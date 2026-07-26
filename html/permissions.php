@@ -1,0 +1,87 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Role-Based Access Control (RBAC) Permission Helper
+ */
+if (!function_exists('hasModulePermission')) {
+    /**
+     * Check if a specific user role has permission to access a module.
+     *
+     * @param string $role
+     * @param string $module
+     * @return bool
+     */
+    function hasModulePermission(string $role, string $module): bool
+    {
+        $roleKey = strtolower(str_replace([' ', '-'], '_', trim($role)));
+        $module = strtolower(trim($module));
+
+        // CRITICAL RULE: Admins Module (All Admins, Add Admin) is strictly restricted ONLY to Super Administrator
+        if ($module === 'admins') {
+            return in_array($roleKey, ['super_admin', 'super_administrator'], true);
+        }
+
+        // Full access roles for other modules: Admin, Administrator, Super Admin, Super Administrator, Manager
+        $fullAccessRoles = [
+            'admin',
+            'administrator',
+            'super_admin',
+            'super_administrator',
+            'manager'
+        ];
+
+        if (in_array($roleKey, $fullAccessRoles, true)) {
+            return true;
+        }
+
+        // Role-based permissions matrix
+        $permissions = [
+            'site_engineer' => [
+                'services',
+                'quotations',
+                'attendance',
+            ],
+            'office_staff' => [
+                'services',
+                'employees',
+                'attendance',
+                'quotations',
+                'invoices',
+            ],
+            'office_incharge' => [
+                'services',
+                'employees',
+                'attendance',
+                'salaries',
+                'quotations',
+                'invoices',
+                'daily_expenses',
+            ],
+        ];
+
+        if (isset($permissions[$roleKey])) {
+            return in_array($module, $permissions[$roleKey], true);
+        }
+
+        // Default fallback for any unlisted role
+        return false;
+    }
+}
+
+if (!function_exists('enforceModulePermission')) {
+    /**
+     * Enforce module permission or redirect user to dashboard.
+     *
+     * @param string $role
+     * @param string $module
+     */
+    function enforceModulePermission(string $role, string $module): void
+    {
+        if (!hasModulePermission($role, $module)) {
+            header('Location: dashboard.php');
+            exit;
+        }
+    }
+}

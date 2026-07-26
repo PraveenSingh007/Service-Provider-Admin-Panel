@@ -30,7 +30,14 @@ class AdminController
         $dataList = [];
 
         foreach ($admins as $admin) {
-            $dataList[] = $admin->toArray();
+            $dataList[] = [
+                'id' => $admin->getId(),
+                'first_name' => $admin->getFirstName(),
+                'last_name' => $admin->getLastName(),
+                'full_name' => $admin->getFullName(),
+                'admin_username' => $admin->getUsername(),
+                'admin_role' => $admin->getRole(),
+            ];
         }
 
         return [
@@ -65,11 +72,13 @@ class AdminController
             ];
         }
 
+        $firstName = (string) ($postData['first_name'] ?? '');
+        $lastName = (string) ($postData['last_name'] ?? '');
         $username = (string) ($postData['admin_username'] ?? '');
         $password = (string) ($postData['admin_password'] ?? '');
         $role = (string) ($postData['admin_role'] ?? 'admin');
 
-        $result = $this->service->createAdmin($username, $password, $role);
+        $result = $this->service->createAdmin($firstName, $lastName, $username, $password, $role);
 
         if (!$result['success']) {
             return [
@@ -113,11 +122,13 @@ class AdminController
             ];
         }
 
+        $firstName = (string) ($postData['first_name'] ?? '');
+        $lastName = (string) ($postData['last_name'] ?? '');
         $username = (string) ($postData['admin_username'] ?? '');
         $password = (string) ($postData['admin_password'] ?? '');
         $role = (string) ($postData['admin_role'] ?? 'admin');
 
-        $result = $this->service->updateAdmin($id, $username, $password, $role);
+        $result = $this->service->updateAdmin($id, $firstName, $lastName, $username, $password, $role);
 
         if (!$result['success']) {
             return [

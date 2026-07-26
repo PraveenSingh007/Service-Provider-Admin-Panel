@@ -43,8 +43,10 @@ class AdminManagementService
      *
      * @return array{success: bool, message: string, errors: string[]}
      */
-    public function createAdmin(string $username, string $password, string $role): array
+    public function createAdmin(string $firstName, string $lastName, string $username, string $password, string $role): array
     {
+        $firstName = trim($firstName);
+        $lastName = trim($lastName);
         $username = trim($username);
         $password = (string) $password;
         $role = trim($role);
@@ -78,7 +80,7 @@ class AdminManagementService
         }
 
         $passwordHash = password_hash($password, PASSWORD_BCRYPT);
-        $created = $this->userRepository->create($username, $passwordHash, $role);
+        $created = $this->userRepository->create($firstName, $lastName, $username, $passwordHash, $role);
 
         if (!$created) {
             return [
@@ -100,8 +102,10 @@ class AdminManagementService
      *
      * @return array{success: bool, message: string, errors: string[]}
      */
-    public function updateAdmin(int $id, string $username, string $password, string $role): array
+    public function updateAdmin(int $id, string $firstName, string $lastName, string $username, string $password, string $role): array
     {
+        $firstName = trim($firstName);
+        $lastName = trim($lastName);
         $username = trim($username);
         $role = trim($role);
 
@@ -151,7 +155,7 @@ class AdminManagementService
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
         }
 
-        $updated = $this->userRepository->update($id, $username, $passwordHash, $role);
+        $updated = $this->userRepository->update($id, $firstName, $lastName, $username, $passwordHash, $role);
 
         if (!$updated) {
             return [

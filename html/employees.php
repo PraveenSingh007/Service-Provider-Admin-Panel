@@ -216,6 +216,19 @@ $employees = (array) ($empResult['response']['data']['employees'] ?? []);
                       <div class="dropdown-divider my-1"></div>
                     </li>
                     <li>
+                      <a class="dropdown-item" href="edit-profile.php">
+                        <i class="icon-base bx bx-user me-3"></i><span>Edit Profile</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="change-password.php">
+                        <i class="icon-base bx bx-key me-3"></i><span>Change Password</span>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider my-1"></div>
+                    </li>
+                    <li>
                       <a class="dropdown-item" href="dashboard.php?action=logout">
                         <i class="icon-base bx bx-power-off icon-md me-3"></i><span>Log Out</span>
                       </a>

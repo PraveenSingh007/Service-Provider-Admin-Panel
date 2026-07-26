@@ -5,31 +5,52 @@ declare(strict_types=1);
 namespace App\Model;
 
 /**
- * User Entity Model
- * Represents admin_login user record data.
+ * User Entity Model representing an Admin User.
  */
-final class User
+class User
 {
-    private int $id;
+    private ?int $id;
+    private ?string $firstName;
+    private ?string $lastName;
     private string $username;
     private string $passwordHash;
     private string $role;
 
     public function __construct(
-        int $id,
+        ?int $id,
+        ?string $firstName,
+        ?string $lastName,
         string $username,
         string $passwordHash,
         string $role = 'admin'
     ) {
         $this->id = $id;
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
         $this->username = $username;
         $this->passwordHash = $passwordHash;
         $this->role = $role;
     }
 
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function getFullName(): string
+    {
+        $fullName = trim(($this->firstName ?? '') . ' ' . ($this->lastName ?? ''));
+        return $fullName !== '' ? $fullName : $this->username;
     }
 
     public function getUsername(): string
@@ -45,19 +66,5 @@ final class User
     public function getRole(): string
     {
         return $this->role;
-    }
-
-    /**
-     * Export object state as array.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'username' => $this->username,
-            'role' => $this->role,
-        ];
     }
 }

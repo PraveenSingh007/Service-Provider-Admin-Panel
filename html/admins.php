@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/dbConnection.php';
+require_once __DIR__ . '/permissions.php';
 require_once __DIR__ . '/src/Model/User.php';
 require_once __DIR__ . '/src/Repository/UserRepository.php';
 require_once __DIR__ . '/src/Service/AdminManagementService.php';
@@ -25,6 +26,8 @@ if (empty($_SESSION['user'])) {
 $user = (array) $_SESSION['user'];
 $username = (string) ($user['username'] ?? 'Admin');
 $role = (string) ($user['role'] ?? 'admin');
+
+enforceModulePermission($role, 'admins');
 $currentUserId = (int) ($user['id'] ?? 0);
 
 if (empty($_SESSION['csrf_token'])) {
@@ -52,8 +55,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     }
 }
 
-$adminsResult = $controller->index();
-$admins = (array) ($adminsResult['response']['data']['admins'] ?? []);
+$admins = $serviceMgmt->getAllAdmins();
 ?>
 <!doctype html>
 
@@ -260,7 +262,8 @@ $admins = (array) ($adminsResult['response']['data']['admins'] ?? []);
                     <thead>
                       <tr>
                         <th>#ID</th>
-                        <th>Admin Username</th>
+                        <th>Name</th>
+                        <th>Admin Username / Email</th>
                         <th>Admin Role</th>
                         <th>Actions</th>
                       </tr>
@@ -268,27 +271,26 @@ $admins = (array) ($adminsResult['response']['data']['admins'] ?? []);
                     <tbody>
                       <?php foreach ($admins as $adm): ?>
                         <tr>
-                          <td data-order="<?= (int)$adm['id'] ?>"><strong>#<?= (int)$adm['id'] ?></strong></td>
-                          <td><span class="fw-medium"><?= htmlspecialchars((string)$adm['username'], ENT_QUOTES, 'UTF-8') ?></span></td>
+                          <td data-order="<?= (int)$adm->getId() ?>"><strong>#<?= (int)$adm->getId() ?></strong></td>
+                          <td><span class="fw-bold text-primary"><?= htmlspecialchars($adm->getFullName(), ENT_QUOTES, 'UTF-8') ?></span></td>
+                          <td><span class="fw-medium"><?= htmlspecialchars($adm->getUsername(), ENT_QUOTES, 'UTF-8') ?></span></td>
                           <td>
-                            <span class="badge bg-label-primary"><?= htmlspecialchars(ucfirst((string)($adm['role'] ?? 'admin')), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span class="badge bg-label-primary fs-6"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', $adm->getRole())), ENT_QUOTES, 'UTF-8') ?></span>
                           </td>
                           <td>
                             <div class="d-flex align-items-center gap-2">
-                              <!-- Edit Button -->
-                              <a
-                                href="add-admin.php?id=<?= htmlspecialchars((string)$adm['id'], ENT_QUOTES, 'UTF-8') ?>"
-                                class="btn btn-sm btn-outline-primary">
-                                <i class="icon-base bx bx-edit-alt me-1"></i> Edit
+                              <!-- Edit Admin -->
+                              <a href="add-admin.php?id=<?= (int)$adm->getId() ?>" class="btn btn-sm btn-icon btn-outline-primary" title="Edit Admin">
+                                <i class="icon-base bx bx-edit-alt"></i>
                               </a>
                               <!-- Delete Button -->
-                              <?php if ((int)$adm['id'] !== $currentUserId): ?>
+                              <?php if ((int)$adm->getId() !== $currentUserId): ?>
                                 <form method="POST" action="admins.php" onsubmit="return confirm('Are you sure you want to delete this admin user?');">
                                   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
                                   <input type="hidden" name="action" value="delete" />
-                                  <input type="hidden" name="admin_id" value="<?= htmlspecialchars((string)$adm['id'], ENT_QUOTES, 'UTF-8') ?>" />
-                                  <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="icon-base bx bx-trash me-1"></i> Delete
+                                  <input type="hidden" name="admin_id" value="<?= (int)$adm->getId() ?>" />
+                                  <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Delete Admin">
+                                    <i class="icon-base bx bx-trash"></i>
                                   </button>
                                 </form>
                               <?php else: ?>

@@ -30,7 +30,7 @@ class UserRepository
     {
         $users = [];
         try {
-            $sql = 'SELECT id, admin_username, admin_password, admin_role FROM admin_login ORDER BY id ASC';
+            $sql = 'SELECT id, first_name, last_name, admin_username, admin_password, admin_role FROM admin_login ORDER BY id ASC';
             $stmt = $this->connection->prepare($sql);
 
             if ($stmt) {
@@ -40,6 +40,8 @@ class UserRepository
                 while ($row = $result->fetch_assoc()) {
                     $users[] = new User(
                         (int) $row['id'],
+                        $row['first_name'] !== null ? (string) $row['first_name'] : null,
+                        $row['last_name'] !== null ? (string) $row['last_name'] : null,
                         (string) $row['admin_username'],
                         (string) $row['admin_password'],
                         (string) ($row['admin_role'] ?? 'admin')
@@ -60,7 +62,7 @@ class UserRepository
     public function findById(int $id): ?User
     {
         try {
-            $sql = 'SELECT id, admin_username, admin_password, admin_role FROM admin_login WHERE id = ? LIMIT 1';
+            $sql = 'SELECT id, first_name, last_name, admin_username, admin_password, admin_role FROM admin_login WHERE id = ? LIMIT 1';
             $stmt = $this->connection->prepare($sql);
 
             if ($stmt) {
@@ -69,13 +71,16 @@ class UserRepository
                 $result = $stmt->get_result();
 
                 if ($row = $result->fetch_assoc()) {
-                    $stmt->close();
-                    return new User(
+                    $user = new User(
                         (int) $row['id'],
+                        $row['first_name'] !== null ? (string) $row['first_name'] : null,
+                        $row['last_name'] !== null ? (string) $row['last_name'] : null,
                         (string) $row['admin_username'],
                         (string) $row['admin_password'],
                         (string) ($row['admin_role'] ?? 'admin')
                     );
+                    $stmt->close();
+                    return $user;
                 }
                 $stmt->close();
             }
@@ -94,7 +99,7 @@ class UserRepository
         $username = trim($username);
 
         try {
-            $sql = 'SELECT id, admin_username, admin_password, admin_role FROM admin_login WHERE admin_username = ? LIMIT 1';
+            $sql = 'SELECT id, first_name, last_name, admin_username, admin_password, admin_role FROM admin_login WHERE admin_username = ? LIMIT 1';
             $stmt = $this->connection->prepare($sql);
 
             if (!$stmt) {
@@ -106,13 +111,16 @@ class UserRepository
             $result = $stmt->get_result();
 
             if ($row = $result->fetch_assoc()) {
-                $stmt->close();
-                return new User(
+                $user = new User(
                     (int) $row['id'],
+                    $row['first_name'] !== null ? (string) $row['first_name'] : null,
+                    $row['last_name'] !== null ? (string) $row['last_name'] : null,
                     (string) $row['admin_username'],
                     (string) $row['admin_password'],
                     (string) ($row['admin_role'] ?? 'admin')
                 );
+                $stmt->close();
+                return $user;
             }
 
             $stmt->close();
@@ -126,17 +134,17 @@ class UserRepository
     /**
      * Create a new admin user.
      */
-    public function create(string $username, string $passwordHash, string $role): bool
+    public function create(string $firstName, string $lastName, string $username, string $passwordHash, string $role): bool
     {
         try {
-            $sql = 'INSERT INTO admin_login (admin_username, admin_password, admin_role) VALUES (?, ?, ?)';
+            $sql = 'INSERT INTO admin_login (first_name, last_name, admin_username, admin_password, admin_role) VALUES (?, ?, ?, ?, ?)';
             $stmt = $this->connection->prepare($sql);
 
             if (!$stmt) {
                 return false;
             }
 
-            $stmt->bind_param('sss', $username, $passwordHash, $role);
+            $stmt->bind_param('sssss', $firstName, $lastName, $username, $passwordHash, $role);
             $success = $stmt->execute();
             $stmt->close();
             return $success;
@@ -149,27 +157,27 @@ class UserRepository
     /**
      * Update an admin user.
      */
-    public function update(int $id, string $username, ?string $passwordHash, string $role): bool
+    public function update(int $id, string $firstName, string $lastName, string $username, ?string $passwordHash, string $role): bool
     {
         try {
             if ($passwordHash !== null && $passwordHash !== '') {
-                $sql = 'UPDATE admin_login SET admin_username = ?, admin_password = ?, admin_role = ? WHERE id = ?';
+                $sql = 'UPDATE admin_login SET first_name = ?, last_name = ?, admin_username = ?, admin_password = ?, admin_role = ? WHERE id = ?';
                 $stmt = $this->connection->prepare($sql);
 
                 if (!$stmt) {
                     return false;
                 }
 
-                $stmt->bind_param('sssi', $username, $passwordHash, $role, $id);
+                $stmt->bind_param('sssssi', $firstName, $lastName, $username, $passwordHash, $role, $id);
             } else {
-                $sql = 'UPDATE admin_login SET admin_username = ?, admin_role = ? WHERE id = ?';
+                $sql = 'UPDATE admin_login SET first_name = ?, last_name = ?, admin_username = ?, admin_role = ? WHERE id = ?';
                 $stmt = $this->connection->prepare($sql);
 
                 if (!$stmt) {
                     return false;
                 }
 
-                $stmt->bind_param('ssi', $username, $role, $id);
+                $stmt->bind_param('ssssi', $firstName, $lastName, $username, $role, $id);
             }
 
             $success = $stmt->execute();
@@ -200,6 +208,29 @@ class UserRepository
             return $success;
         } catch (Throwable $e) {
             error_log('UserRepository delete error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update an admin user's password.
+     */
+    public function updatePassword(int $id, string $newPasswordHash): bool
+    {
+        try {
+            $sql = 'UPDATE admin_login SET admin_password = ? WHERE id = ?';
+            $stmt = $this->connection->prepare($sql);
+
+            if (!$stmt) {
+                return false;
+            }
+
+            $stmt->bind_param('si', $newPasswordHash, $id);
+            $success = $stmt->execute();
+            $stmt->close();
+            return $success;
+        } catch (Throwable $e) {
+            error_log('UserRepository updatePassword error: ' . $e->getMessage());
             return false;
         }
     }

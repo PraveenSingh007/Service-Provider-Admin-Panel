@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/dbConnection.php';
+require_once __DIR__ . '/permissions.php';
 require_once __DIR__ . '/src/Model/User.php';
 require_once __DIR__ . '/src/Repository/UserRepository.php';
 require_once __DIR__ . '/src/Service/AdminManagementService.php';
@@ -25,6 +26,8 @@ if (empty($_SESSION['user'])) {
 $user = (array) $_SESSION['user'];
 $username = (string) ($user['username'] ?? 'Admin');
 $role = (string) ($user['role'] ?? 'admin');
+
+enforceModulePermission($role, 'admins');
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -191,6 +194,29 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         action="add-admin.php<?= $isEditMode ? '?id=' . $adminId : '' ?>"
                         method="POST">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
+
+                        <div class="row g-3 mb-4">
+                          <div class="col-md-6">
+                            <label class="form-label" for="first_name">First Name</label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="first_name"
+                              name="first_name"
+                              placeholder="Enter first name"
+                              value="<?= htmlspecialchars((string)($_POST['first_name'] ?? ($existingAdmin !== null ? (string)$existingAdmin->getFirstName() : '')), ENT_QUOTES, 'UTF-8') ?>" />
+                          </div>
+                          <div class="col-md-6">
+                            <label class="form-label" for="last_name">Last Name</label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="last_name"
+                              name="last_name"
+                              placeholder="Enter last name"
+                              value="<?= htmlspecialchars((string)($_POST['last_name'] ?? ($existingAdmin !== null ? (string)$existingAdmin->getLastName() : '')), ENT_QUOTES, 'UTF-8') ?>" />
+                          </div>
+                        </div>
 
                         <div class="mb-4">
                           <label class="form-label" for="admin_username">Admin Username / Email <span class="text-danger">*</span></label>

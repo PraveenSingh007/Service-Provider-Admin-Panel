@@ -2,6 +2,30 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/dbConnection.php';
+require_once __DIR__ . '/permissions.php';
+require_once __DIR__ . '/src/Model/Service.php';
+require_once __DIR__ . '/src/Model/User.php';
+require_once __DIR__ . '/src/Model/Employee.php';
+require_once __DIR__ . '/src/Model/Quotation.php';
+require_once __DIR__ . '/src/Model/Invoice.php';
+require_once __DIR__ . '/src/Model/InvoiceItem.php';
+require_once __DIR__ . '/src/Model/DailyExpense.php';
+require_once __DIR__ . '/src/Repository/ServiceRepository.php';
+require_once __DIR__ . '/src/Repository/UserRepository.php';
+require_once __DIR__ . '/src/Repository/EmployeeRepository.php';
+require_once __DIR__ . '/src/Repository/QuotationRepository.php';
+require_once __DIR__ . '/src/Repository/InvoiceRepository.php';
+require_once __DIR__ . '/src/Repository/DailyExpenseRepository.php';
+
+use App\Database\DatabaseConnection;
+use App\Repository\DailyExpenseRepository;
+use App\Repository\EmployeeRepository;
+use App\Repository\InvoiceRepository;
+use App\Repository\QuotationRepository;
+use App\Repository\ServiceRepository;
+use App\Repository\UserRepository;
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -20,6 +44,26 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     session_destroy();
     header('Location: index.php');
     exit;
+}
+
+$dbConn = DatabaseConnection::createFromEnv()->getConnection();
+$serviceRepo = new ServiceRepository($dbConn);
+$userRepo = new UserRepository($dbConn);
+$empRepo = new EmployeeRepository($dbConn);
+$quotationRepo = new QuotationRepository($dbConn);
+$invoiceRepo = new InvoiceRepository($dbConn);
+$expenseRepo = new DailyExpenseRepository($dbConn);
+
+$totalServices = count($serviceRepo->findAll());
+$totalAdmins = count($userRepo->findAll());
+$totalEmployees = count($empRepo->findAll());
+$totalQuotations = count($quotationRepo->findAll());
+$totalInvoices = count($invoiceRepo->findAll());
+
+$currentMonthExpenses = $expenseRepo->findByDateRange(date('Y-m-01'), date('Y-m-d'));
+$totalMonthExpenseAmt = 0.0;
+foreach ($currentMonthExpenses as $exp) {
+    $totalMonthExpenseAmt += $exp->getAmount();
 }
 ?>
 <!doctype html>
@@ -87,18 +131,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
             </div>
 
             <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
-              <!-- Search -->
-              <div class="navbar-nav align-items-center me-auto">
-                <div class="nav-item d-flex align-items-center">
-                  <span class="w-px-22 h-px-22"><i class="icon-base bx bx-search icon-md"></i></span>
-                  <input
-                    type="text"
-                    class="form-control border-0 shadow-none ps-1 ps-sm-2 d-md-block d-none"
-                    placeholder="Search..."
-                    aria-label="Search..." />
-                </div>
-              </div>
-              <!-- /Search -->
 
               <ul class="navbar-nav flex-row align-items-center ms-md-auto">
                 <!-- User -->
@@ -131,6 +163,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
                       <div class="dropdown-divider my-1"></div>
                     </li>
                     <li>
+                      <a class="dropdown-item" href="edit-profile.php">
+                        <i class="icon-base bx bx-user me-3"></i><span>Edit Profile</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="change-password.php">
+                        <i class="icon-base bx bx-key me-3"></i><span>Change Password</span>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider my-1"></div>
+                    </li>
+                    <li>
                       <a class="dropdown-item" href="dashboard.php?action=logout">
                         <i class="icon-base bx bx-power-off icon-md me-3"></i><span>Log Out</span>
                       </a>
@@ -147,71 +192,106 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
           <div class="content-wrapper">
             <!-- Content -->
             <div class="container-xxl flex-grow-1 container-p-y">
+              <!-- Welcome & Quick Metrics Row -->
               <div class="row">
-                <div class="col-xxl-8 mb-6 order-0">
-                  <div class="card">
-                    <div class="d-flex align-items-start row">
-                      <div class="col-sm-7">
+                <!-- Welcome Card -->
+                <div class="col-lg-12 mb-4">
+                  <div class="card bg-label-primary border-0 shadow-sm">
+                    <div class="d-flex align-items-center row">
+                      <div class="col-sm-8">
                         <div class="card-body">
-                          <h5 class="card-title text-primary mb-3">Congratulations <?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>! 🎉</h5>
-                          <p class="mb-6">
-                            You have successfully logged in as <span class="fw-bold"><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></span>.
+                          <h4 class="card-title text-primary mb-2">Welcome back, <?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?>! 👋</h4>
+                          <p class="mb-0 text-muted">
+                            Manage your services, site engineers, staff attendance, payroll, quotations, invoices, and daily expenses all in one place.
                           </p>
                         </div>
                       </div>
-                      <div class="col-sm-5 text-center text-sm-left">
-                        <div class="card-body pb-0 px-0 px-md-6">
-                          <img
-                            src="../assets/img/illustrations/man-with-laptop.png"
-                            height="175"
-                            alt="View Badge User" />
-                        </div>
+                      <div class="col-sm-4 text-center text-sm-end pe-4 d-none d-sm-block">
+                        <img src="../assets/img/illustrations/man-with-laptop.png" height="110" alt="Dashboard Illustration" />
                       </div>
                     </div>
                   </div>
                 </div>
-                <div class="col-xxl-4 col-lg-12 col-md-4 order-1">
-                  <div class="row">
-                    <div class="col-lg-6 col-md-12 col-6 mb-6">
-                      <div class="card h-100">
-                        <div class="card-body">
-                          <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                            <div class="avatar flex-shrink-0">
-                              <img
-                                src="../assets/img/icons/unicons/chart-success.png"
-                                alt="chart success"
-                                class="rounded" />
-                            </div>
-                          </div>
-                          <p class="mb-1">Profit</p>
-                          <h4 class="card-title mb-3">$12,628</h4>
-                          <small class="text-success fw-medium"
-                            ><i class="icon-base bx bx-up-arrow-alt"></i> +72.80%</small
-                          >
-                        </div>
+
+                <!-- System Stat Widgets (Filtered by User Role Permissions) -->
+                <?php if (hasModulePermission($role, 'services')): ?>
+                  <div class="col-lg-2 col-md-4 col-6 mb-4">
+                    <div class="card h-100 p-3 text-center">
+                      <div class="avatar bg-label-primary rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                        <i class="icon-base bx bx-cog text-primary icon-lg"></i>
                       </div>
-                    </div>
-                    <div class="col-lg-6 col-md-12 col-6 mb-6">
-                      <div class="card h-100">
-                        <div class="card-body">
-                          <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                            <div class="avatar flex-shrink-0">
-                              <img
-                                src="../assets/img/icons/unicons/wallet-info.png"
-                                alt="wallet info"
-                                class="rounded" />
-                            </div>
-                          </div>
-                          <p class="mb-1">Sales</p>
-                          <h4 class="card-title mb-3">$4,679</h4>
-                          <small class="text-success fw-medium"
-                            ><i class="icon-base bx bx-up-arrow-alt"></i> +28.42%</small
-                          >
-                        </div>
-                      </div>
+                      <small class="text-muted d-block fw-semibold">Services</small>
+                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalServices ?></h4>
+                      <a href="services.php" class="btn btn-xs btn-outline-primary mt-2">Manage</a>
                     </div>
                   </div>
-                </div>
+                <?php endif; ?>
+
+                <?php if (hasModulePermission($role, 'admins')): ?>
+                  <div class="col-lg-2 col-md-4 col-6 mb-4">
+                    <div class="card h-100 p-3 text-center">
+                      <div class="avatar bg-label-info rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                        <i class="icon-base bx bx-user-check text-info icon-lg"></i>
+                      </div>
+                      <small class="text-muted d-block fw-semibold">Admins & Staff</small>
+                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalAdmins ?></h4>
+                      <a href="admins.php" class="btn btn-xs btn-outline-info mt-2">Manage</a>
+                    </div>
+                  </div>
+                <?php endif; ?>
+
+                <?php if (hasModulePermission($role, 'employees')): ?>
+                  <div class="col-lg-2 col-md-4 col-6 mb-4">
+                    <div class="card h-100 p-3 text-center">
+                      <div class="avatar bg-label-success rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                        <i class="icon-base bx bx-group text-success icon-lg"></i>
+                      </div>
+                      <small class="text-muted d-block fw-semibold">Employees</small>
+                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalEmployees ?></h4>
+                      <a href="employees.php" class="btn btn-xs btn-outline-success mt-2">Manage</a>
+                    </div>
+                  </div>
+                <?php endif; ?>
+
+                <?php if (hasModulePermission($role, 'quotations')): ?>
+                  <div class="col-lg-2 col-md-4 col-6 mb-4">
+                    <div class="card h-100 p-3 text-center">
+                      <div class="avatar bg-label-warning rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                        <i class="icon-base bx bx-receipt text-warning icon-lg"></i>
+                      </div>
+                      <small class="text-muted d-block fw-semibold">Quotations</small>
+                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalQuotations ?></h4>
+                      <a href="quotations.php" class="btn btn-xs btn-outline-warning mt-2">Manage</a>
+                    </div>
+                  </div>
+                <?php endif; ?>
+
+                <?php if (hasModulePermission($role, 'invoices')): ?>
+                  <div class="col-lg-2 col-md-4 col-6 mb-4">
+                    <div class="card h-100 p-3 text-center">
+                      <div class="avatar bg-label-secondary rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                        <i class="icon-base bx bx-file text-secondary icon-lg"></i>
+                      </div>
+                      <small class="text-muted d-block fw-semibold">Invoices</small>
+                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalInvoices ?></h4>
+                      <a href="invoices.php" class="btn btn-xs btn-outline-secondary mt-2">Manage</a>
+                    </div>
+                  </div>
+                <?php endif; ?>
+
+                <?php if (hasModulePermission($role, 'daily_expenses')): ?>
+                  <div class="col-lg-2 col-md-4 col-6 mb-4">
+                    <div class="card h-100 p-3 text-center">
+                      <div class="avatar bg-label-danger rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                        <i class="icon-base bx bx-wallet text-danger icon-lg"></i>
+                      </div>
+                      <small class="text-muted d-block fw-semibold">Month Expenses</small>
+                      <h5 class="fw-bold text-danger mb-0 mt-1">₹<?= number_format($totalMonthExpenseAmt, 0) ?></h5>
+                      <a href="daily-expenses.php" class="btn btn-xs btn-outline-danger mt-2">Manage</a>
+                    </div>
+                  </div>
+                <?php endif; ?>
+              </div>
                 <!-- Total Revenue -->
                 <div class="col-12 col-xxl-8 order-2 order-md-3 order-xxl-2 mb-6 total-revenue">
                   <div class="card">
