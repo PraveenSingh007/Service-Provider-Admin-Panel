@@ -226,10 +226,18 @@ if ($employee === null) {
             <span class="info-label">Mobile:</span>
             <span class="info-val"><?= htmlspecialchars($employee->getEmpMobile(), ENT_QUOTES, 'UTF-8') ?></span>
           </div>
-          <div class="info-row">
-            <span class="info-label">Email:</span>
-            <span class="info-val"><?= htmlspecialchars($employee->getEmpEmail(), ENT_QUOTES, 'UTF-8') ?></span>
-          </div>
+          <?php if (!empty($employee->getEmpAadhar())): ?>
+            <div class="info-row">
+              <span class="info-label">Aadhaar No:</span>
+              <span class="info-val"><?= htmlspecialchars((string)$employee->getEmpAadhar(), ENT_QUOTES, 'UTF-8') ?></span>
+            </div>
+          <?php endif; ?>
+          <?php if (!empty($employee->getEmpPan())): ?>
+            <div class="info-row">
+              <span class="info-label">PAN No:</span>
+              <span class="info-val"><?= htmlspecialchars((string)$employee->getEmpPan(), ENT_QUOTES, 'UTF-8') ?></span>
+            </div>
+          <?php endif; ?>
           <div class="info-row">
             <span class="info-label">Joining:</span>
             <span class="info-val"><?= htmlspecialchars($employee->getJoiningDate(), ENT_QUOTES, 'UTF-8') ?></span>

@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS `employees` (
   `emp_role` VARCHAR(100) NOT NULL,
   `emp_salary` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `emp_photo` VARCHAR(255) NULL,
+  `emp_aadhar` VARCHAR(20) NULL,
+  `emp_pan` VARCHAR(20) NULL,
   `joining_date` DATE NOT NULL,
   `status` ENUM('active', 'inactive', 'terminated') NOT NULL DEFAULT 'active',
   `status_change_date` DATE NULL,

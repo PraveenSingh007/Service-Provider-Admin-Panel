@@ -103,6 +103,9 @@ class EmployeeManagementService
         }
 
         $empPhoto = null;
+        $empAadhar = !empty($postData['emp_aadhar']) ? trim((string)$postData['emp_aadhar']) : null;
+        $empPan = !empty($postData['emp_pan']) ? trim((string)$postData['emp_pan']) : null;
+
         if ($fileData !== null && isset($fileData['emp_photo']) && $fileData['emp_photo']['error'] === UPLOAD_ERR_OK) {
             $uploadedPath = $this->processImageUpload($fileData['emp_photo']);
             if ($uploadedPath !== null) {
@@ -110,7 +113,7 @@ class EmployeeManagementService
             }
         }
 
-        $created = $this->repository->create($empCode, $empName, $empEmail, $empMobile, $empAddress, $empRole, $empSalary, $empPhoto, $joiningDate, $status, $statusChangeDate);
+        $created = $this->repository->create($empCode, $empName, $empEmail, $empMobile, $empAddress, $empRole, $empSalary, $empPhoto, $empAadhar, $empPan, $joiningDate, $status, $statusChangeDate);
 
         if (!$created) {
             return ['success' => false, 'message' => 'Database error', 'errors' => ['Failed to save employee to database.']];
@@ -140,6 +143,8 @@ class EmployeeManagementService
         $empAddress = trim((string) ($postData['emp_address'] ?? ''));
         $empRole = trim((string) ($postData['emp_role'] ?? ''));
         $empSalary = (float) ($postData['emp_salary'] ?? 0.0);
+        $empAadhar = !empty($postData['emp_aadhar']) ? trim((string)$postData['emp_aadhar']) : null;
+        $empPan = !empty($postData['emp_pan']) ? trim((string)$postData['emp_pan']) : null;
         $joiningDate = trim((string) ($postData['joining_date'] ?? date('Y-m-d')));
         $status = trim((string) ($postData['status'] ?? 'active'));
         $statusChangeDate = !empty($postData['status_change_date']) ? trim((string)$postData['status_change_date']) : null;
@@ -180,7 +185,7 @@ class EmployeeManagementService
             }
         }
 
-        $updated = $this->repository->update($id, $empCode, $empName, $empEmail, $empMobile, $empAddress, $empRole, $empSalary, $empPhoto, $joiningDate, $status, $statusChangeDate);
+        $updated = $this->repository->update($id, $empCode, $empName, $empEmail, $empMobile, $empAddress, $empRole, $empSalary, $empPhoto, $empAadhar, $empPan, $joiningDate, $status, $statusChangeDate);
 
         if (!$updated) {
             return ['success' => false, 'message' => 'Database error', 'errors' => ['Failed to update employee.']];

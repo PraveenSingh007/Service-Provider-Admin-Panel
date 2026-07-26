@@ -251,6 +251,34 @@ $generatedEmpCode = 'EMP-' . rand(1000, 9999);
                         </div>
 
                         <div class="row">
+                          <!-- Aadhaar Card Number -->
+                          <div class="col-md-6 mb-4">
+                            <label class="form-label" for="emp_aadhar">Aadhaar Card No</label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="emp_aadhar"
+                              name="emp_aadhar"
+                              placeholder="e.g. 1234 5678 9012"
+                              maxlength="16"
+                              value="<?= htmlspecialchars((string)($_POST['emp_aadhar'] ?? ($existingEmp !== null ? (string)$existingEmp->getEmpAadhar() : '')), ENT_QUOTES, 'UTF-8') ?>" />
+                          </div>
+
+                          <!-- PAN Card Number -->
+                          <div class="col-md-6 mb-4">
+                            <label class="form-label" for="emp_pan">PAN Card No</label>
+                            <input
+                              type="text"
+                              class="form-control text-uppercase"
+                              id="emp_pan"
+                              name="emp_pan"
+                              placeholder="e.g. ABCDE1234F"
+                              maxlength="10"
+                              value="<?= htmlspecialchars((string)($_POST['emp_pan'] ?? ($existingEmp !== null ? (string)$existingEmp->getEmpPan() : '')), ENT_QUOTES, 'UTF-8') ?>" />
+                          </div>
+                        </div>
+
+                        <div class="row">
                           <!-- Role -->
                           <div class="col-md-6 mb-4">
                             <label class="form-label" for="emp_role">Employee Role <span class="text-danger">*</span></label>

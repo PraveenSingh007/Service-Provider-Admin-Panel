@@ -19,6 +19,8 @@ final class Employee
     private string $empRole;
     private float $empSalary;
     private ?string $empPhoto;
+    private ?string $empAadhar;
+    private ?string $empPan;
     private string $joiningDate;
     private string $status;
     private ?string $statusChangeDate;
@@ -35,6 +37,8 @@ final class Employee
         string $empRole,
         float $empSalary,
         ?string $empPhoto,
+        ?string $empAadhar,
+        ?string $empPan,
         string $joiningDate,
         string $status = 'active',
         ?string $statusChangeDate = null,
@@ -50,6 +54,8 @@ final class Employee
         $this->empRole = $empRole;
         $this->empSalary = $empSalary;
         $this->empPhoto = $empPhoto;
+        $this->empAadhar = $empAadhar;
+        $this->empPan = $empPan;
         $this->joiningDate = $joiningDate;
         $this->status = $status;
         $this->statusChangeDate = $statusChangeDate;
@@ -102,6 +108,16 @@ final class Employee
         return $this->empPhoto;
     }
 
+    public function getEmpAadhar(): ?string
+    {
+        return $this->empAadhar;
+    }
+
+    public function getEmpPan(): ?string
+    {
+        return $this->empPan;
+    }
+
     public function getJoiningDate(): string
     {
         return $this->joiningDate;
@@ -144,6 +160,8 @@ final class Employee
             'emp_role' => $this->empRole,
             'emp_salary' => $this->empSalary,
             'emp_photo' => $this->empPhoto,
+            'emp_aadhar' => $this->empAadhar,
+            'emp_pan' => $this->empPan,
             'joining_date' => $this->joiningDate,
             'status' => $this->status,
             'status_change_date' => $this->statusChangeDate,

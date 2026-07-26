@@ -313,7 +313,17 @@ $employees = (array) ($empResult['response']['data']['employees'] ?? []);
                           <td><span class="badge bg-label-secondary"><?= htmlspecialchars((string)$emp['emp_role'], ENT_QUOTES, 'UTF-8') ?></span></td>
                           <td>
                             <div><i class="icon-base bx bx-phone text-muted me-1"></i><?= htmlspecialchars((string)$emp['emp_mobile'], ENT_QUOTES, 'UTF-8') ?></div>
-                            <small class="text-muted"><?= htmlspecialchars((string)$emp['emp_email'], ENT_QUOTES, 'UTF-8') ?></small>
+                            <small class="text-muted d-block"><?= htmlspecialchars((string)$emp['emp_email'], ENT_QUOTES, 'UTF-8') ?></small>
+                            <?php if (!empty($emp['emp_aadhar']) || !empty($emp['emp_pan'])): ?>
+                              <div class="mt-1" style="font-size: 11px;">
+                                <?php if (!empty($emp['emp_aadhar'])): ?>
+                                  <span class="badge bg-label-primary py-1 px-2 me-1" title="Aadhaar Card No">Aadhaar: <?= htmlspecialchars((string)$emp['emp_aadhar'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($emp['emp_pan'])): ?>
+                                  <span class="badge bg-label-warning py-1 px-2" title="PAN Card No">PAN: <?= htmlspecialchars((string)$emp['emp_pan'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <?php endif; ?>
+                              </div>
+                            <?php endif; ?>
                           </td>
                           <td><strong class="text-success">₹<?= number_format((float)$emp['emp_salary'], 2) ?></strong></td>
                           <td>
