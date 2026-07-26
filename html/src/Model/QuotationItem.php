@@ -1,0 +1,64 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Model;
+
+/**
+ * Entity model for a Quotation Line Item.
+ */
+class QuotationItem
+{
+    private ?int $id;
+    private int $versionId;
+    private string $itemDescription;
+    private int $quantity;
+    private float $unitPrice;
+    private float $totalPrice;
+
+    public function __construct(
+        ?int $id,
+        int $versionId,
+        string $itemDescription,
+        int $quantity,
+        float $unitPrice,
+        float $totalPrice
+    ) {
+        $this->id = $id;
+        $this->versionId = $versionId;
+        $this->itemDescription = $itemDescription;
+        $this->quantity = $quantity;
+        $this->unitPrice = $unitPrice;
+        $this->totalPrice = $totalPrice;
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getVersionId(): int
+    {
+        return $this->versionId;
+    }
+
+    public function getItemDescription(): string
+    {
+        return $this->itemDescription;
+    }
+
+    public function getQuantity(): int
+    {
+        return $this->quantity;
+    }
+
+    public function getUnitPrice(): float
+    {
+        return $this->unitPrice;
+    }
+
+    public function getTotalPrice(): float
+    {
+        return $this->totalPrice;
+    }
+}

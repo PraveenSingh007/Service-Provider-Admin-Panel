@@ -1,0 +1,270 @@
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/dbConnection.php';
+require_once __DIR__ . '/src/Model/ServiceArea.php';
+require_once __DIR__ . '/src/Repository/ServiceAreaRepository.php';
+require_once __DIR__ . '/src/Service/ServiceAreaManagementService.php';
+require_once __DIR__ . '/src/Controller/ServiceAreaController.php';
+
+use App\Controller\ServiceAreaController;
+use App\Database\DatabaseConnection;
+use App\Repository\ServiceAreaRepository;
+use App\Service\ServiceAreaManagementService;
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (empty($_SESSION['user'])) {
+    header('Location: index.php');
+    exit;
+}
+
+$user = (array) $_SESSION['user'];
+$username = (string) ($user['username'] ?? 'Admin');
+$role = (string) ($user['role'] ?? 'admin');
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrfToken = (string) $_SESSION['csrf_token'];
+
+$dbConn = DatabaseConnection::createFromEnv()->getConnection();
+$repository = new ServiceAreaRepository($dbConn);
+$serviceMgmt = new ServiceAreaManagementService($repository);
+$controller = new ServiceAreaController($serviceMgmt);
+
+$areaId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+$isEditMode = $areaId > 0;
+$existingArea = $isEditMode ? $serviceMgmt->getAreaById($areaId) : null;
+
+$formError = null;
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    if ($isEditMode) {
+        $result = $controller->update($areaId, $_POST, $csrfToken);
+    } else {
+        $result = $controller->store($_POST, $csrfToken);
+    }
+
+    if ($result['response']['success']) {
+        header('Location: service-areas.php');
+        exit;
+    }
+
+    $errors = (array) ($result['response']['errors'] ?? []);
+    $formError = count($errors) > 0 ? implode(', ', $errors) : (string) $result['response']['message'];
+}
+?>
+<!doctype html>
+
+<html
+  lang="en"
+  class="layout-menu-fixed layout-compact"
+  data-assets-path="../assets/"
+  data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+    <title><?= $isEditMode ? 'Edit Service Area' : 'Add New Service Area' ?> - Sneat Admin</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/img/favicon/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+      rel="stylesheet" />
+
+    <link rel="stylesheet" href="../assets/vendor/fonts/iconify-icons.css" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../assets/css/demo.css" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+
+    <!-- Helpers -->
+    <script src="../assets/vendor/js/helpers.js"></script>
+    <script src="../assets/js/config.js"></script>
+  </head>
+
+  <body>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Sidebar Menu -->
+        <?php
+        $activePage = 'add-service-area';
+        require __DIR__ . '/sidebar.php';
+        ?>
+
+        <!-- Layout container -->
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav
+            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="icon-base bx bx-menu icon-md"></i>
+              </a>
+            </div>
+
+            <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+              <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+                <!-- User -->
+                <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow p-0"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="../assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="../assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <h6 class="mb-0"><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8') ?></h6>
+                            <small class="text-body-secondary"><?= htmlspecialchars(ucfirst($role), ENT_QUOTES, 'UTF-8') ?></small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider my-1"></div>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="dashboard.php?action=logout">
+                        <i class="icon-base bx bx-power-off icon-md me-3"></i><span>Log Out</span>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+          <!-- / Navbar -->
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold py-3 mb-0"><?= $isEditMode ? 'Edit Service Area' : 'Add New Service Area' ?></h4>
+                <a href="service-areas.php" class="btn btn-outline-secondary">
+                  <i class="icon-base bx bx-arrow-back me-1"></i> Back to Service Areas
+                </a>
+              </div>
+
+              <?php if ($formError !== null): ?>
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                  <?= htmlspecialchars($formError, ENT_QUOTES, 'UTF-8') ?>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              <?php endif; ?>
+
+              <!-- Service Area Form Card -->
+              <div class="row">
+                <div class="col-xl-8 col-lg-10">
+                  <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h5 class="mb-0"><?= $isEditMode ? 'Service Area Details (# ' . $areaId . ')' : 'Service Area Details' ?></h5>
+                    </div>
+                    <div class="card-body">
+                      <form
+                        action="add-service-area.php<?= $isEditMode ? '?id=' . $areaId : '' ?>"
+                        method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
+
+                        <div class="mb-4">
+                          <label class="form-label" for="area_name">Area Name <span class="text-danger">*</span></label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="area_name"
+                            name="area_name"
+                            placeholder="e.g. Connaught Place, Bandra West"
+                            value="<?= htmlspecialchars((string)($_POST['area_name'] ?? ($existingArea !== null ? $existingArea->getAreaName() : '')), ENT_QUOTES, 'UTF-8') ?>"
+                            required />
+                        </div>
+
+                        <div class="mb-4">
+                          <label class="form-label" for="pincode">Pin Code <span class="text-danger">*</span></label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="pincode"
+                            name="pincode"
+                            placeholder="e.g. 110001, 400050"
+                            value="<?= htmlspecialchars((string)($_POST['pincode'] ?? ($existingArea !== null ? $existingArea->getPincode() : '')), ENT_QUOTES, 'UTF-8') ?>"
+                            required />
+                        </div>
+
+                        <div class="mb-4">
+                          <label class="form-label" for="city">City <span class="text-danger">*</span></label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="city"
+                            name="city"
+                            placeholder="e.g. New Delhi, Mumbai, Bengaluru"
+                            value="<?= htmlspecialchars((string)($_POST['city'] ?? ($existingArea !== null ? $existingArea->getCity() : '')), ENT_QUOTES, 'UTF-8') ?>"
+                            required />
+                        </div>
+
+                        <div class="mb-4">
+                          <label class="form-label" for="state">State <span class="text-danger">*</span></label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="state"
+                            name="state"
+                            placeholder="e.g. Delhi, Maharashtra, Karnataka"
+                            value="<?= htmlspecialchars((string)($_POST['state'] ?? ($existingArea !== null ? $existingArea->getState() : '')), ENT_QUOTES, 'UTF-8') ?>"
+                            required />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                          <button type="submit" class="btn btn-primary">
+                            <i class="icon-base bx bx-save me-1"></i> <?= $isEditMode ? 'Update Service Area' : 'Save Service Area' ?>
+                          </button>
+                          <a href="service-areas.php" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Core JS -->
+    <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../assets/vendor/libs/popper/popper.js"></script>
+    <script src="../assets/vendor/js/bootstrap.js"></script>
+    <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="../assets/vendor/js/menu.js"></script>
+    <script src="../assets/js/main.js"></script>
+  </body>
+</html>
