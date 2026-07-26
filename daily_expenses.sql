@@ -6,6 +6,7 @@ USE `service_provider`;
 CREATE TABLE IF NOT EXISTS `daily_expenses` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `expense_type` VARCHAR(100) NOT NULL,
+  `employee_id` INT NULL,
   `amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `expense_date` DATE NOT NULL,
   `notes` TEXT NULL,

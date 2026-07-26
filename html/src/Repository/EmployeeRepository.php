@@ -67,6 +67,51 @@ class EmployeeRepository
     }
 
     /**
+     * Get active employees only.
+     *
+     * @return Employee[]
+     */
+    public function findActive(): array
+    {
+        $employees = [];
+        try {
+            $sql = "SELECT id, emp_code, emp_name, emp_email, emp_mobile, emp_address, emp_role, emp_salary, emp_photo, emp_aadhar, emp_pan, joining_date, status, status_change_date, created_at, updated_at FROM employees WHERE status = 'active' ORDER BY emp_name ASC";
+            $stmt = $this->connection->prepare($sql);
+
+            if ($stmt) {
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                while ($row = $result->fetch_assoc()) {
+                    $employees[] = new Employee(
+                        (int) $row['id'],
+                        (string) $row['emp_code'],
+                        (string) $row['emp_name'],
+                        (string) $row['emp_email'],
+                        (string) $row['emp_mobile'],
+                        (string) $row['emp_address'],
+                        (string) $row['emp_role'],
+                        (float) $row['emp_salary'],
+                        isset($row['emp_photo']) ? (string) $row['emp_photo'] : null,
+                        isset($row['emp_aadhar']) ? (string) $row['emp_aadhar'] : null,
+                        isset($row['emp_pan']) ? (string) $row['emp_pan'] : null,
+                        (string) $row['joining_date'],
+                        (string) ($row['status'] ?? 'active'),
+                        isset($row['status_change_date']) ? (string) $row['status_change_date'] : null,
+                        isset($row['created_at']) ? (string) $row['created_at'] : null,
+                        isset($row['updated_at']) ? (string) $row['updated_at'] : null
+                    );
+                }
+                $stmt->close();
+            }
+        } catch (Throwable $e) {
+            error_log('EmployeeRepository findActive error: ' . $e->getMessage());
+        }
+
+        return $employees;
+    }
+
+    /**
      * Find employee by ID.
      */
     public function findById(int $id): ?Employee

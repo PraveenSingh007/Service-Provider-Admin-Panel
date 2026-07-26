@@ -63,6 +63,29 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 }
 
 $employees = $empRepo->findAll();
+$normalizedRole = strtolower(str_replace([' ', '-'], '_', trim($role)));
+if ($normalizedRole === 'site_engineer') {
+    $userEmail = strtolower(trim((string)($user['username'] ?? $user['email'] ?? '')));
+    $selfList = [];
+    foreach ($employees as $emp) {
+        if (strtolower(trim($emp->getEmpEmail())) === $userEmail || strtolower(trim($emp->getEmpName())) === strtolower(trim((string)($user['full_name'] ?? '')))) {
+            $selfList[] = $emp;
+            break;
+        }
+    }
+    if (empty($selfList)) {
+        foreach ($employees as $emp) {
+            if (strtolower(trim($emp->getEmpRole())) === 'site engineer') {
+                $selfList[] = $emp;
+                break;
+            }
+        }
+    }
+    if (!empty($selfList)) {
+        $employees = $selfList;
+    }
+}
+
 $existingAttn = $attnService->getAttendanceByDate($selectedDate);
 ?>
 <!doctype html>

@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/dbConnection.php';
+require_once __DIR__ . '/src/Model/Employee.php';
 require_once __DIR__ . '/src/Model/DailyExpense.php';
+require_once __DIR__ . '/src/Repository/EmployeeRepository.php';
 require_once __DIR__ . '/src/Repository/DailyExpenseRepository.php';
 require_once __DIR__ . '/src/Service/DailyExpenseManagementService.php';
 require_once __DIR__ . '/src/Controller/DailyExpenseController.php';
@@ -11,6 +13,7 @@ require_once __DIR__ . '/src/Controller/DailyExpenseController.php';
 use App\Controller\DailyExpenseController;
 use App\Database\DatabaseConnection;
 use App\Repository\DailyExpenseRepository;
+use App\Repository\EmployeeRepository;
 use App\Service\DailyExpenseManagementService;
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -33,12 +36,37 @@ $csrfToken = (string) $_SESSION['csrf_token'];
 
 $dbConn = DatabaseConnection::createFromEnv()->getConnection();
 $repo = new DailyExpenseRepository($dbConn);
+$empRepo = new EmployeeRepository($dbConn);
+$allEmployees = $empRepo->findActive();
 $service = new DailyExpenseManagementService($repo);
 $controller = new DailyExpenseController($service);
 
 $expenseId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $existingExpense = $expenseId > 0 ? $service->getExpenseById($expenseId) : null;
 $isEditMode = $existingExpense !== null;
+
+// Validate ownership if site_engineer or office_staff is attempting to edit an existing expense
+$normalizedRole = strtolower(str_replace([' ', '-'], '_', trim($role)));
+if ($isEditMode && in_array($normalizedRole, ['site_engineer', 'office_staff'], true)) {
+    $userEmail = strtolower(trim((string)($user['username'] ?? $user['email'] ?? '')));
+    $fullName = strtolower(trim((string)($user['full_name'] ?? '')));
+    $loggedInEmpId = null;
+    foreach ($allEmployees as $emp) {
+        if (strtolower(trim($emp->getEmpEmail())) === $userEmail || (!empty($fullName) && strtolower(trim($emp->getEmpName())) === $fullName)) {
+            $loggedInEmpId = $emp->getId();
+            break;
+        }
+    }
+
+    $expCreator = strtolower(trim((string)($existingExpense->getCreatedBy() ?? '')));
+    $isCreator = (!empty($username) && $expCreator === strtolower(trim($username))) || (!empty($fullName) && $expCreator === $fullName);
+    $isEmpId = $loggedInEmpId !== null && $existingExpense->getEmployeeId() === $loggedInEmpId;
+
+    if (!$isCreator && !$isEmpId) {
+        header('Location: daily-expenses.php');
+        exit;
+    }
+}
 
 $actionError = null;
 
@@ -242,6 +270,20 @@ $categories = [
                             name="expense_date"
                             value="<?= htmlspecialchars((string)($_POST['expense_date'] ?? ($existingExpense !== null ? $existingExpense->getExpenseDate() : date('Y-m-d'))), ENT_QUOTES, 'UTF-8') ?>"
                             required />
+                        </div>
+
+                        <!-- Expense Incurred For (Employee List Dropdown) -->
+                        <div class="col-md-6">
+                          <label class="form-label" for="employee_id">Expense Incurred For (Employee)</label>
+                          <?php $curEmpId = (int)($_POST['employee_id'] ?? ($existingExpense !== null ? (int)$existingExpense->getEmployeeId() : 0)); ?>
+                          <select class="form-select" id="employee_id" name="employee_id">
+                            <option value="">-- General Office / Company Expense --</option>
+                            <?php foreach ($allEmployees as $emp): ?>
+                              <option value="<?= (int)$emp->getId() ?>" <?= $curEmpId === (int)$emp->getId() ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($emp->getEmpName(), ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($emp->getEmpCode(), ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars($emp->getEmpRole(), ENT_QUOTES, 'UTF-8') ?>)
+                              </option>
+                            <?php endforeach; ?>
+                          </select>
                         </div>
 
                         <!-- Notes / Description -->

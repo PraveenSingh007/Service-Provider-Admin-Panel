@@ -148,28 +148,7 @@ $userRole = (string) ($currentUser['role'] ?? 'admin');
       </li>
     <?php endif; ?>
 
-    <!-- Admins Section -->
-    <?php if (hasModulePermission($userRole, 'admins')): ?>
-      <?php $isAdminOpen = in_array($activePage, ['admins', 'add-admin'], true); ?>
-      <li class="menu-item <?= $isAdminOpen ? 'active open' : '' ?>">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="menu-icon tf-icons bx bx-user-check"></i>
-          <div class="text-truncate">Admins</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item <?= $activePage === 'admins' ? 'active' : '' ?>">
-            <a href="admins.php" class="menu-link">
-              <div class="text-truncate">All Admins</div>
-            </a>
-          </li>
-          <li class="menu-item <?= $activePage === 'add-admin' ? 'active' : '' ?>">
-            <a href="add-admin.php" class="menu-link">
-              <div class="text-truncate">Add Admin</div>
-            </a>
-          </li>
-        </ul>
-      </li>
-    <?php endif; ?>
+
 
     <!-- Services Section -->
     <?php if (hasModulePermission($userRole, 'services')): ?>
@@ -212,6 +191,17 @@ $userRole = (string) ($currentUser['role'] ?? 'admin');
             </a>
           </li>
         </ul>
+      </li>
+    <?php endif; ?>
+
+    <!-- Company Settings Section -->
+    <?php if (hasModulePermission($userRole, 'company_profile')): ?>
+      <li class="menu-header small text-uppercase"><span class="menu-header-text">Settings</span></li>
+      <li class="menu-item <?= $activePage === 'company-profile' ? 'active' : '' ?>">
+        <a href="company-profile.php" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-building-house"></i>
+          <div class="text-truncate">Company Profile</div>
+        </a>
       </li>
     <?php endif; ?>
   </ul>

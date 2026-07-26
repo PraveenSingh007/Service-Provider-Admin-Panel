@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/dbConnection.php';
 require_once __DIR__ . '/src/Model/Invoice.php';
-require_once __DIR__ . '/src/Model/InvoiceItem.php';
-require_once __DIR__ . '/src/Repository/InvoiceRepository.php';
-require_once __DIR__ . '/src/Repository/QuotationRepository.php';
+require_once __DIR__ . '/src/Model/Company.php';
+require_once __DIR__ . '/src/Repository/CompanyRepository.php';
 require_once __DIR__ . '/src/Service/InvoiceManagementService.php';
 
 use App\Database\DatabaseConnection;
+use App\Repository\CompanyRepository;
 use App\Repository\InvoiceRepository;
 use App\Repository\QuotationRepository;
 use App\Service\InvoiceManagementService;
@@ -27,12 +27,14 @@ $invoiceId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $dbConn = DatabaseConnection::createFromEnv()->getConnection();
 $invRepo = new InvoiceRepository($dbConn);
 $quoRepo = new QuotationRepository($dbConn);
+$companyRepo = new CompanyRepository($dbConn);
 $service = new InvoiceManagementService($invRepo, $quoRepo);
 
 $invoice = $service->getInvoiceById($invoiceId);
 if ($invoice === null) {
     die('Invoice not found.');
 }
+$company = $companyRepo->getCompany();
 ?>
 <!doctype html>
 <html lang="en">
@@ -93,9 +95,21 @@ if ($invoice === null) {
     <div class="invoice-card">
       <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
         <div>
-          <h2 class="fw-bold text-success mb-1">SNEAT SERVICES</h2>
-          <p class="text-muted mb-0">GSTIN: 22AAAAA0000A1Z5 | Official Service Provider</p>
-          <small class="text-muted">Raipur, Chhattisgarh, India</small>
+          <h2 class="fw-bold text-success mb-1"><?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'Sneat Services Pvt Ltd', ENT_QUOTES, 'UTF-8') ?></h2>
+          <?php if ($company !== null): ?>
+            <?php if (!empty($company->getAddress())): ?>
+              <div class="text-muted" style="max-width: 450px; font-size: 13px;"><?= nl2br(htmlspecialchars($company->getAddress(), ENT_QUOTES, 'UTF-8')) ?></div>
+            <?php endif; ?>
+            <div class="text-muted mt-1" style="font-size: 12px;">
+              <?php if (!empty($company->getRegistrationNo())): ?><strong>Reg No:</strong> <?= htmlspecialchars($company->getRegistrationNo(), ENT_QUOTES, 'UTF-8') ?> | <?php endif; ?>
+              <?php if (!empty($company->getGstNo())): ?><strong>GSTIN:</strong> <?= htmlspecialchars($company->getGstNo(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            </div>
+            <div class="text-muted" style="font-size: 12px;">
+              <?php if (!empty($company->getPhone())): ?><strong>Ph:</strong> <?= htmlspecialchars($company->getPhone(), ENT_QUOTES, 'UTF-8') ?> | <?php endif; ?>
+              <?php if (!empty($company->getFax())): ?><strong>Fax:</strong> <?= htmlspecialchars($company->getFax(), ENT_QUOTES, 'UTF-8') ?> | <?php endif; ?>
+              <?php if (!empty($company->getEmail())): ?><strong>Email:</strong> <?= htmlspecialchars($company->getEmail(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            </div>
+          <?php endif; ?>
         </div>
         <div class="text-end">
           <h3 class="fw-bold text-dark mb-1">TAX INVOICE</h3>
@@ -189,9 +203,20 @@ if ($invoice === null) {
         </div>
       <?php endif; ?>
 
-      <div class="border-top pt-4 mt-4 d-flex justify-content-between text-muted" style="font-size: 12px;">
-        <div>Authorized Signatory: ___________________</div>
-        <div>Thank you for your prompt payment!</div>
+      <div class="border-top pt-4 mt-4 text-muted" style="font-size: 12px;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>Authorized Signatory: <strong>___________________</strong></div>
+          <div class="fw-semibold text-success">Thank you for your business!</div>
+        </div>
+        <?php if ($company !== null): ?>
+          <div class="text-center text-secondary border-top pt-2 mt-2">
+            <?= htmlspecialchars($company->getCompanyName(), ENT_QUOTES, 'UTF-8') ?>
+            <?php if (!empty($company->getRegistrationNo())): ?> | Reg: <?= htmlspecialchars($company->getRegistrationNo(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            <?php if (!empty($company->getGstNo())): ?> | GSTIN: <?= htmlspecialchars($company->getGstNo(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            <?php if (!empty($company->getPhone())): ?> | Ph: <?= htmlspecialchars($company->getPhone(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            <?php if (!empty($company->getEmail())): ?> | Email: <?= htmlspecialchars($company->getEmail(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
   </body>

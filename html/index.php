@@ -32,13 +32,7 @@ $authError = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $dbConn = null;
-        try {
-            $dbConn = DatabaseConnection::createFromEnv()->getConnection();
-        } catch (\Throwable $e) {
-            // DB connection optional; fallback handles demo credentials
-        }
-
+        $dbConn = DatabaseConnection::createFromEnv()->getConnection();
         $userRepo = new UserRepository($dbConn);
         $authService = new AuthService($userRepo);
         $controller = new AuthController($authService);
@@ -49,8 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
         if ($isXmlHttpRequest) {
+            if (ob_get_length()) {
+                ob_clean();
+            }
             header('Content-Type: application/json; charset=utf-8');
-            http_response_code($result['status']);
+            http_response_code(200);
             echo json_encode($result['response']);
             exit;
         }
@@ -63,7 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors = (array) ($result['response']['errors'] ?? []);
         $authError = count($errors) > 0 ? implode(', ', $errors) : (string) $result['response']['message'];
     } catch (\Throwable $e) {
-        $authError = 'An unexpected error occurred during login. Please try again.';
+        error_log('Login Exception: ' . $e->getMessage());
+        $authError = 'Login error: ' . $e->getMessage();
     }
 }
 ?>
@@ -132,13 +130,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <form id="formAuthentication" class="mb-6" action="index.php" method="POST">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
                 <div class="mb-6">
-                  <label for="email" class="form-label">Email</label>
+                  <label for="email" class="form-label">Username / Email</label>
                   <input
-                    type="email"
+                    type="text"
                     class="form-control"
                     id="email"
                     name="email"
-                    placeholder="admin@example.com"
+                    placeholder="Enter email or username"
                     required
                     autofocus />
                 </div>
@@ -244,9 +242,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 showSnackbar(errorMsg);
               }
             })
-            .catch(function () {
+            .catch(function (err) {
               if (btn) { btn.disabled = false; }
-              showSnackbar('An unexpected connection error occurred.');
+              console.error('Login fetch error:', err);
+              form.submit();
             });
           });
         }

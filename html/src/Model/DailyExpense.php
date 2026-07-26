@@ -11,6 +11,8 @@ class DailyExpense
 {
     private ?int $id;
     private string $expenseType;
+    private ?int $employeeId;
+    private ?string $employeeName;
     private float $amount;
     private string $expenseDate;
     private ?string $notes;
@@ -21,19 +23,23 @@ class DailyExpense
     public function __construct(
         ?int $id,
         string $expenseType,
+        ?int $employeeId,
         float $amount,
         string $expenseDate,
         ?string $notes = null,
         ?string $createdBy = 'Admin',
+        ?string $employeeName = null,
         ?string $createdAt = null,
         ?string $updatedAt = null
     ) {
         $this->id = $id;
         $this->expenseType = $expenseType;
+        $this->employeeId = $employeeId;
         $this->amount = $amount;
         $this->expenseDate = !empty($expenseDate) ? $expenseDate : date('Y-m-d');
         $this->notes = $notes;
         $this->createdBy = $createdBy;
+        $this->employeeName = $employeeName;
         $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
     }
@@ -46,6 +52,16 @@ class DailyExpense
     public function getExpenseType(): string
     {
         return $this->expenseType;
+    }
+
+    public function getEmployeeId(): ?int
+    {
+        return $this->employeeId;
+    }
+
+    public function getEmployeeName(): ?string
+    {
+        return $this->employeeName;
     }
 
     public function getAmount(): float

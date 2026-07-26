@@ -67,4 +67,21 @@ class User
     {
         return $this->role;
     }
+
+    /**
+     * Export entity as associative array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'first_name' => $this->firstName,
+            'last_name' => $this->lastName,
+            'full_name' => $this->getFullName(),
+            'username' => $this->username,
+            'role' => $this->role,
+        ];
+    }
 }

@@ -26,7 +26,7 @@ class DailyExpenseRepository
     {
         $expenses = [];
         try {
-            $sql = 'SELECT id, expense_type, amount, expense_date, notes, created_by, created_at, updated_at FROM daily_expenses ORDER BY id ASC';
+            $sql = 'SELECT d.id, d.expense_type, d.employee_id, d.amount, d.expense_date, d.notes, d.created_by, d.created_at, d.updated_at, e.emp_name as employee_name FROM daily_expenses d LEFT JOIN employees e ON d.employee_id = e.id ORDER BY d.id ASC';
             $result = $this->connection->query($sql);
 
             if ($result) {
@@ -34,10 +34,12 @@ class DailyExpenseRepository
                     $expenses[] = new DailyExpense(
                         (int) $row['id'],
                         (string) $row['expense_type'],
+                        $row['employee_id'] !== null ? (int) $row['employee_id'] : null,
                         (float) $row['amount'],
                         (string) $row['expense_date'],
                         $row['notes'] !== null ? (string) $row['notes'] : null,
                         $row['created_by'] !== null ? (string) $row['created_by'] : null,
+                        $row['employee_name'] !== null ? (string) $row['employee_name'] : null,
                         (string) $row['created_at'],
                         (string) $row['updated_at']
                     );
@@ -60,7 +62,7 @@ class DailyExpenseRepository
     {
         $expenses = [];
         try {
-            $stmt = $this->connection->prepare('SELECT id, expense_type, amount, expense_date, notes, created_by, created_at, updated_at FROM daily_expenses WHERE expense_date BETWEEN ? AND ? ORDER BY expense_date DESC, id DESC');
+            $stmt = $this->connection->prepare('SELECT d.id, d.expense_type, d.employee_id, d.amount, d.expense_date, d.notes, d.created_by, d.created_at, d.updated_at, e.emp_name as employee_name FROM daily_expenses d LEFT JOIN employees e ON d.employee_id = e.id WHERE d.expense_date BETWEEN ? AND ? ORDER BY d.expense_date DESC, d.id DESC');
             if ($stmt) {
                 $stmt->bind_param('ss', $startDate, $endDate);
                 $stmt->execute();
@@ -70,10 +72,12 @@ class DailyExpenseRepository
                     $expenses[] = new DailyExpense(
                         (int) $row['id'],
                         (string) $row['expense_type'],
+                        $row['employee_id'] !== null ? (int) $row['employee_id'] : null,
                         (float) $row['amount'],
                         (string) $row['expense_date'],
                         $row['notes'] !== null ? (string) $row['notes'] : null,
                         $row['created_by'] !== null ? (string) $row['created_by'] : null,
+                        $row['employee_name'] !== null ? (string) $row['employee_name'] : null,
                         (string) $row['created_at'],
                         (string) $row['updated_at']
                     );
@@ -93,7 +97,7 @@ class DailyExpenseRepository
     public function findById(int $id): ?DailyExpense
     {
         try {
-            $stmt = $this->connection->prepare('SELECT id, expense_type, amount, expense_date, notes, created_by, created_at, updated_at FROM daily_expenses WHERE id = ? LIMIT 1');
+            $stmt = $this->connection->prepare('SELECT d.id, d.expense_type, d.employee_id, d.amount, d.expense_date, d.notes, d.created_by, d.created_at, d.updated_at, e.emp_name as employee_name FROM daily_expenses d LEFT JOIN employees e ON d.employee_id = e.id WHERE d.id = ? LIMIT 1');
             if (!$stmt) {
                 return null;
             }
@@ -106,10 +110,12 @@ class DailyExpenseRepository
                 $expense = new DailyExpense(
                     (int) $row['id'],
                     (string) $row['expense_type'],
+                    $row['employee_id'] !== null ? (int) $row['employee_id'] : null,
                     (float) $row['amount'],
                     (string) $row['expense_date'],
                     $row['notes'] !== null ? (string) $row['notes'] : null,
                     $row['created_by'] !== null ? (string) $row['created_by'] : null,
+                    $row['employee_name'] !== null ? (string) $row['employee_name'] : null,
                     (string) $row['created_at'],
                     (string) $row['updated_at']
                 );
@@ -131,33 +137,35 @@ class DailyExpenseRepository
     {
         try {
             if ($expense->getId() !== null && $expense->getId() > 0) {
-                $stmt = $this->connection->prepare('UPDATE daily_expenses SET expense_type = ?, amount = ?, expense_date = ?, notes = ?, created_by = ? WHERE id = ?');
+                $stmt = $this->connection->prepare('UPDATE daily_expenses SET expense_type = ?, employee_id = ?, amount = ?, expense_date = ?, notes = ?, created_by = ? WHERE id = ?');
                 if (!$stmt) {
                     return false;
                 }
                 $type = $expense->getExpenseType();
+                $empId = $expense->getEmployeeId();
                 $amt = $expense->getAmount();
                 $date = $expense->getExpenseDate();
                 $notes = $expense->getNotes();
                 $createdBy = $expense->getCreatedBy();
                 $id = $expense->getId();
 
-                $stmt->bind_param('sdsssi', $type, $amt, $date, $notes, $createdBy, $id);
+                $stmt->bind_param('sidsssi', $type, $empId, $amt, $date, $notes, $createdBy, $id);
                 $success = $stmt->execute();
                 $stmt->close();
                 return $success;
             } else {
-                $stmt = $this->connection->prepare('INSERT INTO daily_expenses (expense_type, amount, expense_date, notes, created_by) VALUES (?, ?, ?, ?, ?)');
+                $stmt = $this->connection->prepare('INSERT INTO daily_expenses (expense_type, employee_id, amount, expense_date, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)');
                 if (!$stmt) {
                     return false;
                 }
                 $type = $expense->getExpenseType();
+                $empId = $expense->getEmployeeId();
                 $amt = $expense->getAmount();
                 $date = $expense->getExpenseDate();
                 $notes = $expense->getNotes();
                 $createdBy = $expense->getCreatedBy();
 
-                $stmt->bind_param('sdsss', $type, $amt, $date, $notes, $createdBy);
+                $stmt->bind_param('sidsss', $type, $empId, $amt, $date, $notes, $createdBy);
                 $success = $stmt->execute();
                 $stmt->close();
                 return $success;
@@ -169,7 +177,7 @@ class DailyExpenseRepository
     }
 
     /**
-     * Delete a daily expense.
+     * Delete daily expense record.
      */
     public function delete(int $id): bool
     {

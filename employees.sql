@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `employees` (
   `emp_code` VARCHAR(50) NOT NULL,
   `emp_name` VARCHAR(255) NOT NULL,
   `emp_email` VARCHAR(255) NOT NULL,
+  `password_hash` VARCHAR(255) NULL,
   `emp_mobile` VARCHAR(20) NOT NULL,
   `emp_address` TEXT NOT NULL,
   `emp_role` VARCHAR(100) NOT NULL,

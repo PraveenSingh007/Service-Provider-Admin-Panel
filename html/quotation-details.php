@@ -7,9 +7,12 @@ require_once __DIR__ . '/src/Model/Quotation.php';
 require_once __DIR__ . '/src/Model/QuotationVersion.php';
 require_once __DIR__ . '/src/Model/QuotationItem.php';
 require_once __DIR__ . '/src/Repository/QuotationRepository.php';
+require_once __DIR__ . '/src/Model/Company.php';
+require_once __DIR__ . '/src/Repository/CompanyRepository.php';
 require_once __DIR__ . '/src/Service/QuotationManagementService.php';
 
 use App\Database\DatabaseConnection;
+use App\Repository\CompanyRepository;
 use App\Repository\QuotationRepository;
 use App\Service\QuotationManagementService;
 
@@ -26,6 +29,8 @@ $quotationId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $dbConn = DatabaseConnection::createFromEnv()->getConnection();
 $repository = new QuotationRepository($dbConn);
 $service = new QuotationManagementService($repository);
+$companyRepo = new CompanyRepository($dbConn);
+$company = $companyRepo->getCompany();
 
 $quotation = $service->getQuotationById($quotationId);
 if ($quotation === null) {
@@ -216,9 +221,20 @@ if ($activeVersion === null && !empty($versions)) {
         </div>
       </div>
 
-      <div class="border-top pt-4 mt-4 d-flex justify-content-between text-muted" style="font-size: 12px;">
-        <div>Prepared by: <strong><?= htmlspecialchars($activeVersion !== null && $activeVersion->getCreatedBy() !== null ? $activeVersion->getCreatedBy() : 'Admin', ENT_QUOTES, 'UTF-8') ?></strong></div>
-        <div>Thank you for choosing Sneat Services!</div>
+      <div class="border-top pt-4 mt-4 text-muted" style="font-size: 12px;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>Prepared by: <strong><?= htmlspecialchars($activeVersion !== null && $activeVersion->getCreatedBy() !== null ? $activeVersion->getCreatedBy() : 'Admin', ENT_QUOTES, 'UTF-8') ?></strong></div>
+          <div class="fw-semibold text-primary">Thank you for choosing <?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'Sneat Services Pvt Ltd', ENT_QUOTES, 'UTF-8') ?>!</div>
+        </div>
+        <?php if ($company !== null): ?>
+          <div class="text-center text-secondary border-top pt-2 mt-2">
+            <?= htmlspecialchars($company->getCompanyName(), ENT_QUOTES, 'UTF-8') ?>
+            <?php if (!empty($company->getRegistrationNo())): ?> | Reg: <?= htmlspecialchars($company->getRegistrationNo(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            <?php if (!empty($company->getGstNo())): ?> | GSTIN: <?= htmlspecialchars($company->getGstNo(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            <?php if (!empty($company->getPhone())): ?> | Ph: <?= htmlspecialchars($company->getPhone(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            <?php if (!empty($company->getEmail())): ?> | Email: <?= htmlspecialchars($company->getEmail(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
   </body>

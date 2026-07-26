@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/dbConnection.php';
+require_once __DIR__ . '/src/Model/Employee.php';
 require_once __DIR__ . '/src/Model/DailyExpense.php';
+require_once __DIR__ . '/src/Repository/EmployeeRepository.php';
 require_once __DIR__ . '/src/Repository/DailyExpenseRepository.php';
 require_once __DIR__ . '/src/Service/DailyExpenseManagementService.php';
 require_once __DIR__ . '/src/Controller/DailyExpenseController.php';
@@ -11,6 +13,7 @@ require_once __DIR__ . '/src/Controller/DailyExpenseController.php';
 use App\Controller\DailyExpenseController;
 use App\Database\DatabaseConnection;
 use App\Repository\DailyExpenseRepository;
+use App\Repository\EmployeeRepository;
 use App\Service\DailyExpenseManagementService;
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -57,6 +60,36 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 }
 
 $expenses = $service->getExpensesByDateRange($startDate, $endDate);
+
+// Restrict Site Engineer and Office Staff to view ONLY their own expenses
+$normalizedRole = strtolower(str_replace([' ', '-'], '_', trim($role)));
+if (in_array($normalizedRole, ['site_engineer', 'office_staff'], true)) {
+    $empRepo = new EmployeeRepository($dbConn);
+    $allEmployees = $empRepo->findAll();
+    $loggedInEmpId = null;
+    $userEmail = strtolower(trim((string)($user['username'] ?? $user['email'] ?? '')));
+    $fullName = strtolower(trim((string)($user['full_name'] ?? '')));
+
+    foreach ($allEmployees as $emp) {
+        if (strtolower(trim($emp->getEmpEmail())) === $userEmail || (!empty($fullName) && strtolower(trim($emp->getEmpName())) === $fullName)) {
+            $loggedInEmpId = $emp->getId();
+            break;
+        }
+    }
+
+    $filteredExpenses = [];
+    foreach ($expenses as $exp) {
+        $expCreator = strtolower(trim((string)($exp->getCreatedBy() ?? '')));
+        $isCreator = (!empty($username) && $expCreator === strtolower(trim($username)))
+            || (!empty($fullName) && $expCreator === $fullName);
+        $isEmpId = $loggedInEmpId !== null && $exp->getEmployeeId() === $loggedInEmpId;
+
+        if ($isCreator || $isEmpId) {
+            $filteredExpenses[] = $exp;
+        }
+    }
+    $expenses = $filteredExpenses;
+}
 
 $totalExpenseAmount = 0.0;
 foreach ($expenses as $exp) {
@@ -265,6 +298,7 @@ foreach ($expenses as $exp) {
                       <tr>
                         <th>#ID</th>
                         <th>Expense Type</th>
+                        <th>Incurred For</th>
                         <th>Amount (₹)</th>
                         <th>Date</th>
                         <th>Notes / Description</th>
@@ -277,6 +311,13 @@ foreach ($expenses as $exp) {
                         <tr>
                           <td data-order="<?= (int)$exp->getId() ?>"><strong>#<?= (int)$exp->getId() ?></strong></td>
                           <td><span class="badge bg-label-info fs-6"><?= htmlspecialchars($exp->getExpenseType(), ENT_QUOTES, 'UTF-8') ?></span></td>
+                          <td>
+                            <?php if (!empty($exp->getEmployeeName())): ?>
+                              <span class="badge bg-label-success"><i class="icon-base bx bx-user me-1"></i><?= htmlspecialchars($exp->getEmployeeName(), ENT_QUOTES, 'UTF-8') ?></span>
+                            <?php else: ?>
+                              <small class="text-muted">Company General</small>
+                            <?php endif; ?>
+                          </td>
                           <td><strong class="text-danger fs-6">₹<?= number_format($exp->getAmount(), 2) ?></strong></td>
                           <td><?= htmlspecialchars($exp->getExpenseDate(), ENT_QUOTES, 'UTF-8') ?></td>
                           <td><?= htmlspecialchars((string)($exp->getNotes() ?? '-'), ENT_QUOTES, 'UTF-8') ?></td>

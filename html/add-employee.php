@@ -279,17 +279,18 @@ $generatedEmpCode = 'EMP-' . rand(1000, 9999);
                         </div>
 
                         <div class="row">
-                          <!-- Role -->
+                          <!-- Role Dropdown -->
                           <div class="col-md-6 mb-4">
                             <label class="form-label" for="emp_role">Employee Role <span class="text-danger">*</span></label>
-                            <input
-                              type="text"
-                              class="form-control"
-                              id="emp_role"
-                              name="emp_role"
-                              placeholder="e.g. Senior Technician, Field Manager, Supervisor"
-                              value="<?= htmlspecialchars((string)($_POST['emp_role'] ?? ($existingEmp !== null ? $existingEmp->getEmpRole() : '')), ENT_QUOTES, 'UTF-8') ?>"
-                              required />
+                            <?php $curEmpRole = (string)($_POST['emp_role'] ?? ($existingEmp !== null ? $existingEmp->getEmpRole() : 'office_staff')); ?>
+                            <select class="form-select" id="emp_role" name="emp_role" required>
+                              <option value="super_admin" <?= $curEmpRole === 'super_admin' ? 'selected' : '' ?>>Super Administrator (super_admin)</option>
+                              <option value="admin" <?= $curEmpRole === 'admin' ? 'selected' : '' ?>>Administrator (admin)</option>
+                              <option value="manager" <?= $curEmpRole === 'manager' ? 'selected' : '' ?>>Manager (manager)</option>
+                              <option value="office_incharge" <?= $curEmpRole === 'office_incharge' ? 'selected' : '' ?>>Office Incharge (office_incharge)</option>
+                              <option value="office_staff" <?= $curEmpRole === 'office_staff' ? 'selected' : '' ?>>Office Staff (office_staff)</option>
+                              <option value="site_engineer" <?= $curEmpRole === 'site_engineer' ? 'selected' : '' ?>>Site Engineer (site_engineer)</option>
+                            </select>
                           </div>
 
                           <!-- Base Salary -->

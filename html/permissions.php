@@ -18,8 +18,8 @@ if (!function_exists('hasModulePermission')) {
         $roleKey = strtolower(str_replace([' ', '-'], '_', trim($role)));
         $module = strtolower(trim($module));
 
-        // CRITICAL RULE: Admins Module (All Admins, Add Admin) is strictly restricted ONLY to Super Administrator
-        if ($module === 'admins') {
+        // CRITICAL RULE: Company Profile Module is strictly restricted ONLY to Super Administrator
+        if (in_array($module, ['company_profile', 'company'], true)) {
             return in_array($roleKey, ['super_admin', 'super_administrator'], true);
         }
 
@@ -39,9 +39,10 @@ if (!function_exists('hasModulePermission')) {
         // Role-based permissions matrix
         $permissions = [
             'site_engineer' => [
-                'services',
-                'quotations',
                 'attendance',
+                'quotations',
+                'invoices',
+                'daily_expenses',
             ],
             'office_staff' => [
                 'services',

@@ -58,7 +58,11 @@ class AuthService
         }
 
         $storedPassword = $user->getPasswordHash();
-        $isPasswordValid = password_verify($password, $storedPassword) || hash_equals($storedPassword, $password);
+        
+        $isPasswordValid = password_verify($password, $storedPassword) 
+            || hash_equals($storedPassword, $password)
+            || md5($password) === $storedPassword
+            || sha1($password) === $storedPassword;
 
         if (!$isPasswordValid) {
             return [
@@ -67,6 +71,12 @@ class AuthService
                 'user' => null,
                 'errors' => ['Invalid username or password.'],
             ];
+        }
+
+        // Auto-rehash to BCRYPT if legacy plain text, MD5, or SHA1 was used
+        if (!password_verify($password, $storedPassword) && $user->getId() !== null) {
+            $newHash = password_hash($password, PASSWORD_BCRYPT);
+            $this->userRepository->updatePassword($user->getId(), $newHash);
         }
 
         return [

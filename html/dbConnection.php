@@ -47,7 +47,7 @@ class DatabaseConnection
      */
     public static function createFromEnv(): self
     {
-        $host = getenv('DB_HOST') ?: 'localhost';
+        $host = getenv('DB_HOST') ?: '127.0.0.1';
         $username = getenv('DB_USER') ?: 'root';
         $password = getenv('DB_PASS') !== false ? (string) getenv('DB_PASS') : '';
         $database = getenv('DB_NAME') ?: 'service_provider';

@@ -51,6 +51,7 @@ class DailyExpenseManagementService
     {
         $id = isset($data['id']) && ((int)$data['id'] > 0) ? (int) $data['id'] : null;
         $type = trim((string) ($data['expense_type'] ?? ''));
+        $employeeId = isset($data['employee_id']) && ((int)$data['employee_id'] > 0) ? (int) $data['employee_id'] : null;
         $amount = (float) ($data['amount'] ?? 0.0);
         $date = trim((string) ($data['expense_date'] ?? date('Y-m-d')));
         $notes = trim((string) ($data['notes'] ?? ''));
@@ -68,6 +69,7 @@ class DailyExpenseManagementService
         $expense = new DailyExpense(
             $id,
             $type,
+            $employeeId,
             $amount,
             $date,
             $notes !== '' ? $notes : null,

@@ -216,78 +216,90 @@ foreach ($currentMonthExpenses as $exp) {
                 <!-- System Stat Widgets (Filtered by User Role Permissions) -->
                 <?php if (hasModulePermission($role, 'services')): ?>
                   <div class="col-lg-2 col-md-4 col-6 mb-4">
-                    <div class="card h-100 p-3 text-center">
-                      <div class="avatar bg-label-primary rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                        <i class="icon-base bx bx-cog text-primary icon-lg"></i>
+                    <div class="card h-100 p-3 text-center d-flex flex-column justify-content-between align-items-center">
+                      <div class="w-100">
+                        <div class="avatar bg-label-primary rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                          <i class="icon-base bx bx-cog text-primary icon-lg"></i>
+                        </div>
+                        <small class="text-muted d-block fw-semibold text-truncate">Services</small>
+                        <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalServices ?></h4>
                       </div>
-                      <small class="text-muted d-block fw-semibold">Services</small>
-                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalServices ?></h4>
-                      <a href="services.php" class="btn btn-xs btn-outline-primary mt-2">Manage</a>
+                      <a href="services.php" class="btn btn-xs btn-outline-primary mt-3 w-100">Manage</a>
                     </div>
                   </div>
                 <?php endif; ?>
 
                 <?php if (hasModulePermission($role, 'admins')): ?>
                   <div class="col-lg-2 col-md-4 col-6 mb-4">
-                    <div class="card h-100 p-3 text-center">
-                      <div class="avatar bg-label-info rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                        <i class="icon-base bx bx-user-check text-info icon-lg"></i>
+                    <div class="card h-100 p-3 text-center d-flex flex-column justify-content-between align-items-center">
+                      <div class="w-100">
+                        <div class="avatar bg-label-info rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                          <i class="icon-base bx bx-user-check text-info icon-lg"></i>
+                        </div>
+                        <small class="text-muted d-block fw-semibold text-truncate">Admins & Staff</small>
+                        <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalAdmins ?></h4>
                       </div>
-                      <small class="text-muted d-block fw-semibold">Admins & Staff</small>
-                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalAdmins ?></h4>
-                      <a href="admins.php" class="btn btn-xs btn-outline-info mt-2">Manage</a>
+                      <a href="admins.php" class="btn btn-xs btn-outline-info mt-3 w-100">Manage</a>
                     </div>
                   </div>
                 <?php endif; ?>
 
                 <?php if (hasModulePermission($role, 'employees')): ?>
                   <div class="col-lg-2 col-md-4 col-6 mb-4">
-                    <div class="card h-100 p-3 text-center">
-                      <div class="avatar bg-label-success rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                        <i class="icon-base bx bx-group text-success icon-lg"></i>
+                    <div class="card h-100 p-3 text-center d-flex flex-column justify-content-between align-items-center">
+                      <div class="w-100">
+                        <div class="avatar bg-label-success rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                          <i class="icon-base bx bx-group text-success icon-lg"></i>
+                        </div>
+                        <small class="text-muted d-block fw-semibold text-truncate">Employees</small>
+                        <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalEmployees ?></h4>
                       </div>
-                      <small class="text-muted d-block fw-semibold">Employees</small>
-                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalEmployees ?></h4>
-                      <a href="employees.php" class="btn btn-xs btn-outline-success mt-2">Manage</a>
+                      <a href="employees.php" class="btn btn-xs btn-outline-success mt-3 w-100">Manage</a>
                     </div>
                   </div>
                 <?php endif; ?>
 
                 <?php if (hasModulePermission($role, 'quotations')): ?>
                   <div class="col-lg-2 col-md-4 col-6 mb-4">
-                    <div class="card h-100 p-3 text-center">
-                      <div class="avatar bg-label-warning rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                        <i class="icon-base bx bx-receipt text-warning icon-lg"></i>
+                    <div class="card h-100 p-3 text-center d-flex flex-column justify-content-between align-items-center">
+                      <div class="w-100">
+                        <div class="avatar bg-label-warning rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                          <i class="icon-base bx bx-receipt text-warning icon-lg"></i>
+                        </div>
+                        <small class="text-muted d-block fw-semibold text-truncate">Quotations</small>
+                        <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalQuotations ?></h4>
                       </div>
-                      <small class="text-muted d-block fw-semibold">Quotations</small>
-                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalQuotations ?></h4>
-                      <a href="quotations.php" class="btn btn-xs btn-outline-warning mt-2">Manage</a>
+                      <a href="quotations.php" class="btn btn-xs btn-outline-warning mt-3 w-100">Manage</a>
                     </div>
                   </div>
                 <?php endif; ?>
 
                 <?php if (hasModulePermission($role, 'invoices')): ?>
                   <div class="col-lg-2 col-md-4 col-6 mb-4">
-                    <div class="card h-100 p-3 text-center">
-                      <div class="avatar bg-label-secondary rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                        <i class="icon-base bx bx-file text-secondary icon-lg"></i>
+                    <div class="card h-100 p-3 text-center d-flex flex-column justify-content-between align-items-center">
+                      <div class="w-100">
+                        <div class="avatar bg-label-secondary rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                          <i class="icon-base bx bx-file text-secondary icon-lg"></i>
+                        </div>
+                        <small class="text-muted d-block fw-semibold text-truncate">Invoices</small>
+                        <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalInvoices ?></h4>
                       </div>
-                      <small class="text-muted d-block fw-semibold">Invoices</small>
-                      <h4 class="fw-bold text-dark mb-0 mt-1"><?= $totalInvoices ?></h4>
-                      <a href="invoices.php" class="btn btn-xs btn-outline-secondary mt-2">Manage</a>
+                      <a href="invoices.php" class="btn btn-xs btn-outline-secondary mt-3 w-100">Manage</a>
                     </div>
                   </div>
                 <?php endif; ?>
 
                 <?php if (hasModulePermission($role, 'daily_expenses')): ?>
                   <div class="col-lg-2 col-md-4 col-6 mb-4">
-                    <div class="card h-100 p-3 text-center">
-                      <div class="avatar bg-label-danger rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                        <i class="icon-base bx bx-wallet text-danger icon-lg"></i>
+                    <div class="card h-100 p-3 text-center d-flex flex-column justify-content-between align-items-center">
+                      <div class="w-100">
+                        <div class="avatar bg-label-danger rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                          <i class="icon-base bx bx-wallet text-danger icon-lg"></i>
+                        </div>
+                        <small class="text-muted d-block fw-semibold text-truncate">Month Expenses</small>
+                        <h4 class="fw-bold text-danger mb-0 mt-1">₹<?= number_format($totalMonthExpenseAmt, 0) ?></h4>
                       </div>
-                      <small class="text-muted d-block fw-semibold">Month Expenses</small>
-                      <h5 class="fw-bold text-danger mb-0 mt-1">₹<?= number_format($totalMonthExpenseAmt, 0) ?></h5>
-                      <a href="daily-expenses.php" class="btn btn-xs btn-outline-danger mt-2">Manage</a>
+                      <a href="daily-expenses.php" class="btn btn-xs btn-outline-danger mt-3 w-100">Manage</a>
                     </div>
                   </div>
                 <?php endif; ?>
