@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../admin/dbConnection.php';
+require_once __DIR__ . '/../admin/Model/ServiceArea.php';
 require_once __DIR__ . '/../admin/Repository/ServiceAreaRepository.php';
+require_once __DIR__ . '/../admin/Model/Service.php';
 require_once __DIR__ . '/../admin/Repository/ServiceRepository.php';
 
 use App\Admin\Database\DatabaseConnection;
@@ -39,8 +41,9 @@ $services = $serviceRepo->findAll();
   <style>
     body { background-color: #f5f5f9; font-family: 'Public Sans', sans-serif; }
     .hero-banner { background: linear-gradient(135deg, #696cff 0%, #393bbf 100%); color: #fff; padding: 4rem 1rem; border-radius: 0 0 2rem 2rem; }
-    .service-card { transition: all 0.25s ease-in-out; border: none; border-radius: 1rem; box-shadow: 0 0.25rem 1rem rgba(161, 172, 184, 0.15); }
+    .service-card { transition: all 0.25s ease-in-out; border: none; border-radius: 1rem; box-shadow: 0 0.25rem 1rem rgba(161, 172, 184, 0.15); overflow: hidden; }
     .service-card:hover { transform: translateY(-5px); box-shadow: 0 0.5rem 1.5rem rgba(105, 108, 255, 0.25); }
+    .service-card-img { height: 200px; object-fit: cover; width: 100%; border-radius: 1rem 1rem 0 0; }
   </style>
 </head>
 <body>
@@ -66,13 +69,10 @@ $services = $serviceRepo->findAll();
               <a href="logout.php" class="btn btn-sm btn-danger"><i class="bx bx-log-out me-1"></i> Log Out</a>
             </li>
           <?php else: ?>
-            <li class="nav-item me-2">
+            <li class="nav-item">
               <a href="login.php" class="btn btn-primary btn-sm fw-bold"><i class="bx bx-log-in-circle me-1"></i> Sign In with OTP</a>
             </li>
           <?php endif; ?>
-          <li class="nav-item ms-2">
-            <a class="btn btn-outline-secondary btn-sm" href="../admin/index.php"><i class="bx bx-shield-quarter me-1"></i> Admin</a>
-          </li>
         </ul>
       </div>
     </div>
@@ -89,41 +89,36 @@ $services = $serviceRepo->findAll();
 
   <!-- Main Container -->
   <div class="container my-5">
-    <h3 class="fw-bold mb-4 text-center">Our Core Services</h3>
+    <h3 class="fw-bold mb-4 text-center">Our Offered Services</h3>
     
     <div class="row g-4 mb-5">
-      <div class="col-md-4">
-        <div class="card h-100 p-4 service-card text-center">
-          <div class="avatar avatar-xl mx-auto mb-3">
-            <span class="avatar-initial rounded-circle bg-label-primary fs-2"><i class="bx bx-camera-home"></i></span>
+      <?php if (count($services) === 0): ?>
+        <div class="col-12 text-center text-muted">No services currently available.</div>
+      <?php else: ?>
+        <?php foreach ($services as $srv): ?>
+          <?php
+          $srvName = $srv->getServiceName();
+          $srvImg = $srv->getServiceImage();
+          
+          // Fallback image path if empty
+          $imgSrc = '../../../' . ($srvImg ?: 'uploads/services/cctv_service.png');
+          
+          $catParam = 'other';
+          if (stripos($srvName, 'CCTV') !== false) { $catParam = 'cctv_camera'; }
+          elseif (stripos($srvName, 'Computer') !== false || stripos($srvName, 'Hardware') !== false) { $catParam = 'computer_hardware'; }
+          elseif (stripos($srvName, 'AMC') !== false || stripos($srvName, 'Contract') !== false) { $catParam = 'amc_contract'; }
+          ?>
+          <div class="col-md-4">
+            <div class="card h-100 service-card text-center">
+              <img src="<?= htmlspecialchars($imgSrc, ENT_QUOTES, 'UTF-8') ?>" class="service-card-img" alt="<?= htmlspecialchars($srvName, ENT_QUOTES, 'UTF-8') ?>" />
+              <div class="card-body d-flex flex-column p-4">
+                <h5 class="fw-bold mb-3"><?= htmlspecialchars($srvName, ENT_QUOTES, 'UTF-8') ?></h5>
+                <a href="book-service.php?category=<?= urlencode($catParam) ?>&service_id=<?= $srv->getId() ?>" class="btn btn-primary mt-auto fw-bold"><i class="bx bx-calendar-plus me-1"></i> Book Now</a>
+              </div>
+            </div>
           </div>
-          <h5 class="fw-bold">CCTV Camera Installation & Repair</h5>
-          <p class="text-muted">HD IP Camera setups, DVR/NVR configuration, indoor/outdoor wiring, and quick fault repair.</p>
-          <a href="book-service.php?category=cctv_camera" class="btn btn-outline-primary mt-auto">Book CCTV Service</a>
-        </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card h-100 p-4 service-card text-center">
-          <div class="avatar avatar-xl mx-auto mb-3">
-            <span class="avatar-initial rounded-circle bg-label-success fs-2"><i class="bx bx-laptop"></i></span>
-          </div>
-          <h5 class="fw-bold">Computer Hardware & Sales</h5>
-          <p class="text-muted">Desktop & laptop repairs, RAM/SSD upgrades, hardware sales, and OS maintenance.</p>
-          <a href="book-service.php?category=computer_hardware" class="btn btn-outline-success mt-auto">Book Computer Service</a>
-        </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card h-100 p-4 service-card text-center">
-          <div class="avatar avatar-xl mx-auto mb-3">
-            <span class="avatar-initial rounded-circle bg-label-warning fs-2"><i class="bx bx-award"></i></span>
-          </div>
-          <h5 class="fw-bold">Annual Maintenance Contract (AMC)</h5>
-          <p class="text-muted">Comprehensive yearly maintenance for CCTV systems and office computer infrastructure.</p>
-          <a href="book-service.php?category=amc_contract" class="btn btn-outline-warning mt-auto">Book AMC Contract</a>
-        </div>
-      </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
 
     <!-- Active Service Areas Banner -->
