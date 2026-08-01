@@ -123,8 +123,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
           <div class="avatar avatar-xl mx-auto mb-2">
             <span class="avatar-initial rounded-circle bg-label-primary fs-2"><i class="bx bx-envelope"></i></span>
           </div>
-          <h4 class="fw-bold mb-1">Customer Sign In</h4>
-          <p class="text-muted small">Enter your email address to receive a One-Time Password (OTP)</p>
+          <h4 class="fw-bold mb-1">Sign In</h4>
+          <p class="text-muted small">Enter your email address to receive OTP</p>
         </div>
 
         <?php if ($successMsg !== null): ?>
@@ -157,7 +157,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
             </div>
 
             <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
-              <i class="bx bx-paper-plane me-1"></i> Send OTP via Email
+              <i class="bx bx-paper-plane me-1"></i> Get OTP
             </button>
           </form>
 
@@ -170,7 +170,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
 
             <div class="mb-3">
               <label class="form-label fw-semibold">Enter 6-Digit OTP</label>
-              <p class="text-muted fs-xs">Sent to <strong><?= htmlspecialchars($targetEmail, ENT_QUOTES, 'UTF-8') ?></strong></p>
+              <!-- <p class="text-muted fs-xs">Sent to <strong><?= htmlspecialchars($targetEmail, ENT_QUOTES, 'UTF-8') ?></strong></p> -->
               <input type="text" name="otp_code" class="form-control form-control-lg otp-input" maxlength="6" placeholder="123456" required autofocus autocomplete="off" />
             </div>
 

@@ -67,7 +67,7 @@ $areas = (array) ($areasResult['response']['data']['areas'] ?? []);
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Service Areas - Sneat Admin</title>
+    <title>Service Areas - tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />

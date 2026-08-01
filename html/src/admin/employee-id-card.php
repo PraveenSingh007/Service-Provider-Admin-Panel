@@ -203,9 +203,10 @@ if ($employee === null) {
     </div>
 
     <div class="id-card-wrapper">
-      <div class="id-card-header">
-        <h2>SNEAT SERVICES</h2>
-        <p>Official Identity Card</p>
+      <div class="id-card-header text-center">
+        <img src="../../../assets/img/logo.png" alt="tech-xpert Logo" style="height: 45px; width: auto; object-fit: contain; filter: brightness(0) invert(1);" class="mb-1" />
+        <h2 style="font-size: 1.1rem; margin-bottom: 2px;">Tech-Xpert</h2>
+        <p style="font-size: 0.75rem; opacity: 0.9;">Official Identity Card</p>
       </div>
 
       <div class="id-card-photo-container">

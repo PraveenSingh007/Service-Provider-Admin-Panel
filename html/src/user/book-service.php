@@ -68,12 +68,20 @@ $selectedCategory = (string) ($_GET['category'] ?? 'cctv_camera');
 
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3 mb-4">
     <div class="container">
-      <a class="navbar-brand fw-bold fs-4" href="index.php"><i class="bx bx-wrench me-2 text-primary"></i>Service Provider Portal</a>
+      <a class="navbar-brand fw-bold fs-4 d-flex align-items-center me-3" href="index.php">
+        <img src="/sneat/assets/img/logo.png" alt="tech-xpert" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px; background: #fff; padding: 2px;" class="me-2" />
+        <span>tech-</span><span style="color: #696cff;">xpert</span>
+      </a>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
           <li class="nav-item me-3"><a class="nav-link" href="index.php">Home</a></li>
           <li class="nav-item me-3"><a class="nav-link active" href="book-service.php">Book Service</a></li>
           <li class="nav-item me-3"><a class="nav-link" href="my-requests.php">Track Request</a></li>
+          <li class="nav-item me-3">
+            <a href="index.php#requestCallbackModal" class="btn btn-warning btn-sm fw-bold text-dark rounded-pill px-3 shadow-sm" onclick="window.location.href='index.php?callback=1'; return false;">
+              <i class="bx bx-phone-call me-1"></i> Request Call Back
+            </a>
+          </li>
           
           <?php if ($currentUser !== null): ?>
             <li class="nav-item me-2">
@@ -84,7 +92,7 @@ $selectedCategory = (string) ($_GET['category'] ?? 'cctv_camera');
             </li>
           <?php else: ?>
             <li class="nav-item">
-              <a href="login.php" class="btn btn-primary btn-sm fw-bold"><i class="bx bx-log-in-circle me-1"></i> Sign In with OTP</a>
+              <a href="login.php" class="btn btn-primary btn-sm fw-bold"><i class="bx bx-log-in-circle me-1"></i> Sign In</a>
             </li>
           <?php endif; ?>
         </ul>
@@ -99,8 +107,8 @@ $selectedCategory = (string) ($_GET['category'] ?? 'cctv_camera');
         <?php if ($successMessage !== null): ?>
           <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bx bx-check-circle me-2 fs-4 align-middle"></i>
-            <strong>Booking Successful!</strong> <?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8') ?>
-            <div class="mt-2"><a href="my-requests.php<?= $currentUser ? '?mobile=' . urlencode((string)($currentUser['mobile_no'] ?? '')) : '' ?>" class="btn btn-sm btn-success">View Request Status</a></div>
+             <?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8') ?>
+            <!-- <div class="mt-2"><a href="my-requests.php<?= $currentUser ? '?mobile=' . urlencode((string)($currentUser['mobile_no'] ?? '')) : '' ?>" class="btn btn-sm btn-success">View Request Status</a></div> -->
           </div>
         <?php endif; ?>
 
@@ -114,7 +122,7 @@ $selectedCategory = (string) ($_GET['category'] ?? 'cctv_camera');
         <div class="card shadow-sm p-4">
           <div class="card-body">
             <h4 class="card-title fw-bold mb-3"><i class="bx bx-calendar-plus text-primary me-2"></i>Book Service Request</h4>
-            <p class="text-muted mb-4">Fill out the form below to book CCTV installation/repair, Computer Hardware service, or AMC contract.</p>
+            <p class="text-muted mb-4">Fill out the form below to book your service.</p>
 
             <form method="POST" action="book-service.php">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />

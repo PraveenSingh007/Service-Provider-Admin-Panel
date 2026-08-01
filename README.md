@@ -1,6 +1,6 @@
-# Service Provider Admin Panel
+# tech-xpert Admin Panel
 
-A comprehensive, role-based PHP Admin Panel built for managing service providers, employees, attendance, salary generation, quotations, invoices, daily expenses, and company profile.
+A comprehensive, role-based PHP Admin Panel built for managing tech-xpert, employees, attendance, salary generation, quotations, invoices, daily expenses, and company profile.
 
 ## 🛠️ Features
 

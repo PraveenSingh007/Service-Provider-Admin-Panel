@@ -96,24 +96,39 @@ foreach ($invoiceRepo->findAll() as $inv) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Track Service Request - Customer Portal</title>
+  <title>Service Requests | Customer Portal</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../../assets/vendor/css/core.css" />
   <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.css" />
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" />
+  
+  <style>
+    body { background-color: #f5f5f9; font-family: 'Public Sans', sans-serif; }
+    .max-w-500 { max-width: 500px; }
+  </style>
 </head>
 <body class="bg-light">
 
+  <!-- Navigation Header -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3 mb-4">
     <div class="container">
-      <a class="navbar-brand fw-bold fs-4" href="index.php"><i class="bx bx-wrench me-2 text-primary"></i>Service Provider Portal</a>
+      <a class="navbar-brand fw-bold fs-4 d-flex align-items-center me-3" href="index.php">
+        <img src="/sneat/assets/img/logo.png" alt="tech-xpert" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px; background: #fff; padding: 2px;" class="me-2" />
+        <span>tech-</span><span style="color: #696cff;">xpert</span>
+      </a>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
           <li class="nav-item me-3"><a class="nav-link" href="index.php">Home</a></li>
           <li class="nav-item me-3"><a class="nav-link" href="book-service.php">Book Service</a></li>
           <li class="nav-item me-3"><a class="nav-link active" href="my-requests.php">Track Request</a></li>
+          <li class="nav-item me-3">
+            <a href="index.php#requestCallbackModal" class="btn btn-warning btn-sm fw-bold text-dark rounded-pill px-3 shadow-sm" onclick="window.location.href='index.php?callback=1'; return false;">
+              <i class="bx bx-phone-call me-1"></i> Request Call Back
+            </a>
+          </li>
           
           <?php if ($currentUser !== null): ?>
             <li class="nav-item me-2">
@@ -124,7 +139,7 @@ foreach ($invoiceRepo->findAll() as $inv) {
             </li>
           <?php else: ?>
             <li class="nav-item">
-              <a href="login.php" class="btn btn-primary btn-sm fw-bold"><i class="bx bx-log-in-circle me-1"></i> Sign In with OTP</a>
+              <a href="login.php" class="btn btn-primary btn-sm fw-bold"><i class="bx bx-log-in-circle me-1"></i> Sign In</a>
             </li>
           <?php endif; ?>
         </ul>
@@ -137,52 +152,60 @@ foreach ($invoiceRepo->findAll() as $inv) {
       <div class="col-lg-12">
 
         <?php if ($successMsg !== null): ?>
-          <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bx bx-check-circle me-1"></i> <?= htmlspecialchars($successMsg, ENT_QUOTES, 'UTF-8') ?>
+          <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bx bx-check-circle me-1 fs-5 align-middle"></i> <?= htmlspecialchars($successMsg, ENT_QUOTES, 'UTF-8') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         <?php endif; ?>
 
         <?php if ($errorMsg !== null): ?>
-          <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bx bx-error-circle me-1"></i> <?= htmlspecialchars($errorMsg, ENT_QUOTES, 'UTF-8') ?>
+          <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bx bx-error-circle me-1 fs-5 align-middle"></i> <?= htmlspecialchars($errorMsg, ENT_QUOTES, 'UTF-8') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         <?php endif; ?>
-        
-        <div class="card shadow-sm p-4 mb-4">
-          <div class="card-body">
-            <h4 class="card-title fw-bold mb-3"><i class="bx bx-search text-primary me-2"></i>Track Service Request Status</h4>
-            <p class="text-muted">Enter your 10-digit mobile number to view request progress, approve quotations & invoices, and complete payments.</p>
 
-            <form method="GET" action="my-requests.php" class="row g-3">
-              <div class="col-md-9">
-                <input type="text" name="mobile" class="form-control form-control-lg" placeholder="Enter Mobile Number (e.g. 9876543210)" value="<?= htmlspecialchars($mobileQuery, ENT_QUOTES, 'UTF-8') ?>" required />
-              </div>
-              <div class="col-md-3">
-                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold"><i class="bx bx-search me-1"></i> Track Requests</button>
-              </div>
-            </form>
+        <?php if ($mobileQuery === ''): ?>
+          <!-- Prompt sign-in if no mobile number is active -->
+          <div class="card shadow-sm p-4 text-center my-4">
+            <div class="card-body py-5">
+              <i class="bx bx-user-pin text-primary display-3 mb-3"></i>
+              <h3 class="fw-bold mb-2">View Your Service Requests</h3>
+              <p class="text-muted mb-4 max-w-500 mx-auto">Please sign in to view all your booked requests, track live technician assignment, approve quotations, and make online payments.</p>
+              <a href="login.php" class="btn btn-primary btn-lg fw-bold px-4 rounded-pill shadow-sm">
+                <i class="bx bx-log-in-circle me-1"></i> Sign In to View Requests
+              </a>
+            </div>
           </div>
-        </div>
-
-        <?php if ($mobileQuery !== ''): ?>
+        <?php else: ?>
+          <!-- Service Requests Clean Table Container -->
           <div class="card shadow-sm p-4">
             <div class="card-body">
-              <h5 class="fw-bold mb-3">Service Requests for Mobile: <span class="text-primary"><?= htmlspecialchars($mobileQuery, ENT_QUOTES, 'UTF-8') ?></span></h5>
+              <div class="d-flex align-items-center justify-content-between mb-4">
+                <h5 class="fw-bold mb-0">
+                  <i class="bx bx-list-check me-2 text-primary"></i>Service Requests for Mobile: <span class="text-primary"><?= htmlspecialchars($mobileQuery, ENT_QUOTES, 'UTF-8') ?></span>
+                </h5>
+                <a href="book-service.php" class="btn btn-sm btn-primary fw-bold rounded-pill">
+                  <i class="bx bx-plus me-1"></i> Book New Service
+                </a>
+              </div>
 
               <?php if (count($customerRequests) === 0): ?>
-                <div class="alert alert-warning mb-0">No service requests found for mobile number "<?= htmlspecialchars($mobileQuery, ENT_QUOTES, 'UTF-8') ?>".</div>
+                <div class="alert alert-warning mb-0 p-4 text-center">
+                  <i class="bx bx-info-circle fs-3 mb-2 d-block text-warning"></i>
+                  No service requests found for mobile number "<strong><?= htmlspecialchars($mobileQuery, ENT_QUOTES, 'UTF-8') ?></strong>".
+                </div>
               <?php else: ?>
                 <div class="table-responsive">
                   <table class="table table-bordered table-hover align-middle">
                     <thead class="table-dark">
                       <tr>
                         <th>Req No</th>
+                        <th>Request Date</th>
+                        <th>Completion Date</th>
                         <th>Service</th>
                         <th>Status</th>
-                        <th>Assigned Tech</th>
-                        <th>Quotation & Approval</th>
-                        <th>Invoice & Approval</th>
-                        <th>Payment / QR Code</th>
+                        <th class="text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -192,6 +215,12 @@ foreach ($invoiceRepo->findAll() as $inv) {
                         $reqId = (int) $req['id'];
                         $st = (string) ($req['request_status'] ?? 'pending');
                         
+                        $reqDateRaw = (string)($req['request_date'] ?? $req['created_at'] ?? '');
+                        $reqDateFormatted = $reqDateRaw !== '' ? date('d M Y, h:i A', strtotime($reqDateRaw)) : 'N/A';
+
+                        $compDateRaw = (string)($req['completed_at'] ?? '');
+                        $compDateFormatted = ($compDateRaw !== '' && $st === 'completed') ? date('d M Y, h:i A', strtotime($compDateRaw)) : null;
+
                         $badge = 'bg-warning';
                         if ($st === 'assigned') { $badge = 'bg-info'; }
                         elseif ($st === 'in_progress') { $badge = 'bg-primary'; }
@@ -204,116 +233,213 @@ foreach ($invoiceRepo->findAll() as $inv) {
                         $isInvApproved = !empty($req['is_invoice_approved']);
                         ?>
                         <tr>
+                          <!-- Req No -->
                           <td><strong><?= htmlspecialchars((string)$req['service_request_no'], ENT_QUOTES, 'UTF-8') ?></strong></td>
+                          
+                          <!-- Request Date -->
                           <td>
-                            <div class="fw-bold"><?= htmlspecialchars((string)$req['service_name'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <div class="fw-semibold text-dark fs-7">
+                              <i class="bx bx-calendar me-1 text-primary"></i><?= htmlspecialchars($reqDateFormatted, ENT_QUOTES, 'UTF-8') ?>
+                            </div>
+                          </td>
+
+                          <!-- Completion Date -->
+                          <td>
+                            <?php if ($compDateFormatted !== null): ?>
+                              <div class="fw-semibold text-success fs-7">
+                                <i class="bx bx-check-circle me-1"></i><?= htmlspecialchars($compDateFormatted, ENT_QUOTES, 'UTF-8') ?>
+                              </div>
+                            <?php else: ?>
+                              <span class="badge bg-label-warning text-dark"><i class="bx bx-time me-1"></i> In Progress</span>
+                            <?php endif; ?>
+                          </td>
+
+                          <!-- Service -->
+                          <td>
+                            <div class="fw-bold text-dark"><?= htmlspecialchars((string)$req['service_name'], ENT_QUOTES, 'UTF-8') ?></div>
                             <small class="text-muted"><?= htmlspecialchars(strtoupper((string)$req['service_category']), ENT_QUOTES, 'UTF-8') ?></small>
                           </td>
+
+                          <!-- Status -->
                           <td><span class="badge <?= $badge ?>"><?= htmlspecialchars(strtoupper(str_replace('_', ' ', $st)), ENT_QUOTES, 'UTF-8') ?></span></td>
-                          <td><?= htmlspecialchars((string)($req['assign_to'] ?: 'Pending Assignment'), ENT_QUOTES, 'UTF-8') ?></td>
-                          
-                          <!-- COLUMN 1: QUOTATION PDF & APPROVAL -->
-                          <td>
-                            <?php if ($quoNo !== '' && isset($allQuotations[$quoNo])): ?>
-                              <?php $quoObj = $allQuotations[$quoNo]; ?>
-                              <div class="mb-2">
-                                <a href="../admin/quotation-details.php?id=<?= $quoObj->getId() ?>" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">
-                                  <i class="bx bxs-file-pdf me-1"></i> View <?= htmlspecialchars($quoNo, ENT_QUOTES, 'UTF-8') ?>
-                                </a>
-                              </div>
-                              <div class="small fw-semibold text-dark">Amount: ₹<?= number_format((float)$quoObj->getTotalAmount(), 2) ?></div>
 
-                              <?php if ($isQuoApproved): ?>
-                                <span class="badge bg-success mt-1"><i class="bx bx-check-double me-1"></i> Quotation Approved</span>
-                              <?php else: ?>
-                                <form method="POST" action="my-requests.php?mobile=<?= urlencode($mobileQuery) ?>" class="mt-2">
-                                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
-                                  <input type="hidden" name="action" value="approve_quotation" />
-                                  <input type="hidden" name="request_id" value="<?= $reqId ?>" />
-                                  <button type="submit" class="btn btn-success btn-sm fw-bold"><i class="bx bx-check me-1"></i> Approve Quotation</button>
-                                </form>
-                              <?php endif; ?>
+                          <!-- Action: Details Button -->
+                          <td class="text-center">
+                            <button type="button" class="btn btn-primary btn-sm fw-bold rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#requestDetailModal<?= $reqId ?>">
+                              <i class="bx bx-info-circle me-1"></i> Details
+                            </button>
 
-                            <?php else: ?>
-                              <span class="text-muted small">Pending Admin Quotation</span>
-                            <?php endif; ?>
-                          </td>
-
-                          <!-- COLUMN 2: INVOICE PDF & APPROVAL -->
-                          <td>
-                            <?php if (!$isQuoApproved): ?>
-                              <span class="badge bg-label-warning text-dark"><i class="bx bx-lock-alt me-1"></i> Approve Quotation First</span>
-                            <?php elseif ($invNo !== '' && isset($allInvoices[$invNo])): ?>
-                              <?php $invObj = $allInvoices[$invNo]; ?>
-                              <div class="mb-2">
-                                <a href="../admin/invoice-details.php?id=<?= $invObj->getId() ?>" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">
-                                  <i class="bx bxs-file-pdf me-1"></i> View <?= htmlspecialchars($invNo, ENT_QUOTES, 'UTF-8') ?>
-                                </a>
-                              </div>
-                              <div class="small fw-semibold text-dark">Amount: ₹<?= number_format((float)$invObj->getTotalAmount(), 2) ?></div>
-
-                              <?php if ($isInvApproved): ?>
-                                <span class="badge bg-success mt-1"><i class="bx bx-check-double me-1"></i> Invoice Approved</span>
-                              <?php else: ?>
-                                <form method="POST" action="my-requests.php?mobile=<?= urlencode($mobileQuery) ?>" class="mt-2">
-                                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
-                                  <input type="hidden" name="action" value="approve_invoice" />
-                                  <input type="hidden" name="request_id" value="<?= $reqId ?>" />
-                                  <button type="submit" class="btn btn-primary btn-sm fw-bold"><i class="bx bx-check-circle me-1"></i> Approve Invoice</button>
-                                </form>
-                              <?php endif; ?>
-
-                            <?php else: ?>
-                              <span class="text-muted small">Pending Admin Invoice</span>
-                            <?php endif; ?>
-                          </td>
-
-                          <!-- COLUMN 3: COMPANY QR CODE FOR PAYMENT -->
-                          <td>
-                            <?php if ($isInvApproved): ?>
-                              <?php
-                              $invTotal = isset($allInvoices[$invNo]) ? (float)$allInvoices[$invNo]->getTotalAmount() : 0.00;
-                              $upiString = 'upi://pay?pa=' . urlencode('serviceprovider@upi') . '&pn=' . urlencode('Service Provider Portal') . '&am=' . $invTotal . '&cu=INR';
-                              $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . urlencode($upiString);
-                              ?>
-                              <button type="button" class="btn btn-warning btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#qrModal<?= $reqId ?>">
-                                <i class="bx bx-qr me-1"></i> Pay Now (QR Code)
-                              </button>
-
-                              <!-- QR Modal -->
-                              <div class="modal fade" id="qrModal<?= $reqId ?>" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                  <div class="modal-content">
-                                    <div class="modal-header bg-dark text-white">
-                                      <h5 class="modal-title text-white fw-bold"><i class="bx bx-qr-scan me-2 text-warning"></i>Company Payment QR Code</h5>
-                                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            <!-- Comprehensive Details Modal -->
+                            <div class="modal fade text-start" id="requestDetailModal<?= $reqId ?>" tabindex="-1" aria-hidden="true">
+                              <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                  <div class="modal-header bg-dark text-white p-4">
+                                    <div>
+                                      <h5 class="modal-title fw-bold text-white mb-1">
+                                        <i class="bx bx-receipt text-primary me-2"></i>Request Details: #<?= htmlspecialchars((string)$req['service_request_no'], ENT_QUOTES, 'UTF-8') ?>
+                                      </h5>
+                                      <span class="badge <?= $badge ?>"><?= htmlspecialchars(strtoupper(str_replace('_', ' ', $st)), ENT_QUOTES, 'UTF-8') ?></span>
                                     </div>
-                                    <div class="modal-body text-center p-4">
-                                      <h6 class="fw-bold mb-2">Scan & Pay for Service Request #<?= htmlspecialchars((string)$req['service_request_no'], ENT_QUOTES, 'UTF-8') ?></h6>
-                                      <div class="display-6 fw-bold text-success mb-3">Total: ₹<?= number_format($invTotal, 2) ?></div>
-                                      
-                                      <div class="p-3 bg-white d-inline-block border rounded-3 shadow-sm mb-3">
-                                        <img src="<?= $qrUrl ?>" alt="Company Payment QR Code" width="180" height="180" class="img-fluid" />
-                                      </div>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  </div>
 
-                                      <div class="bg-light p-3 rounded-3 text-start small">
-                                        <div class="mb-1"><strong>Company:</strong> <?= htmlspecialchars($companyProfile ? $companyProfile->getCompanyName() : 'Service Provider Company', ENT_QUOTES, 'UTF-8') ?></div>
-                                        <div class="mb-1"><strong>UPI ID:</strong> <span class="text-primary fw-bold">serviceprovider@upi</span></div>
-                                        <div class="mb-1"><strong>Bank Account:</strong> 987654321098</div>
-                                        <div class="mb-1"><strong>IFSC Code:</strong> SBIN0001234</div>
-                                        <div><strong>Bank Name:</strong> State Bank of India</div>
+                                  <div class="modal-body p-4">
+                                    
+                                    <!-- Section 1: Overview & Service Info -->
+                                    <div class="card bg-light border-0 rounded-3 p-3 mb-4">
+                                      <div class="row g-3">
+                                        <div class="col-md-6">
+                                          <span class="text-muted fs-7 d-block">Service Name</span>
+                                          <strong class="text-dark fs-6"><?= htmlspecialchars((string)$req['service_name'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                          <span class="text-muted fs-7 d-block">Category & Type</span>
+                                          <span class="badge bg-label-primary"><?= htmlspecialchars(strtoupper((string)$req['service_category']), ENT_QUOTES, 'UTF-8') ?></span>
+                                          <span class="badge bg-label-secondary"><?= htmlspecialchars(strtoupper(str_replace('_', ' ', (string)$req['request_type'])), ENT_QUOTES, 'UTF-8') ?></span>
+                                        </div>
+                                        <div class="col-md-6">
+                                          <span class="text-muted fs-7 d-block">Request Date</span>
+                                          <strong class="text-dark"><i class="bx bx-calendar me-1 text-primary"></i><?= htmlspecialchars($reqDateFormatted, ENT_QUOTES, 'UTF-8') ?></strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                          <span class="text-muted fs-7 d-block">Completion Date</span>
+                                          <?php if ($compDateFormatted !== null): ?>
+                                            <strong class="text-success"><i class="bx bx-check-circle me-1"></i><?= htmlspecialchars($compDateFormatted, ENT_QUOTES, 'UTF-8') ?></strong>
+                                          <?php else: ?>
+                                            <span class="badge bg-label-warning text-dark"><i class="bx bx-time me-1"></i> In Progress</span>
+                                          <?php endif; ?>
+                                        </div>
                                       </div>
                                     </div>
-                                    <div class="modal-footer">
-                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                                    <!-- Section 2: Technician & Visit Location -->
+                                    <div class="row g-3 mb-4">
+                                      <div class="col-md-6">
+                                        <div class="border rounded-3 p-3 h-100 bg-white">
+                                          <h6 class="fw-bold mb-2 text-dark"><i class="bx bx-user-check text-primary me-2"></i>Assigned Technician</h6>
+                                          <div class="fw-semibold text-dark"><?= htmlspecialchars((string)($req['assign_to'] ?: 'Pending Assignment'), ENT_QUOTES, 'UTF-8') ?></div>
+                                          <?php if (!empty($req['preferred_visit_date'])): ?>
+                                            <div class="text-muted fs-7 mt-2"><i class="bx bx-time-five me-1"></i>Preferred Slot: <?= htmlspecialchars((string)$req['preferred_visit_date'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars(ucfirst((string)$req['preferred_time_slot']), ENT_QUOTES, 'UTF-8') ?>)</div>
+                                          <?php endif; ?>
+                                        </div>
+                                      </div>
+                                      <div class="col-md-6">
+                                        <div class="border rounded-3 p-3 h-100 bg-white">
+                                          <h6 class="fw-bold mb-2 text-dark"><i class="bx bx-map-pin text-primary me-2"></i>Service Address</h6>
+                                          <div class="fs-7 text-dark"><?= htmlspecialchars((string)$req['request_address'], ENT_QUOTES, 'UTF-8') ?></div>
+                                          <div class="fs-7 text-muted"><?= htmlspecialchars((string)$req['request_city'] . ', ' . (string)$req['request_state'] . ' - ' . (string)$req['request_pincode'], ENT_QUOTES, 'UTF-8') ?></div>
+                                        </div>
+                                      </div>
                                     </div>
+
+                                    <?php if (!empty($req['description']) || !empty($req['device_details'])): ?>
+                                      <div class="border rounded-3 p-3 mb-4 bg-white">
+                                        <h6 class="fw-bold mb-2 text-dark"><i class="bx bx-detail text-primary me-2"></i>Description & Device Details</h6>
+                                        <?php if (!empty($req['description'])): ?>
+                                          <p class="fs-7 mb-1 text-dark"><strong>Notes:</strong> <?= htmlspecialchars((string)$req['description'], ENT_QUOTES, 'UTF-8') ?></p>
+                                        <?php endif; ?>
+                                        <?php if (!empty($req['device_details'])): ?>
+                                          <p class="fs-7 mb-0 text-muted"><strong>Device Info:</strong> <?= htmlspecialchars((string)$req['device_details'], ENT_QUOTES, 'UTF-8') ?></p>
+                                        <?php endif; ?>
+                                      </div>
+                                    <?php endif; ?>
+
+                                    <!-- Section 3: Quotation & Invoice Approvals -->
+                                    <div class="row g-3 mb-4">
+                                      <!-- Quotation Box -->
+                                      <div class="col-md-6">
+                                        <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
+                                          <h6 class="fw-bold mb-2 text-dark"><i class="bx bx-file text-primary me-2"></i>Quotation Status</h6>
+                                          <?php if ($quoNo !== '' && isset($allQuotations[$quoNo])): ?>
+                                            <?php $quoObj = $allQuotations[$quoNo]; ?>
+                                            <div class="mb-2">
+                                              <a href="../admin/quotation-details.php?id=<?= $quoObj->getId() ?>" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">
+                                                <i class="bx bxs-file-pdf me-1"></i> View <?= htmlspecialchars($quoNo, ENT_QUOTES, 'UTF-8') ?>
+                                              </a>
+                                            </div>
+                                            <div class="fw-bold text-dark mb-2">Total Amount: ₹<?= number_format((float)$quoObj->getTotalAmount(), 2) ?></div>
+                                            <?php if ($isQuoApproved): ?>
+                                              <span class="badge bg-success"><i class="bx bx-check-double me-1"></i> Quotation Approved</span>
+                                            <?php else: ?>
+                                              <form method="POST" action="my-requests.php?mobile=<?= urlencode($mobileQuery) ?>">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
+                                                <input type="hidden" name="action" value="approve_quotation" />
+                                                <input type="hidden" name="request_id" value="<?= $reqId ?>" />
+                                                <button type="submit" class="btn btn-success btn-sm fw-bold"><i class="bx bx-check me-1"></i> Approve Quotation</button>
+                                              </form>
+                                            <?php endif; ?>
+                                          <?php else: ?>
+                                            <span class="text-muted fs-7">Pending Admin Quotation</span>
+                                          <?php endif; ?>
+                                        </div>
+                                      </div>
+
+                                      <!-- Invoice Box -->
+                                      <div class="col-md-6">
+                                        <div class="border rounded-3 p-3 h-100 bg-white shadow-sm">
+                                          <h6 class="fw-bold mb-2 text-dark"><i class="bx bx-receipt text-primary me-2"></i>Invoice Status</h6>
+                                          <?php if (!$isQuoApproved): ?>
+                                            <span class="badge bg-label-warning text-dark"><i class="bx bx-lock-alt me-1"></i> Approve Quotation First</span>
+                                          <?php elseif ($invNo !== '' && isset($allInvoices[$invNo])): ?>
+                                            <?php $invObj = $allInvoices[$invNo]; ?>
+                                            <div class="mb-2">
+                                              <a href="../admin/invoice-details.php?id=<?= $invObj->getId() ?>" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">
+                                                <i class="bx bxs-file-pdf me-1"></i> View <?= htmlspecialchars($invNo, ENT_QUOTES, 'UTF-8') ?>
+                                              </a>
+                                            </div>
+                                            <div class="fw-bold text-dark mb-2">Total Amount: ₹<?= number_format((float)$invObj->getTotalAmount(), 2) ?></div>
+                                            <?php if ($isInvApproved): ?>
+                                              <span class="badge bg-success"><i class="bx bx-check-double me-1"></i> Invoice Approved</span>
+                                            <?php else: ?>
+                                              <form method="POST" action="my-requests.php?mobile=<?= urlencode($mobileQuery) ?>">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
+                                                <input type="hidden" name="action" value="approve_invoice" />
+                                                <input type="hidden" name="request_id" value="<?= $reqId ?>" />
+                                                <button type="submit" class="btn btn-primary btn-sm fw-bold"><i class="bx bx-check-circle me-1"></i> Approve Invoice</button>
+                                              </form>
+                                            <?php endif; ?>
+                                          <?php else: ?>
+                                            <span class="text-muted fs-7">Pending Admin Invoice</span>
+                                          <?php endif; ?>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <!-- Section 4: Payment QR Code -->
+                                    <?php if ($isInvApproved): ?>
+                                      <?php
+                                      $invTotal = isset($allInvoices[$invNo]) ? (float)$allInvoices[$invNo]->getTotalAmount() : 0.00;
+                                      $upiString = 'upi://pay?pa=' . urlencode('techxpert@upi') . '&pn=' . urlencode('tech-xpert Portal') . '&am=' . $invTotal . '&cu=INR';
+                                      $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' . urlencode($upiString);
+                                      ?>
+                                      <div class="border border-warning rounded-3 p-4 bg-label-warning text-center">
+                                        <h6 class="fw-bold text-dark mb-2"><i class="bx bx-qr-scan text-warning me-2"></i>Company Payment QR Code</h6>
+                                        <p class="fs-7 text-muted mb-3">Scan with any UPI App (GPay, PhonePe, Paytm, BHIM) to complete payment.</p>
+                                        
+                                        <div class="p-3 bg-white d-inline-block border rounded-3 shadow-sm mb-3">
+                                          <img src="<?= $qrUrl ?>" alt="Company Payment QR Code" width="180" height="180" class="img-fluid" />
+                                        </div>
+                                        
+                                        <div class="display-6 fw-bold text-success mb-3">Amount: ₹<?= number_format($invTotal, 2) ?></div>
+
+                                        <div class="bg-white p-3 rounded-3 text-start small border mx-auto max-w-500">
+                                          <div class="mb-1"><strong>Company:</strong> <?= htmlspecialchars($companyProfile ? $companyProfile->getCompanyName() : 'tech-xpert Services', ENT_QUOTES, 'UTF-8') ?></div>
+                                          <div class="mb-1"><strong>UPI ID:</strong> <span class="text-primary fw-bold">techxpert@upi</span></div>
+                                          <div class="mb-1"><strong>Bank Account:</strong> 987654321098</div>
+                                          <div class="mb-1"><strong>IFSC Code:</strong> SBIN0001234</div>
+                                          <div><strong>Bank Name:</strong> State Bank of India</div>
+                                        </div>
+                                      </div>
+                                    <?php endif; ?>
+
+                                  </div>
+
+                                  <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-secondary fw-semibold" data-bs-dismiss="modal">Close</button>
                                   </div>
                                 </div>
                               </div>
-
-                            <?php else: ?>
-                              <span class="badge bg-label-secondary text-muted"><i class="bx bx-lock-alt me-1"></i> Locked until Invoice Approved</span>
-                            <?php endif; ?>
+                            </div>
                           </td>
 
                         </tr>

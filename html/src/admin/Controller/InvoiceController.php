@@ -27,7 +27,8 @@ class InvoiceController
 
         if ($action === 'create_from_quotation') {
             $quotationId = (int) ($postData['quotation_id'] ?? 0);
-            return $this->service->createInvoiceFromQuotation($quotationId);
+            $quotationVersion = !empty($postData['quotation_version']) ? (int) $postData['quotation_version'] : null;
+            return $this->service->createInvoiceFromQuotation($quotationId, $quotationVersion);
         }
 
         if ($action === 'save') {
@@ -35,10 +36,27 @@ class InvoiceController
             return $this->service->saveInvoice($postData, $items);
         }
 
+        if ($action === 'add_revision') {
+            $invoiceId = (int) ($postData['invoice_id'] ?? 0);
+            $items = (array) ($postData['items'] ?? []);
+            return $this->service->addInvoiceRevision($invoiceId, $postData, $items);
+        }
+
         if ($action === 'mark_paid') {
             $invoiceId = (int) ($postData['id'] ?? 0);
             $method = (string) ($postData['payment_method'] ?? 'UPI');
+            $versionNumber = !empty($postData['version_number']) ? (int) $postData['version_number'] : 0;
+            
+            if ($versionNumber > 0) {
+                return $this->service->markVersionPaid($invoiceId, $versionNumber, $method);
+            }
             return $this->service->markInvoicePaid($invoiceId, $method);
+        }
+
+        if ($action === 'delete_version') {
+            $invoiceId = (int) ($postData['invoice_id'] ?? 0);
+            $versionNumber = (int) ($postData['version_number'] ?? 0);
+            return $this->service->deleteInvoiceVersion($invoiceId, $versionNumber);
         }
 
         if ($action === 'delete') {

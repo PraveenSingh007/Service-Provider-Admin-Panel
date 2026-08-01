@@ -10,6 +10,7 @@ require_once __DIR__ . '/Model/Employee.php';
 require_once __DIR__ . '/Model/Quotation.php';
 require_once __DIR__ . '/Model/Invoice.php';
 require_once __DIR__ . '/Model/InvoiceItem.php';
+require_once __DIR__ . '/Model/InvoiceVersion.php';
 require_once __DIR__ . '/Model/DailyExpense.php';
 require_once __DIR__ . '/Repository/ServiceRepository.php';
 require_once __DIR__ . '/Repository/UserRepository.php';
@@ -78,9 +79,8 @@ foreach ($currentMonthExpenses as $exp) {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Dashboard - Sneat Admin</title>
-
-    <meta name="description" content="Sneat Admin Dashboard" />
+    <title>Dashboard - tech-xpert Admin</title>
+    <meta name="description" content="tech-xpert Admin Dashboard" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />

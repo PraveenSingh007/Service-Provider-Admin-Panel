@@ -6,11 +6,12 @@ namespace App\Admin\Model;
 
 /**
  * Entity model for an Invoice Line Item.
+ * Items are linked to invoice_versions (via version_id), not directly to invoices.
  */
 class InvoiceItem
 {
     private ?int $id;
-    private int $invoiceId;
+    private int $versionId;
     private string $itemDescription;
     private int $quantity;
     private float $unitPrice;
@@ -18,14 +19,14 @@ class InvoiceItem
 
     public function __construct(
         ?int $id,
-        int $invoiceId,
+        int $versionId,
         string $itemDescription,
         int $quantity,
         float $unitPrice,
         float $totalPrice
     ) {
         $this->id = $id;
-        $this->invoiceId = $invoiceId;
+        $this->versionId = $versionId;
         $this->itemDescription = $itemDescription;
         $this->quantity = $quantity;
         $this->unitPrice = $unitPrice;
@@ -37,9 +38,9 @@ class InvoiceItem
         return $this->id;
     }
 
-    public function getInvoiceId(): int
+    public function getVersionId(): int
     {
-        return $this->invoiceId;
+        return $this->versionId;
     }
 
     public function getItemDescription(): string

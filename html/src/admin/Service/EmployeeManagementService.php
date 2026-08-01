@@ -20,7 +20,7 @@ class EmployeeManagementService
     public function __construct(EmployeeRepository $repository)
     {
         $this->repository = $repository;
-        $this->uploadDir = dirname(__DIR__, 2) . '/uploads/employees/';
+        $this->uploadDir = dirname(__DIR__, 3) . '/uploads/employees/';
         if (!is_dir($this->uploadDir)) {
             @mkdir($this->uploadDir, 0777, true);
             @chmod($this->uploadDir, 0777);

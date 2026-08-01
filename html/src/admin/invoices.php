@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/dbConnection.php';
 require_once __DIR__ . '/Model/Invoice.php';
 require_once __DIR__ . '/Model/InvoiceItem.php';
+require_once __DIR__ . '/Model/InvoiceVersion.php';
 require_once __DIR__ . '/Model/Quotation.php';
 require_once __DIR__ . '/Repository/InvoiceRepository.php';
 require_once __DIR__ . '/Repository/QuotationRepository.php';
@@ -58,7 +59,30 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
 }
 
+// Check for redirect messages
+if (isset($_GET['msg'])) {
+    $actionMessage = (string) $_GET['msg'];
+}
+
 $invoices = $service->getAllInvoices();
+
+// Build flat list of all invoice versions for the table (each version = one row)
+$allVersionRows = [];
+foreach ($invoices as $inv) {
+    foreach ($inv->getVersions() as $ver) {
+        $allVersionRows[] = [
+            'invoice' => $inv,
+            'version' => $ver,
+        ];
+    }
+    // If invoice has no versions (edge case), still show a row
+    if (empty($inv->getVersions())) {
+        $allVersionRows[] = [
+            'invoice' => $inv,
+            'version' => null,
+        ];
+    }
+}
 ?>
 <!doctype html>
 
@@ -73,7 +97,7 @@ $invoices = $service->getAllInvoices();
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Invoices - Sneat Admin</title>
+    <title>Invoices - tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -121,6 +145,11 @@ $invoices = $service->getAllInvoices();
       .btn-export-excel { background-color: #71dd37 !important; color: #ffffff !important; border: none !important; }
       .btn-export-pdf { background-color: #ff3e1d !important; color: #ffffff !important; border: none !important; }
       .btn-export-print { background-color: #03c3ec !important; color: #ffffff !important; border: none !important; }
+      .version-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        border-radius: 12px;
+      }
     </style>
 
     <!-- Helpers -->
@@ -225,6 +254,7 @@ $invoices = $service->getAllInvoices();
                         <th>#ID</th>
                         <th>Invoice No</th>
                         <th>Request ID</th>
+                        <th>Version</th>
                         <th>Customer Details</th>
                         <th>Invoice Date</th>
                         <th>Total Amount</th>
@@ -233,29 +263,58 @@ $invoices = $service->getAllInvoices();
                       </tr>
                     </thead>
                     <tbody>
-                      <?php foreach ($invoices as $inv): ?>
+                      <?php foreach ($allVersionRows as $row):
+                        $inv = $row['invoice'];
+                        $ver = $row['version'];
+                        $verNum = $ver !== null ? $ver->getVersionNumber() : 1;
+                        $totalVersions = $inv->getCurrentVersion();
+                        $isLatest = ($verNum === $totalVersions);
+                        $paymentStatus = $ver !== null ? $ver->getPaymentStatus() : 'unpaid';
+                        $paymentMethod = $ver !== null ? $ver->getPaymentMethod() : 'Cash';
+                        $totalAmount = $ver !== null ? $ver->getTotalAmount() : 0.0;
+                        $invoiceDate = $ver !== null ? $ver->getInvoiceDate() : '';
+                        $qVersion = $ver !== null ? $ver->getQuotationVersion() : null;
+                      ?>
                         <tr>
                           <td data-order="<?= (int)$inv->getId() ?>"><strong>#<?= (int)$inv->getId() ?></strong></td>
                           <td><span class="badge bg-label-success fs-6"><?= htmlspecialchars($inv->getInvoiceNumber(), ENT_QUOTES, 'UTF-8') ?></span></td>
                           <td><span class="badge bg-label-info"><?= htmlspecialchars($inv->getServiceRequestId(), ENT_QUOTES, 'UTF-8') ?></span></td>
                           <td>
+                            <span class="badge version-badge <?= $isLatest ? 'bg-primary' : 'bg-label-secondary' ?>">
+                              v<?= $verNum ?><?= $isLatest && $totalVersions > 1 ? ' (Latest)' : '' ?>
+                            </span>
+                            <?php if ($totalVersions > 1): ?>
+                              <small class="text-muted d-block">of <?= $totalVersions ?> versions</small>
+                            <?php endif; ?>
+                            <?php if ($qVersion !== null): ?>
+                              <small class="text-muted d-block">Quo v<?= $qVersion ?></small>
+                            <?php endif; ?>
+                          </td>
+                          <td>
                             <span class="fw-bold text-dark d-block"><?= htmlspecialchars($inv->getCustomerName(), ENT_QUOTES, 'UTF-8') ?></span>
                             <small class="text-muted">📱 <?= htmlspecialchars($inv->getCustomerMobile(), ENT_QUOTES, 'UTF-8') ?></small>
                           </td>
-                          <td><?= htmlspecialchars($inv->getInvoiceDate(), ENT_QUOTES, 'UTF-8') ?></td>
-                          <td><strong class="text-primary fs-6">₹<?= number_format($inv->getTotalAmount(), 2) ?></strong></td>
+                          <td><?= htmlspecialchars($invoiceDate, ENT_QUOTES, 'UTF-8') ?></td>
+                          <td><strong class="text-primary fs-6">₹<?= number_format($totalAmount, 2) ?></strong></td>
                           <td>
-                            <?php if ($inv->getPaymentStatus() === 'paid'): ?>
-                              <span class="badge bg-label-success">PAID (<?= htmlspecialchars($inv->getPaymentMethod(), ENT_QUOTES, 'UTF-8') ?>)</span>
+                            <?php if ($paymentStatus === 'paid'): ?>
+                              <span class="badge bg-label-success">PAID (<?= htmlspecialchars($paymentMethod, ENT_QUOTES, 'UTF-8') ?>)</span>
+                            <?php elseif ($paymentStatus === 'partially_paid'): ?>
+                              <span class="badge bg-label-info">PARTIAL</span>
                             <?php else: ?>
                               <span class="badge bg-label-warning">UNPAID</span>
                             <?php endif; ?>
                           </td>
                           <td>
                             <div class="d-flex align-items-center gap-1">
-                              <!-- View / Print Invoice -->
-                              <a href="invoice-details.php?id=<?= (int)$inv->getId() ?>" class="btn btn-sm btn-icon btn-outline-info" title="View & Print Tax Invoice">
+                              <!-- Print Invoice Version -->
+                              <a href="invoice-details.php?id=<?= (int)$inv->getId() ?>&version=<?= $verNum ?>&print=1" target="_blank" class="btn btn-sm btn-icon btn-outline-primary" title="Print Tax Invoice v<?= $verNum ?>">
                                 <i class="icon-base bx bx-printer"></i>
+                              </a>
+
+                              <!-- View Details -->
+                              <a href="invoice-details.php?id=<?= (int)$inv->getId() ?>&version=<?= $verNum ?>" class="btn btn-sm btn-icon btn-outline-info" title="View Tax Invoice Details v<?= $verNum ?>">
+                                <i class="icon-base bx bx-file"></i>
                               </a>
 
                               <!-- Edit Invoice -->
@@ -264,11 +323,12 @@ $invoices = $service->getAllInvoices();
                               </a>
 
                               <!-- Mark Paid -->
-                              <?php if ($inv->getPaymentStatus() !== 'paid'): ?>
-                                <form method="POST" action="invoices.php" onsubmit="return confirm('Mark this invoice as PAID?');" class="d-inline">
+                              <?php if ($paymentStatus !== 'paid'): ?>
+                                <form method="POST" action="invoices.php" onsubmit="return confirm('Mark Version <?= $verNum ?> as PAID?');" class="d-inline">
                                   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
                                   <input type="hidden" name="action" value="mark_paid" />
                                   <input type="hidden" name="id" value="<?= (int)$inv->getId() ?>" />
+                                  <input type="hidden" name="version_number" value="<?= $verNum ?>" />
                                   <button type="submit" class="btn btn-sm btn-icon btn-outline-success" title="Mark Paid">
                                     <i class="icon-base bx bx-check-circle"></i>
                                   </button>
@@ -276,14 +336,26 @@ $invoices = $service->getAllInvoices();
                               <?php endif; ?>
 
                               <!-- Delete -->
-                              <form method="POST" action="invoices.php" onsubmit="return confirm('Are you sure you want to delete this invoice?');" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
-                                <input type="hidden" name="action" value="delete" />
-                                <input type="hidden" name="id" value="<?= (int)$inv->getId() ?>" />
-                                <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Delete Invoice">
-                                  <i class="icon-base bx bx-trash"></i>
-                                </button>
-                              </form>
+                              <?php if ($totalVersions > 1): ?>
+                                <form method="POST" action="invoices.php" onsubmit="return confirm('Delete Version <?= $verNum ?> of this invoice?');" class="d-inline">
+                                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
+                                  <input type="hidden" name="action" value="delete_version" />
+                                  <input type="hidden" name="invoice_id" value="<?= (int)$inv->getId() ?>" />
+                                  <input type="hidden" name="version_number" value="<?= $verNum ?>" />
+                                  <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Delete Version <?= $verNum ?>">
+                                    <i class="icon-base bx bx-trash"></i>
+                                  </button>
+                                </form>
+                              <?php else: ?>
+                                <form method="POST" action="invoices.php" onsubmit="return confirm('Are you sure you want to delete this invoice?');" class="d-inline">
+                                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
+                                  <input type="hidden" name="action" value="delete" />
+                                  <input type="hidden" name="id" value="<?= (int)$inv->getId() ?>" />
+                                  <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Delete Invoice">
+                                    <i class="icon-base bx bx-trash"></i>
+                                  </button>
+                                </form>
+                              <?php endif; ?>
                             </div>
                           </td>
                         </tr>
@@ -332,35 +404,35 @@ $invoices = $service->getAllInvoices();
               className: 'btn btn-icon-export btn-export-copy me-1',
               text: '<i class="icon-base bx bx-copy"></i>',
               titleAttr: 'Copy to Clipboard',
-              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
+              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] }
             },
             {
               extend: 'csvHtml5',
               className: 'btn btn-icon-export btn-export-csv me-1',
               text: '<i class="icon-base bx bx-file"></i>',
               titleAttr: 'Export as CSV',
-              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
+              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] }
             },
             {
               extend: 'excelHtml5',
               className: 'btn btn-icon-export btn-export-excel me-1',
               text: '<i class="icon-base bx bx-spreadsheet"></i>',
               titleAttr: 'Export as Excel',
-              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
+              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] }
             },
             {
               extend: 'pdfHtml5',
               className: 'btn btn-icon-export btn-export-pdf me-1',
               text: '<i class="icon-base bx bxs-file-pdf"></i>',
               titleAttr: 'Export as PDF',
-              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
+              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] }
             },
             {
               extend: 'print',
               className: 'btn btn-icon-export btn-export-print',
               text: '<i class="icon-base bx bx-printer"></i>',
               titleAttr: 'Print Table',
-              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
+              exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7] }
             }
           ],
           lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
@@ -369,7 +441,7 @@ $invoices = $service->getAllInvoices();
             search: "_INPUT_",
             searchPlaceholder: "Search invoice no, customer...",
             lengthMenu: "Display _MENU_",
-            info: "Showing _START_ to _END_ of _TOTAL_ invoices",
+            info: "Showing _START_ to _END_ of _TOTAL_ invoice versions",
             paginate: {
               previous: 'Prev',
               next: 'Next'
@@ -378,8 +450,8 @@ $invoices = $service->getAllInvoices();
           order: [[0, 'asc']],
           columnDefs: [
             { type: 'num', targets: 0 },
-            { orderable: false, targets: [7] },
-            { orderSequence: ['asc', 'desc'], targets: [0, 1, 2, 3, 4, 5, 6] }
+            { orderable: false, targets: [8] },
+            { orderSequence: ['asc', 'desc'], targets: [0, 1, 2, 3, 4, 5, 6, 7] }
           ]
         });
       });

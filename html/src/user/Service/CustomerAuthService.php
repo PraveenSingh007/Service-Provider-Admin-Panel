@@ -28,6 +28,12 @@ class CustomerAuthService
      *
      * @return array{success: bool, message: string, otp_code?: string, errors?: string[]}
      */
+    /**
+     * Generate or reuse and send 6-digit OTP code to email via PHPMailer SMTP.
+     * OTP is valid for 30 minutes. If an active OTP exists, the same OTP is re-sent.
+     *
+     * @return array{success: bool, message: string, otp_code?: string, errors?: string[]}
+     */
     public function requestOtp(string $email): array
     {
         $email = strtolower(trim($email));
@@ -40,24 +46,32 @@ class CustomerAuthService
             ];
         }
 
-        // Generate 6-digit numeric OTP code
-        try {
-            $otpCode = (string) random_int(100000, 999999);
-        } catch (\Throwable $e) {
-            $otpCode = (string) sprintf("%06d", mt_rand(100000, 999999));
-        }
+        // Check for existing active (unexpired, unused) OTP for this email
+        $activeOtp = $this->repository->getActiveOtp($email);
+        $isReused = false;
 
-        $expiresAt = date('Y-m-d H:i:s', time() + 600); // 10 Minutes validity
+        if ($activeOtp !== null && !empty($activeOtp['otp_code'])) {
+            // Reuse existing active OTP without creating a new record in DB
+            $otpCode = (string) $activeOtp['otp_code'];
+            $isReused = true;
+        } else {
+            // Generate new 6-digit numeric OTP code valid for 30 minutes (1800s)
+            try {
+                $otpCode = (string) random_int(100000, 999999);
+            } catch (\Throwable $e) {
+                $otpCode = (string) sprintf("%06d", mt_rand(100000, 999999));
+            }
 
-        // Save OTP to customer_otp table
-        $saved = $this->repository->createOtp($email, $otpCode, $expiresAt);
+            // Save OTP to customer_otp table (MySQL sets expires_at to DATE_ADD(NOW(), INTERVAL 30 MINUTE))
+            $saved = $this->repository->createOtp($email, $otpCode);
 
-        if (!$saved) {
-            return [
-                'success' => false,
-                'message' => 'Failed to generate OTP.',
-                'errors' => ['Database error during OTP creation.'],
-            ];
+            if (!$saved) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to generate OTP.',
+                    'errors' => ['Database error during OTP creation.'],
+                ];
+            }
         }
 
         // Load SMTP Configuration
@@ -78,23 +92,23 @@ class CustomerAuthService
 
             $mail->setFrom(
                 (string) ($smtpConfig['from_email'] ?? $smtpConfig['username']),
-                (string) ($smtpConfig['from_name'] ?? 'Service Provider Portal')
+                (string) ($smtpConfig['from_name'] ?? 'tech-xpert Portal')
             );
             $mail->addAddress($email);
-            $mail->Subject = 'Your Service Portal Login OTP: ' . $otpCode;
+            $mail->Subject = 'Your tech-xpert Portal Login OTP: ' . $otpCode;
             $mail->isHTML(true);
 
             $mail->Body = "
                 <div style='font-family: Arial, sans-serif; max-width: 500px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;'>
-                    <h2 style='color: #696cff; text-align: center;'>Service Provider Portal</h2>
+                    <h2 style='color: #696cff; text-align: center;'>tech-xpert Portal</h2>
                     <p>Hello,</p>
                     <p>Your 6-digit One-Time Password (OTP) for logging into your customer account is:</p>
                     <div style='background-color: #f5f5f9; text-align: center; padding: 15px; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #333; border-radius: 6px; margin: 20px 0;'>
                         {$otpCode}
                     </div>
-                    <p style='color: #666; font-size: 13px;'>This OTP code is valid for 10 minutes. Do not share this code with anyone.</p>
+                    <p style='color: #666; font-size: 13px;'>This OTP code is valid for 30 minutes. Do not share this code with anyone.</p>
                     <hr style='border: none; border-top: 1px solid #eee; margin-top: 20px;' />
-                    <p style='color: #999; font-size: 11px; text-align: center;'>© " . date('Y') . " Service Provider Portal. All rights reserved.</p>
+                    <p style='color: #999; font-size: 11px; text-align: center;'>© " . date('Y') . " tech-xpert Portal. All rights reserved.</p>
                 </div>
             ";
 
@@ -104,13 +118,13 @@ class CustomerAuthService
             }
         } else {
             // Fallback to PHP native mail function
-            $subject = 'Your Service Portal Login OTP: ' . $otpCode;
-            $message = "Hello,\n\nYour OTP for logging in is: {$otpCode}\n\nValid for 10 minutes.";
-            $headers = 'From: no-reply@serviceprovider.com';
+            $subject = 'Your tech-xpert Portal Login OTP: ' . $otpCode;
+            $message = "Hello,\n\nYour OTP for logging in is: {$otpCode}\n\nValid for 30 minutes.";
+            $headers = 'From: no-reply@techxpert.com';
             @mail($email, $subject, $message, $headers);
         }
 
-        $resMessage = "OTP code sent to {$email}.";
+        $resMessage = $isReused ? "Your active OTP code has been re-sent to {$email} (valid for 30 minutes)." : "OTP sent to {$email} (valid for 30 minutes).";
         if ($smtpError) {
             $resMessage .= " (SMTP Warning: {$smtpError})";
         }

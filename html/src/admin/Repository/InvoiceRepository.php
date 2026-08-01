@@ -6,6 +6,7 @@ namespace App\Admin\Repository;
 
 use App\Admin\Model\Invoice;
 use App\Admin\Model\InvoiceItem;
+use App\Admin\Model\InvoiceVersion;
 use mysqli;
 use Throwable;
 
@@ -19,20 +20,20 @@ class InvoiceRepository
     }
 
     /**
-     * Fetch all invoices ordered by ID ascending.
+     * Fetch all invoices with their versions (ordered by ID ascending).
      *
      * @return Invoice[]
      */
     public function findAll(): array
     {
         $invoices = [];
-        $sql = 'SELECT id, invoice_number, quotation_id, service_request_id, customer_name, customer_mobile, customer_email, service_name, subtotal, discount, tax, total_amount, payment_status, payment_method, invoice_date, due_date, notes, created_at, updated_at FROM invoices ORDER BY id ASC';
+        $sql = 'SELECT id, invoice_number, quotation_id, service_request_id, customer_name, customer_mobile, customer_email, service_name, current_version, status, created_at, updated_at FROM invoices ORDER BY id ASC';
         $result = $this->connection->query($sql);
 
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $invId = (int) $row['id'];
-                $items = $this->findItemsByInvoiceId($invId);
+                $versions = $this->findVersionsByInvoiceId($invId);
 
                 $invoices[] = new Invoice(
                     $invId,
@@ -43,18 +44,11 @@ class InvoiceRepository
                     (string) $row['customer_mobile'],
                     $row['customer_email'] !== null ? (string) $row['customer_email'] : null,
                     (string) $row['service_name'],
-                    (float) $row['subtotal'],
-                    (float) $row['discount'],
-                    (float) $row['tax'],
-                    (float) $row['total_amount'],
-                    (string) $row['payment_status'],
-                    (string) ($row['payment_method'] ?? 'Cash'),
-                    (string) $row['invoice_date'],
-                    (string) $row['due_date'],
-                    $row['notes'] !== null ? (string) $row['notes'] : null,
+                    (int) $row['current_version'],
+                    (string) $row['status'],
                     (string) $row['created_at'],
                     (string) $row['updated_at'],
-                    $items
+                    $versions
                 );
             }
             $result->free();
@@ -64,11 +58,11 @@ class InvoiceRepository
     }
 
     /**
-     * Find invoice by primary key ID.
+     * Find invoice by primary key ID (with all versions loaded).
      */
     public function findById(int $id): ?Invoice
     {
-        $stmt = $this->connection->prepare('SELECT id, invoice_number, quotation_id, service_request_id, customer_name, customer_mobile, customer_email, service_name, subtotal, discount, tax, total_amount, payment_status, payment_method, invoice_date, due_date, notes, created_at, updated_at FROM invoices WHERE id = ?');
+        $stmt = $this->connection->prepare('SELECT id, invoice_number, quotation_id, service_request_id, customer_name, customer_mobile, customer_email, service_name, current_version, status, created_at, updated_at FROM invoices WHERE id = ?');
         if (!$stmt) {
             return null;
         }
@@ -79,7 +73,7 @@ class InvoiceRepository
 
         if ($row = $result->fetch_assoc()) {
             $invId = (int) $row['id'];
-            $items = $this->findItemsByInvoiceId($invId);
+            $versions = $this->findVersionsByInvoiceId($invId);
 
             $invoice = new Invoice(
                 $invId,
@@ -90,18 +84,11 @@ class InvoiceRepository
                 (string) $row['customer_mobile'],
                 $row['customer_email'] !== null ? (string) $row['customer_email'] : null,
                 (string) $row['service_name'],
-                (float) $row['subtotal'],
-                (float) $row['discount'],
-                (float) $row['tax'],
-                (float) $row['total_amount'],
-                (string) $row['payment_status'],
-                (string) ($row['payment_method'] ?? 'Cash'),
-                (string) $row['invoice_date'],
-                (string) $row['due_date'],
-                $row['notes'] !== null ? (string) $row['notes'] : null,
+                (int) $row['current_version'],
+                (string) $row['status'],
                 (string) $row['created_at'],
                 (string) $row['updated_at'],
-                $items
+                $versions
             );
             $stmt->close();
             return $invoice;
@@ -160,14 +147,14 @@ class InvoiceRepository
     }
 
     /**
-     * Fetch line items for an invoice ID.
+     * Fetch all version records for a specific invoice.
      *
-     * @return InvoiceItem[]
+     * @return InvoiceVersion[]
      */
-    public function findItemsByInvoiceId(int $invoiceId): array
+    public function findVersionsByInvoiceId(int $invoiceId): array
     {
-        $items = [];
-        $stmt = $this->connection->prepare('SELECT id, invoice_id, item_description, quantity, unit_price, total_price FROM invoice_items WHERE invoice_id = ? ORDER BY id ASC');
+        $versions = [];
+        $stmt = $this->connection->prepare('SELECT id, invoice_id, version_number, quotation_version, subtotal, discount, tax, total_amount, payment_status, payment_method, invoice_date, due_date, revision_notes, created_by, created_at, updated_at FROM invoice_versions WHERE invoice_id = ? ORDER BY version_number ASC');
         if (!$stmt) {
             return [];
         }
@@ -177,9 +164,55 @@ class InvoiceRepository
         $result = $stmt->get_result();
 
         while ($row = $result->fetch_assoc()) {
+            $versionId = (int) $row['id'];
+            $items = $this->findItemsByVersionId($versionId);
+
+            $versions[] = new InvoiceVersion(
+                $versionId,
+                (int) $row['invoice_id'],
+                (int) $row['version_number'],
+                (float) $row['subtotal'],
+                (float) $row['discount'],
+                (float) $row['tax'],
+                (float) $row['total_amount'],
+                (string) $row['payment_status'],
+                (string) ($row['payment_method'] ?? 'Cash'),
+                (string) $row['invoice_date'],
+                (string) $row['due_date'],
+                $row['revision_notes'] !== null ? (string) $row['revision_notes'] : null,
+                $row['created_by'] !== null ? (string) $row['created_by'] : null,
+                (string) $row['created_at'],
+                $row['updated_at'] !== null ? (string) $row['updated_at'] : null,
+                $items,
+                $row['quotation_version'] !== null ? (int) $row['quotation_version'] : null
+            );
+        }
+
+        $stmt->close();
+        return $versions;
+    }
+
+    /**
+     * Fetch items for a specific invoice version.
+     *
+     * @return InvoiceItem[]
+     */
+    public function findItemsByVersionId(int $versionId): array
+    {
+        $items = [];
+        $stmt = $this->connection->prepare('SELECT id, version_id, item_description, quantity, unit_price, total_price FROM invoice_items WHERE version_id = ? ORDER BY id ASC');
+        if (!$stmt) {
+            return [];
+        }
+
+        $stmt->bind_param('i', $versionId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
             $items[] = new InvoiceItem(
                 (int) $row['id'],
-                (int) $row['invoice_id'],
+                (int) $row['version_id'],
                 (string) $row['item_description'],
                 (int) $row['quantity'],
                 (float) $row['unit_price'],
@@ -192,13 +225,13 @@ class InvoiceRepository
     }
 
     /**
-     * Save an invoice and its line items.
+     * Create or update an invoice header record.
      */
-    public function saveInvoice(Invoice $inv, array $itemsData): int
+    public function saveInvoiceHeader(Invoice $inv): int
     {
         try {
             if ($inv->getId() !== null && $inv->getId() > 0) {
-                $stmt = $this->connection->prepare('UPDATE invoices SET invoice_number = ?, quotation_id = ?, service_request_id = ?, customer_name = ?, customer_mobile = ?, customer_email = ?, service_name = ?, subtotal = ?, discount = ?, tax = ?, total_amount = ?, payment_status = ?, payment_method = ?, invoice_date = ?, due_date = ?, notes = ? WHERE id = ?');
+                $stmt = $this->connection->prepare('UPDATE invoices SET invoice_number = ?, quotation_id = ?, service_request_id = ?, customer_name = ?, customer_mobile = ?, customer_email = ?, service_name = ?, current_version = ?, status = ? WHERE id = ?');
                 $iNum = $inv->getInvoiceNumber();
                 $qId = $inv->getQuotationId();
                 $sReq = $inv->getServiceRequestId();
@@ -206,23 +239,16 @@ class InvoiceRepository
                 $cMob = $inv->getCustomerMobile();
                 $cEmail = $inv->getCustomerEmail();
                 $sName = $inv->getServiceName();
-                $sub = $inv->getSubtotal();
-                $disc = $inv->getDiscount();
-                $tax = $inv->getTax();
-                $tot = $inv->getTotalAmount();
-                $pStat = $inv->getPaymentStatus();
-                $pMeth = $inv->getPaymentMethod();
-                $iDate = $inv->getInvoiceDate();
-                $dDate = $inv->getDueDate();
-                $notes = $inv->getNotes();
+                $curVer = $inv->getCurrentVersion();
+                $status = $inv->getStatus();
                 $id = $inv->getId();
 
-                $stmt->bind_param('sisssssddddsssssi', $iNum, $qId, $sReq, $cName, $cMob, $cEmail, $sName, $sub, $disc, $tax, $tot, $pStat, $pMeth, $iDate, $dDate, $notes, $id);
+                $stmt->bind_param('sisssssisi', $iNum, $qId, $sReq, $cName, $cMob, $cEmail, $sName, $curVer, $status, $id);
                 $stmt->execute();
                 $stmt->close();
-                $invoiceId = $inv->getId();
+                return $inv->getId();
             } else {
-                $stmt = $this->connection->prepare('INSERT INTO invoices (invoice_number, quotation_id, service_request_id, customer_name, customer_mobile, customer_email, service_name, subtotal, discount, tax, total_amount, payment_status, payment_method, invoice_date, due_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                $stmt = $this->connection->prepare('INSERT INTO invoices (invoice_number, quotation_id, service_request_id, customer_name, customer_mobile, customer_email, service_name, current_version, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
                 $iNum = $inv->getInvoiceNumber();
                 $qId = $inv->getQuotationId();
                 $sReq = $inv->getServiceRequestId();
@@ -230,30 +256,49 @@ class InvoiceRepository
                 $cMob = $inv->getCustomerMobile();
                 $cEmail = $inv->getCustomerEmail();
                 $sName = $inv->getServiceName();
-                $sub = $inv->getSubtotal();
-                $disc = $inv->getDiscount();
-                $tax = $inv->getTax();
-                $tot = $inv->getTotalAmount();
-                $pStat = $inv->getPaymentStatus();
-                $pMeth = $inv->getPaymentMethod();
-                $iDate = $inv->getInvoiceDate();
-                $dDate = $inv->getDueDate();
-                $notes = $inv->getNotes();
+                $curVer = $inv->getCurrentVersion();
+                $status = $inv->getStatus();
 
-                $stmt->bind_param('sisssssddddsssss', $iNum, $qId, $sReq, $cName, $cMob, $cEmail, $sName, $sub, $disc, $tax, $tot, $pStat, $pMeth, $iDate, $dDate, $notes);
+                $stmt->bind_param('sisssssis', $iNum, $qId, $sReq, $cName, $cMob, $cEmail, $sName, $curVer, $status);
                 $stmt->execute();
-                $invoiceId = (int) $this->connection->insert_id;
+                $insertId = (int) $this->connection->insert_id;
                 $stmt->close();
+                return $insertId;
             }
+        } catch (Throwable $e) {
+            error_log('InvoiceRepository saveInvoiceHeader error: ' . $e->getMessage());
+            return 0;
+        }
+    }
 
-            if ($invoiceId > 0 && !empty($itemsData)) {
-                // Remove old items on update
-                $delStmt = $this->connection->prepare('DELETE FROM invoice_items WHERE invoice_id = ?');
-                $delStmt->bind_param('i', $invoiceId);
-                $delStmt->execute();
-                $delStmt->close();
+    /**
+     * Save a new invoice version and its line items.
+     */
+    public function saveVersion(InvoiceVersion $version, array $itemsData): int
+    {
+        try {
+            $stmt = $this->connection->prepare('INSERT INTO invoice_versions (invoice_id, version_number, quotation_version, subtotal, discount, tax, total_amount, payment_status, payment_method, invoice_date, due_date, revision_notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $invId = $version->getInvoiceId();
+            $verNum = $version->getVersionNumber();
+            $qVer = $version->getQuotationVersion();
+            $sub = $version->getSubtotal();
+            $disc = $version->getDiscount();
+            $tax = $version->getTax();
+            $tot = $version->getTotalAmount();
+            $pStat = $version->getPaymentStatus();
+            $pMeth = $version->getPaymentMethod();
+            $iDate = $version->getInvoiceDate();
+            $dDate = $version->getDueDate();
+            $notes = $version->getRevisionNotes();
+            $creator = $version->getCreatedBy();
 
-                $itemStmt = $this->connection->prepare('INSERT INTO invoice_items (invoice_id, item_description, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)');
+            $stmt->bind_param('iiiddddssssss', $invId, $verNum, $qVer, $sub, $disc, $tax, $tot, $pStat, $pMeth, $iDate, $dDate, $notes, $creator);
+            $stmt->execute();
+            $versionId = (int) $this->connection->insert_id;
+            $stmt->close();
+
+            if ($versionId > 0 && !empty($itemsData)) {
+                $itemStmt = $this->connection->prepare('INSERT INTO invoice_items (version_id, item_description, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)');
                 foreach ($itemsData as $item) {
                     $desc = (string) ($item['description'] ?? '');
                     $qty = (int) ($item['quantity'] ?? 1);
@@ -261,27 +306,55 @@ class InvoiceRepository
                     $tPrice = (float) ($item['total_price'] ?? ($qty * $uPrice));
 
                     if (!empty($desc)) {
-                        $itemStmt->bind_param('isidd', $invoiceId, $desc, $qty, $uPrice, $tPrice);
+                        $itemStmt->bind_param('isidd', $versionId, $desc, $qty, $uPrice, $tPrice);
                         $itemStmt->execute();
                     }
                 }
                 $itemStmt->close();
             }
 
-            return $invoiceId;
+            return $versionId;
         } catch (Throwable $e) {
-            error_log('InvoiceRepository saveInvoice error: ' . $e->getMessage());
+            error_log('InvoiceRepository saveVersion error: ' . $e->getMessage());
             return 0;
         }
     }
 
     /**
-     * Mark invoice as paid.
+     * Update an existing invoice version's payment status and method.
      */
-    public function markPaid(int $invoiceId, string $method = 'UPI'): bool
+    public function updateVersionPayment(int $versionId, string $paymentStatus, string $paymentMethod): bool
     {
         try {
-            $stmt = $this->connection->prepare('UPDATE invoices SET payment_status = "paid", payment_method = ? WHERE id = ?');
+            $stmt = $this->connection->prepare('UPDATE invoice_versions SET payment_status = ?, payment_method = ? WHERE id = ?');
+            if (!$stmt) {
+                return false;
+            }
+            $stmt->bind_param('ssi', $paymentStatus, $paymentMethod, $versionId);
+            $success = $stmt->execute();
+            $stmt->close();
+            return $success;
+        } catch (Throwable $e) {
+            error_log('InvoiceRepository updateVersionPayment error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Mark a specific invoice version as paid.
+     */
+    public function markVersionPaid(int $versionId, string $method = 'UPI'): bool
+    {
+        return $this->updateVersionPayment($versionId, 'paid', $method);
+    }
+
+    /**
+     * Mark all versions of an invoice as paid.
+     */
+    public function markAllVersionsPaid(int $invoiceId, string $method = 'UPI'): bool
+    {
+        try {
+            $stmt = $this->connection->prepare('UPDATE invoice_versions SET payment_status = "paid", payment_method = ? WHERE invoice_id = ?');
             if (!$stmt) {
                 return false;
             }
@@ -290,13 +363,76 @@ class InvoiceRepository
             $stmt->close();
             return $success;
         } catch (Throwable $e) {
-            error_log('InvoiceRepository markPaid error: ' . $e->getMessage());
+            error_log('InvoiceRepository markAllVersionsPaid error: ' . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Delete invoice by primary key ID.
+     * Delete a specific version of an invoice.
+     */
+    public function deleteVersion(int $invoiceId, int $versionNumber): bool
+    {
+        try {
+            // Find the version record
+            $verStmt = $this->connection->prepare('SELECT id FROM invoice_versions WHERE invoice_id = ? AND version_number = ?');
+            if (!$verStmt) {
+                return false;
+            }
+            $verStmt->bind_param('ii', $invoiceId, $versionNumber);
+            $verStmt->execute();
+            $verRes = $verStmt->get_result();
+            $versionId = 0;
+            if ($row = $verRes->fetch_assoc()) {
+                $versionId = (int) $row['id'];
+            }
+            $verStmt->close();
+
+            if ($versionId <= 0) {
+                return false;
+            }
+
+            // Delete items first (cascade should handle it, but be explicit)
+            $delItemsStmt = $this->connection->prepare('DELETE FROM invoice_items WHERE version_id = ?');
+            if ($delItemsStmt) {
+                $delItemsStmt->bind_param('i', $versionId);
+                $delItemsStmt->execute();
+                $delItemsStmt->close();
+            }
+
+            // Delete the version
+            $delVerStmt = $this->connection->prepare('DELETE FROM invoice_versions WHERE id = ?');
+            if ($delVerStmt) {
+                $delVerStmt->bind_param('i', $versionId);
+                $delVerStmt->execute();
+                $delVerStmt->close();
+            }
+
+            // Update invoice header
+            $remaining = $this->findVersionsByInvoiceId($invoiceId);
+            if (empty($remaining)) {
+                // If no versions left, delete the invoice header too
+                $this->delete($invoiceId);
+            } else {
+                $latestVer = end($remaining);
+                $upStmt = $this->connection->prepare('UPDATE invoices SET current_version = ? WHERE id = ?');
+                if ($upStmt) {
+                    $cVer = $latestVer->getVersionNumber();
+                    $upStmt->bind_param('ii', $cVer, $invoiceId);
+                    $upStmt->execute();
+                    $upStmt->close();
+                }
+            }
+
+            return true;
+        } catch (Throwable $e) {
+            error_log('InvoiceRepository deleteVersion error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Delete invoice by primary key ID (cascading deletes versions and items).
      */
     public function delete(int $id): bool
     {
@@ -313,5 +449,28 @@ class InvoiceRepository
             error_log('InvoiceRepository delete error: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Generate the next sequential invoice number.
+     */
+    public function findNextInvoiceNumber(): string
+    {
+        $year = date('Y');
+        $prefix = "INV-{$year}-";
+        $stmt = $this->connection->prepare("SELECT invoice_number FROM invoices WHERE invoice_number LIKE ? ORDER BY id DESC LIMIT 1");
+        $pattern = $prefix . '%';
+        $stmt->bind_param('s', $pattern);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $nextNum = 1;
+        if ($row = $result->fetch_assoc()) {
+            $lastNum = (int) str_replace($prefix, '', (string)$row['invoice_number']);
+            $nextNum = $lastNum + 1;
+        }
+        $stmt->close();
+
+        return $prefix . str_pad((string) $nextNum, 3, '0', STR_PAD_LEFT);
     }
 }

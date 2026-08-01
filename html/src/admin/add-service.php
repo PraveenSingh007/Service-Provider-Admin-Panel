@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title><?= $isEditMode ? 'Edit Service' : 'Add New Service' ?> - Sneat Admin</title>
+    <title><?= $isEditMode ? 'Edit Service' : 'Add New Service' ?> - tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -209,13 +209,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="mb-4">
                           <label class="form-label" for="service_image">Service Image</label>
                           <?php if ($isEditMode && $existingService !== null && !empty($existingService->getServiceImage())): ?>
-                            <div class="mb-2">
-                              <img
-                                src="<?= htmlspecialchars((string)$existingService->getServiceImage(), ENT_QUOTES, 'UTF-8') ?>"
-                                alt="Current Image"
-                                class="rounded"
-                                style="max-width: 120px; max-height: 120px; object-fit: cover;" />
-                              <div class="form-text mt-1">Current Image</div>
+                            <?php
+                            $existingImg = (string) $existingService->getServiceImage();
+                            $cleanPath = ltrim($existingImg, '/');
+                            if (strpos($cleanPath, 'html/') === 0) {
+                                $cleanPath = substr($cleanPath, 5);
+                            }
+                            $imgSrc = '../../' . $cleanPath;
+                            ?>
+                            <div class="mb-3">
+                              <label class="form-label d-block text-muted">Current Service Image</label>
+                              <div class="p-2 border rounded d-inline-block bg-light">
+                                <img
+                                  src="<?= htmlspecialchars($imgSrc, ENT_QUOTES, 'UTF-8') ?>"
+                                  alt="Current Service Image"
+                                  class="rounded shadow-sm"
+                                  style="max-width: 140px; max-height: 140px; object-fit: cover;" />
+                              </div>
                             </div>
                           <?php endif; ?>
                           <input

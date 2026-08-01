@@ -89,13 +89,47 @@ class CustomerRepository
     }
 
     /**
-     * Store a generated OTP code for email verification.
+     * Get active (unexpired and unused) OTP record for a given email.
+     *
+     * @return array<string, mixed>|null
      */
-    public function createOtp(string $email, string $otpCode, string $expiresAt): bool
+    public function getActiveOtp(string $email): ?array
     {
         try {
+            $email = strtolower(trim($email));
+
+            $sql = 'SELECT * FROM customer_otp WHERE LOWER(email) = ? AND expires_at >= NOW() AND is_used = 0 ORDER BY id DESC LIMIT 1';
+            $stmt = $this->connection->prepare($sql);
+
+            if ($stmt) {
+                $stmt->bind_param('s', $email);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($row = $result->fetch_assoc()) {
+                    $stmt->close();
+                    return $row;
+                }
+                $stmt->close();
+            }
+        } catch (Throwable $e) {
+            error_log('CustomerRepository getActiveOtp error: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Store a generated OTP code for email verification.
+     * Sets expires_at to exactly 30 minutes after creation using MySQL DATE_ADD(NOW(), INTERVAL 30 MINUTE).
+     */
+    public function createOtp(string $email, string $otpCode): bool
+    {
+        try {
+            $email = strtolower(trim($email));
+
             // Invalidate existing active OTPs for this email
-            $updateSql = 'UPDATE customer_otp SET is_used = 1 WHERE email = ? AND is_used = 0';
+            $updateSql = 'UPDATE customer_otp SET is_used = 1 WHERE LOWER(email) = ? AND is_used = 0';
             $upStmt = $this->connection->prepare($updateSql);
             if ($upStmt) {
                 $upStmt->bind_param('s', $email);
@@ -103,12 +137,12 @@ class CustomerRepository
                 $upStmt->close();
             }
 
-            // Insert new OTP
-            $sql = 'INSERT INTO customer_otp (email, otp_code, expires_at, is_used) VALUES (?, ?, ?, 0)';
+            // Insert new OTP with expires_at set to exactly 30 minutes after NOW()
+            $sql = 'INSERT INTO customer_otp (email, otp_code, expires_at, is_used) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE), 0)';
             $stmt = $this->connection->prepare($sql);
 
             if ($stmt) {
-                $stmt->bind_param('sss', $email, $otpCode, $expiresAt);
+                $stmt->bind_param('ss', $email, $otpCode);
                 $success = $stmt->execute();
                 $stmt->close();
                 return $success;
@@ -128,13 +162,12 @@ class CustomerRepository
         try {
             $email = strtolower(trim($email));
             $otpCode = trim($otpCode);
-            $now = date('Y-m-d H:i:s');
 
-            $sql = 'SELECT id FROM customer_otp WHERE LOWER(email) = ? AND otp_code = ? AND expires_at >= ? AND is_used = 0 ORDER BY id DESC LIMIT 1';
+            $sql = 'SELECT id FROM customer_otp WHERE LOWER(email) = ? AND otp_code = ? AND expires_at >= NOW() AND is_used = 0 ORDER BY id DESC LIMIT 1';
             $stmt = $this->connection->prepare($sql);
 
             if ($stmt) {
-                $stmt->bind_param('sss', $email, $otpCode, $now);
+                $stmt->bind_param('ss', $email, $otpCode);
                 $stmt->execute();
                 $result = $stmt->get_result();
 

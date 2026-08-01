@@ -44,7 +44,13 @@ $existingVersions = $quotationId > 0 ? $service->getQuotationVersions($quotation
 $latestVersion = !empty($existingVersions) ? end($existingVersions) : null;
 
 $isRevisionMode = $existingQuotation !== null;
-$actionError = null;
+$serviceRequests = [];
+$srRes = $dbConn->query("SELECT service_request_no, customer_name, request_by_mobile_no, customer_email, service_name FROM service_requests ORDER BY id DESC");
+if ($srRes) {
+    while ($srRow = $srRes->fetch_assoc()) {
+        $serviceRequests[] = $srRow;
+    }
+}
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $submittedToken = (string) ($_POST['csrf_token'] ?? '');
@@ -74,7 +80,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title><?= $isRevisionMode ? 'Create Quotation Revision' : 'Create Quotation' ?> - Sneat Admin</title>
+    <title><?= $isRevisionMode ? 'Create Quotation Revision' : 'Create Quotation' ?> - tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -191,6 +197,38 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                   <input type="hidden" name="quotation_id" value="<?= (int)$existingQuotation->getId() ?>" />
                 <?php endif; ?>
 
+                <!-- Step 1: Service Request Search & Selection Card -->
+                <?php if (!$isRevisionMode): ?>
+                  <div class="card p-4 mb-4 border-primary">
+                    <h5 class="card-title text-primary mb-3">
+                      <i class="icon-base bx bx-search-alt me-1"></i> Step 1: Select Service Request <span class="text-danger">*</span>
+                    </h5>
+                    <div class="row g-3 align-items-end">
+                      <div class="col-md-8">
+                        <label class="form-label fw-semibold" for="sr_search_input">Service Request No <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="sr_search_input"
+                            placeholder="Enter Service Request No (e.g. REQ-1001)"
+                            value="<?= htmlspecialchars($_POST['service_request_id'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                            required />
+                          <button type="button" class="btn btn-primary" id="btn_search_sr">
+                            <i class="icon-base bx bx-search me-1"></i> Search & Load
+                          </button>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div id="sr_status_badge">
+                          <span class="badge bg-warning text-dark w-100 py-2"><i class="icon-base bx bx-error me-1"></i> Service Request Required</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="sr_search_msg" class="form-text mt-2"></div>
+                  </div>
+                <?php endif; ?>
+
                 <!-- Customer & Request Info Card -->
                 <div class="card p-4 mb-4">
                   <h5 class="card-title text-primary mb-3">
@@ -204,9 +242,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         class="form-control"
                         id="service_request_id"
                         name="service_request_id"
-                        value="<?= htmlspecialchars($isRevisionMode ? $existingQuotation->getServiceRequestId() : ($_POST['service_request_id'] ?? 'REQ-'), ENT_QUOTES, 'UTF-8') ?>"
-                        placeholder="e.g. REQ-1002"
-                        <?= $isRevisionMode ? 'readonly' : 'required' ?> />
+                        value="<?= htmlspecialchars($isRevisionMode ? $existingQuotation->getServiceRequestId() : ($_POST['service_request_id'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                        placeholder="e.g. REQ-1001"
+                        required
+                        readonly />
                     </div>
 
                     <div class="col-md-4">
@@ -440,6 +479,64 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
           `;
           $('#itemsContainer').append(newRow);
           calculateTotals();
+        });
+
+        // Service Request AJAX search & auto-fill (Invoice pattern)
+        function loadServiceRequestData(srNo) {
+          $('#sr_search_msg').html('<span class="text-info"><i class="icon-base bx bx-loader-alt bx-spin me-1"></i> Searching Service Request...</span>');
+
+          $.getJSON('api-get-service-request.php?sr=' + encodeURIComponent(srNo), function (res) {
+            if (!res.success) {
+              $('#sr_search_msg').html('<span class="text-danger"><i class="icon-base bx bx-error me-1"></i> ' + res.message + '</span>');
+              $('#sr_status_badge').html('<span class="badge bg-danger w-100 py-2"><i class="icon-base bx bx-x-circle me-1"></i> Not Found</span>');
+              $('#service_request_id').val('');
+              return;
+            }
+
+            let sr = res.service_request;
+            $('#service_request_id').val(sr.service_request_no);
+            $('#customer_name').val(sr.customer_name);
+            $('#customer_mobile').val(sr.customer_mobile);
+            $('#customer_email').val(sr.customer_email);
+            $('#service_name').val(sr.service_name);
+
+            const firstDescInput = $('.item-desc').first();
+            if (firstDescInput.length > 0 && !firstDescInput.val()) {
+              firstDescInput.val(sr.service_name);
+            }
+
+            $('#sr_search_msg').html('<span class="text-success"><i class="icon-base bx bx-check-circle me-1"></i> Loaded Service Request ' + sr.service_request_no + ' successfully!</span>');
+            $('#sr_status_badge').html('<span class="badge bg-success w-100 py-2"><i class="icon-base bx bx-check-circle me-1"></i> Request Loaded</span>');
+          }).fail(function () {
+            $('#sr_search_msg').html('<span class="text-danger"><i class="icon-base bx bx-error me-1"></i> Error loading Service Request details. Please try again.</span>');
+            $('#sr_status_badge').html('<span class="badge bg-danger w-100 py-2"><i class="icon-base bx bx-x-circle me-1"></i> Error</span>');
+          });
+        }
+
+        $('#btn_search_sr').on('click', function () {
+          let srNo = $('#sr_search_input').val().trim();
+          if (!srNo) {
+            alert('Please enter a Service Request No to search.');
+            return;
+          }
+          loadServiceRequestData(srNo);
+        });
+
+        $('#sr_search_input').on('keypress', function (e) {
+          if (e.which === 13) {
+            e.preventDefault();
+            $('#btn_search_sr').click();
+          }
+        });
+
+        $('form').on('submit', function (e) {
+          let srId = $('#service_request_id').val();
+          let isRevision = <?= $isRevisionMode ? 'true' : 'false' ?>;
+          if (!isRevision && (!srId || srId.trim() === '')) {
+            e.preventDefault();
+            alert('A valid Service Request is required to create a quotation. Please enter a Service Request No and click "Search & Load".');
+            $('#sr_search_input').focus();
+          }
         });
 
         // Remove row

@@ -81,7 +81,7 @@ class AttendanceManagementService
     /**
      * Check if an employee is eligible for attendance on a specific date.
      */
-    public function isEligibleForAttendance(\App\Model\Employee $emp, string $date): bool
+    public function isEligibleForAttendance(\App\Admin\Model\Employee $emp, string $date): bool
     {
         if ($emp->getStatus() === 'active') {
             return true;

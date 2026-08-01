@@ -70,7 +70,7 @@ $quotations = $service->getAllQuotations();
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Quotations - Sneat Admin</title>
+    <title>Quotations - tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />

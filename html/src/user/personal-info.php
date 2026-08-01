@@ -42,7 +42,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if (!empty($submittedToken) && hash_equals($csrfToken, $submittedToken)) {
         $res = $authService->updatePersonalInformation($userId, $_POST);
         if ($res['success']) {
-            $_SESSION['profile_saved_success'] = 'Personal information saved successfully! You can now book services.';
+            $_SESSION['profile_saved_success'] = 'Personal information saved successfully!';
             header('Location: book-service.php');
             exit;
         } else {
@@ -80,7 +80,10 @@ $userArray = $userObj ? $userObj->toArray() : $currentUser;
   <!-- Navigation Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
     <div class="container">
-      <a class="navbar-brand fw-bold fs-4" href="index.php"><i class="bx bx-wrench me-2 text-primary"></i>Service Provider Portal</a>
+      <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="index.php">
+        <img src="/sneat/assets/img/logo.png" alt="tech-xpert" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px; background: #fff; padding: 2px;" class="me-2" />
+        tech-xpert Portal
+      </a>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
           <li class="nav-item me-3"><span class="text-light small"><i class="bx bx-user me-1"></i><?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?></span></li>

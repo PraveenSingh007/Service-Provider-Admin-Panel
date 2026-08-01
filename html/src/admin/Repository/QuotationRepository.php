@@ -91,6 +91,43 @@ class QuotationRepository
     }
 
     /**
+     * Find quotation by quotation_number.
+     */
+    public function findByQuotationNumber(string $quotationNumber): ?Quotation
+    {
+        $stmt = $this->connection->prepare('SELECT id, quotation_number, service_request_id, customer_name, customer_mobile, customer_email, service_name, current_version, total_amount, status, created_at, updated_at FROM quotations WHERE quotation_number = ? LIMIT 1');
+        if (!$stmt) {
+            return null;
+        }
+
+        $stmt->bind_param('s', $quotationNumber);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($row = $result->fetch_assoc()) {
+            $quotation = new Quotation(
+                (int) $row['id'],
+                (string) $row['quotation_number'],
+                (string) $row['service_request_id'],
+                (string) $row['customer_name'],
+                (string) $row['customer_mobile'],
+                $row['customer_email'] !== null ? (string) $row['customer_email'] : null,
+                (string) $row['service_name'],
+                (int) $row['current_version'],
+                (float) $row['total_amount'],
+                (string) $row['status'],
+                (string) $row['created_at'],
+                (string) $row['updated_at']
+            );
+            $stmt->close();
+            return $quotation;
+        }
+
+        $stmt->close();
+        return null;
+    }
+
+    /**
      * Fetch all version records for a specific quotation.
      *
      * @return QuotationVersion[]
@@ -269,6 +306,75 @@ class QuotationRepository
             return $success;
         } catch (Throwable $e) {
             error_log('QuotationRepository delete error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Delete a specific version of a quotation, and optionally its associated invoice.
+     */
+    public function deleteVersion(int $quotationId, int $versionNumber, bool $deleteInvoice = false): bool
+    {
+        try {
+            $verStmt = $this->connection->prepare('SELECT id FROM quotation_versions WHERE quotation_id = ? AND version_number = ?');
+            if (!$verStmt) {
+                return false;
+            }
+            $verStmt->bind_param('ii', $quotationId, $versionNumber);
+            $verStmt->execute();
+            $verRes = $verStmt->get_result();
+            $versionId = 0;
+            if ($row = $verRes->fetch_assoc()) {
+                $versionId = (int) $row['id'];
+            }
+            $verStmt->close();
+
+            if ($versionId <= 0) {
+                return false;
+            }
+
+            if ($deleteInvoice) {
+                $notePattern = "%(Version {$versionNumber})%";
+                $delInvStmt = $this->connection->prepare('DELETE FROM invoices WHERE (quotation_id = ? AND quotation_version = ?) OR (quotation_id = ? AND notes LIKE ?)');
+                if ($delInvStmt) {
+                    $delInvStmt->bind_param('iiis', $quotationId, $versionNumber, $quotationId, $notePattern);
+                    $delInvStmt->execute();
+                    $delInvStmt->close();
+                }
+            }
+
+            $delItemsStmt = $this->connection->prepare('DELETE FROM quotation_items WHERE version_id = ?');
+            if ($delItemsStmt) {
+                $delItemsStmt->bind_param('i', $versionId);
+                $delItemsStmt->execute();
+                $delItemsStmt->close();
+            }
+
+            $delVerStmt = $this->connection->prepare('DELETE FROM quotation_versions WHERE id = ?');
+            if ($delVerStmt) {
+                $delVerStmt->bind_param('i', $versionId);
+                $delVerStmt->execute();
+                $delVerStmt->close();
+            }
+
+            $remaining = $this->findVersionsByQuotationId($quotationId);
+            if (empty($remaining)) {
+                $this->delete($quotationId);
+            } else {
+                $latestVer = end($remaining);
+                $upStmt = $this->connection->prepare('UPDATE quotations SET current_version = ?, total_amount = ? WHERE id = ?');
+                if ($upStmt) {
+                    $cVer = $latestVer->getVersionNumber();
+                    $tAmt = $latestVer->getTotalAmount();
+                    $upStmt->bind_param('idi', $cVer, $tAmt, $quotationId);
+                    $upStmt->execute();
+                    $upStmt->close();
+                }
+            }
+
+            return true;
+        } catch (Throwable $e) {
+            error_log('QuotationRepository deleteVersion error: ' . $e->getMessage());
             return false;
         }
     }

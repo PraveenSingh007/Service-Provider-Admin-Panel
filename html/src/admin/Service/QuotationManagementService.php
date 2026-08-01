@@ -197,4 +197,22 @@ class QuotationManagementService
         }
         return ['success' => false, 'message' => 'Failed to delete quotation.'];
     }
+
+    /**
+     * Delete a specific version of a quotation, and optionally its associated invoice.
+     */
+    public function deleteQuotationVersion(int $quotationId, int $versionNumber, bool $deleteInvoice = false): array
+    {
+        $success = $this->repository->deleteVersion($quotationId, $versionNumber, $deleteInvoice);
+        if ($success) {
+            $remaining = $this->repository->findVersionsByQuotationId($quotationId);
+            return [
+                'success' => true,
+                'message' => "Quotation Version {$versionNumber} deleted successfully!",
+                'quotation_deleted' => empty($remaining),
+            ];
+        }
+
+        return ['success' => false, 'message' => 'Failed to delete quotation version.'];
+    }
 }

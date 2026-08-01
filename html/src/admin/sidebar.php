@@ -19,8 +19,9 @@ $userRole = (string) ($currentUser['role'] ?? 'admin');
 <!-- Sidebar Menu -->
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
   <div class="app-brand demo">
-    <a href="dashboard.php" class="app-brand-link">
-      <span class="app-brand-text demo menu-text fw-bold ms-2">Sneat</span>
+    <a href="dashboard.php" class="app-brand-link gap-2">
+      <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px;" />
+      <span class="app-brand-text demo menu-text fw-bold">tech-xpert</span>
     </a>
 
     <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">

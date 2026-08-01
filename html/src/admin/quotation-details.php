@@ -50,6 +50,56 @@ foreach ($versions as $v) {
 if ($activeVersion === null && !empty($versions)) {
     $activeVersion = end($versions);
 }
+
+$activeVersionNum = $activeVersion !== null ? $activeVersion->getVersionNumber() : $quotation->getCurrentVersion();
+$existingVersionInvoice = null;
+
+$checkVerInvSql = "SELECT id, invoice_number FROM invoices 
+    WHERE (quotation_id = ? AND quotation_version = ?) 
+       OR (quotation_id = ? AND notes LIKE ?) 
+    LIMIT 1";
+$checkVerStmt = $dbConn->prepare($checkVerInvSql);
+if ($checkVerStmt) {
+    $qId = $quotation->getId();
+    $notePattern = "%(Version {$activeVersionNum})%";
+    $checkVerStmt->bind_param('iiis', $qId, $activeVersionNum, $qId, $notePattern);
+    $checkVerStmt->execute();
+    $resVerInv = $checkVerStmt->get_result();
+    if ($resVerInv && $invRow = $resVerInv->fetch_assoc()) {
+        $existingVersionInvoice = $invRow;
+    }
+    $checkVerStmt->close();
+}
+
+$actionError = null;
+$actionMessage = isset($_GET['msg']) ? (string)$_GET['msg'] : null;
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action'])) {
+    $submittedToken = (string) ($_POST['csrf_token'] ?? '');
+    if (empty($submittedToken) || !hash_equals($_SESSION['csrf_token'] ?? '', $submittedToken)) {
+        $actionError = 'CSRF validation failed.';
+    } elseif ($_POST['action'] === 'delete_version') {
+        $verNumToDelete = (int) ($_POST['version_number'] ?? 0);
+        $deleteInvoiceToo = !empty($_POST['delete_invoice']);
+        
+        if ($existingVersionInvoice !== null && !$deleteInvoiceToo) {
+            $actionError = "Quotation Deletion Locked! Tax Invoice {$existingVersionInvoice['invoice_number']} has already been created for Version {$verNumToDelete}. Delete Invoice {$existingVersionInvoice['invoice_number']} first to unlock quotation deletion.";
+        } elseif ($verNumToDelete > 0) {
+            $delRes = $service->deleteQuotationVersion($quotationId, $verNumToDelete, $deleteInvoiceToo);
+            if ($delRes['success']) {
+                if ($delRes['quotation_deleted']) {
+                    header('Location: quotations.php?msg=' . urlencode('Quotation deleted successfully because all versions were removed.'));
+                    exit;
+                } else {
+                    header("Location: quotation-details.php?id={$quotationId}&msg=" . urlencode("Version {$verNumToDelete} deleted successfully!"));
+                    exit;
+                }
+            } else {
+                $actionError = $delRes['message'];
+            }
+        }
+    }
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -95,17 +145,50 @@ if ($activeVersion === null && !empty($versions)) {
         <i class="icon-base bx bx-arrow-back me-1"></i> Back to Quotations
       </a>
       <div class="d-flex gap-2">
-        <a href="generate-invoice.php?quotation_id=<?= $quotation->getId() ?>" class="btn btn-success">
-          <i class="icon-base bx bx-file me-1"></i> Generate Invoice
-        </a>
+        <?php if ($existingVersionInvoice === null): ?>
+          <a href="generate-invoice.php?quotation_id=<?= $quotation->getId() ?>&version=<?= $activeVersionNum ?>" class="btn btn-success">
+            <i class="icon-base bx bx-file me-1"></i> Generate Invoice (v<?= $activeVersionNum ?>)
+          </a>
+        <?php else: ?>
+          <a href="invoice-details.php?id=<?= (int)$existingVersionInvoice['id'] ?>" class="btn btn-outline-success">
+            <i class="icon-base bx bx-check-circle me-1"></i> View Invoice (<?= htmlspecialchars((string)$existingVersionInvoice['invoice_number'], ENT_QUOTES, 'UTF-8') ?>)
+          </a>
+        <?php endif; ?>
         <a href="add-quotation.php?id=<?= $quotation->getId() ?>" class="btn btn-warning">
           <i class="icon-base bx bx-plus-circle me-1"></i> Add Revision (v<?= $quotation->getCurrentVersion() + 1 ?>)
         </a>
+        <?php if ($existingVersionInvoice !== null): ?>
+          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#deleteVersionModal" title="Deletion locked because invoice exists">
+            <i class="icon-base bx bx-lock-alt me-1"></i> Delete v<?= $activeVersionNum ?> (Locked)
+          </button>
+        <?php else: ?>
+          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteVersionModal">
+            <i class="icon-base bx bx-trash me-1"></i> Delete v<?= $activeVersionNum ?>
+          </button>
+        <?php endif; ?>
         <button onclick="window.print();" class="btn btn-primary">
           <i class="icon-base bx bx-printer me-1"></i> Print / PDF
         </button>
       </div>
     </div>
+
+    <?php if ($actionMessage): ?>
+      <div class="container no-print mb-3" style="max-width: 900px;">
+        <div class="alert alert-success alert-dismissible" role="alert">
+          <?= htmlspecialchars($actionMessage, ENT_QUOTES, 'UTF-8') ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      </div>
+    <?php endif; ?>
+
+    <?php if ($actionError): ?>
+      <div class="container no-print mb-3" style="max-width: 900px;">
+        <div class="alert alert-danger alert-dismissible" role="alert">
+          <?= htmlspecialchars($actionError, ENT_QUOTES, 'UTF-8') ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      </div>
+    <?php endif; ?>
 
     <!-- Version Selection Toolbar -->
     <div class="container no-print mb-4" style="max-width: 900px;">
@@ -130,8 +213,24 @@ if ($activeVersion === null && !empty($versions)) {
     <div class="quotation-card">
       <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
         <div>
-          <h2 class="fw-bold text-primary mb-1">SNEAT SERVICES</h2>
-          <p class="text-muted mb-0">Professional Service Provider Admin Panel</p>
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <img src="../../../assets/img/logo.png" alt="tech-xpert Logo" style="height: 65px; width: auto; object-fit: contain;" />
+            <div>
+              <h2 class="fw-bold mb-0" style="color: #1a9df4;"><?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'tech-xpert Services Pvt Ltd', ENT_QUOTES, 'UTF-8') ?></h2>
+              <p class="text-muted mb-0 small">Suraksha, Seva, Santusstti</p>
+            </div>
+          </div>
+          <?php if ($company !== null): ?>
+            <div class="text-muted mt-2" style="font-size: 12px;">
+              <?php if (!empty($company->getRegistrationNo())): ?><strong>Reg No:</strong> <?= htmlspecialchars($company->getRegistrationNo(), ENT_QUOTES, 'UTF-8') ?> | <?php endif; ?>
+              <?php if (!empty($company->getGstNo())): ?><strong>GSTIN:</strong> <?= htmlspecialchars($company->getGstNo(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            </div>
+            <div class="text-muted" style="font-size: 12px;">
+              <?php if (!empty($company->getPhone())): ?><strong>Ph:</strong> <?= htmlspecialchars($company->getPhone(), ENT_QUOTES, 'UTF-8') ?> | <?php endif; ?>
+              <?php if (!empty($company->getFax())): ?><strong>Fax:</strong> <?= htmlspecialchars($company->getFax(), ENT_QUOTES, 'UTF-8') ?> | <?php endif; ?>
+              <?php if (!empty($company->getEmail())): ?><strong>Email:</strong> <?= htmlspecialchars($company->getEmail(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
+            </div>
+          <?php endif; ?>
         </div>
         <div class="text-end">
           <h3 class="fw-bold text-dark mb-1">QUOTATION</h3>
@@ -224,18 +323,57 @@ if ($activeVersion === null && !empty($versions)) {
       <div class="border-top pt-4 mt-4 text-muted" style="font-size: 12px;">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <div>Prepared by: <strong><?= htmlspecialchars($activeVersion !== null && $activeVersion->getCreatedBy() !== null ? $activeVersion->getCreatedBy() : 'Admin', ENT_QUOTES, 'UTF-8') ?></strong></div>
-          <div class="fw-semibold text-primary">Thank you for choosing <?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'Sneat Services Pvt Ltd', ENT_QUOTES, 'UTF-8') ?>!</div>
+          <div class="fw-semibold" style="color: #1a9df4;">Thank you for choosing <?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'tech-xpert Services', ENT_QUOTES, 'UTF-8') ?>!</div>
         </div>
-        <?php if ($company !== null): ?>
-          <div class="text-center text-secondary border-top pt-2 mt-2">
-            <?= htmlspecialchars($company->getCompanyName(), ENT_QUOTES, 'UTF-8') ?>
-            <?php if (!empty($company->getRegistrationNo())): ?> | Reg: <?= htmlspecialchars($company->getRegistrationNo(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
-            <?php if (!empty($company->getGstNo())): ?> | GSTIN: <?= htmlspecialchars($company->getGstNo(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
-            <?php if (!empty($company->getPhone())): ?> | Ph: <?= htmlspecialchars($company->getPhone(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
-            <?php if (!empty($company->getEmail())): ?> | Email: <?= htmlspecialchars($company->getEmail(), ENT_QUOTES, 'UTF-8') ?><?php endif; ?>
-          </div>
-        <?php endif; ?>
+        <div class="text-center text-secondary border-top pt-2 mt-2">
+          <strong>Office Address:</strong> <?= htmlspecialchars($company !== null && !empty($company->getAddress()) ? $company->getAddress() : '123 Business Tower, Tech Park Road, Mumbai, Maharashtra 400001', ENT_QUOTES, 'UTF-8') ?>
+        </div>
+      </div>
       </div>
     </div>
+
+    <!-- Delete Version Modal -->
+    <div class="modal fade no-print" id="deleteVersionModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title text-white fw-bold"><i class="icon-base bx bx-trash me-2"></i>Delete Quotation Version <?= $activeVersionNum ?></h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="quotation-details.php?id=<?= $quotation->getId() ?>&version=<?= $activeVersionNum ?>">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars((string)($_SESSION['csrf_token'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+            <input type="hidden" name="action" value="delete_version" />
+            <input type="hidden" name="version_number" value="<?= $activeVersionNum ?>" />
+
+            <div class="modal-body p-4">
+              <p class="text-dark fw-semibold mb-3">Are you sure you want to delete <strong>Version <?= $activeVersionNum ?></strong> of Quotation <strong><?= htmlspecialchars($quotation->getQuotationNumber(), ENT_QUOTES, 'UTF-8') ?></strong>?</p>
+
+              <?php if ($existingVersionInvoice !== null): ?>
+                <div class="alert alert-warning mb-3">
+                  <i class="icon-base bx bx-error me-1"></i> Invoice <strong><?= htmlspecialchars((string)$existingVersionInvoice['invoice_number'], ENT_QUOTES, 'UTF-8') ?></strong> is linked to this version!
+                </div>
+              <?php endif; ?>
+
+              <div class="form-check bg-light p-3 rounded border">
+                <input class="form-check-input" type="checkbox" name="delete_invoice" value="1" id="deleteInvoiceCheck" <?= $existingVersionInvoice !== null ? 'checked' : '' ?> />
+                <label class="form-check-label fw-bold text-danger ms-1" for="deleteInvoiceCheck">
+                  Also delete associated invoice <?= $existingVersionInvoice !== null ? '(' . htmlspecialchars((string)$existingVersionInvoice['invoice_number'], ENT_QUOTES, 'UTF-8') . ')' : '' ?>
+                </label>
+                <div class="form-text ms-4">If checked, the tax invoice created for this version will also be permanently deleted.</div>
+              </div>
+            </div>
+
+            <div class="modal-footer bg-light px-4 py-3">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-danger fw-bold"><i class="icon-base bx bx-trash me-1"></i> Delete Version & Invoice</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS Scripts -->
+    <script src="../../../assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="../../../assets/vendor/js/bootstrap.js"></script>
   </body>
 </html>

@@ -22,7 +22,7 @@ class ServiceManagementService
         if ($uploadDir !== '') {
             $this->uploadDir = rtrim($uploadDir, '/') . '/';
         } else {
-            $baseDir = dirname(__DIR__, 2);
+            $baseDir = dirname(__DIR__, 3);
             $this->uploadDir = $baseDir . '/uploads/services/';
         }
     }

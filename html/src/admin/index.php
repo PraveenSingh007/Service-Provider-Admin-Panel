@@ -78,9 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Login - Sneat Admin Dashboard</title>
+    <title>Login - tech-xpert Admin Dashboard</title>
 
-    <meta name="description" content="Sneat Admin Panel Login Page" />
+    <meta name="description" content="tech-xpert Admin Panel Login Page" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -117,9 +117,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="card px-sm-6 px-0">
             <div class="card-body">
               <!-- Logo -->
-              <div class="app-brand justify-content-center">
-                <a href="index.php" class="app-brand-link gap-2">
-                  <span class="app-brand-text demo text-heading fw-bold">Sneat</span>
+              <div class="app-brand justify-content-center flex-column mb-3">
+                <a href="index.php" class="app-brand-link d-flex flex-column align-items-center gap-2">
+                  <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 80px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));" />
+                  <span class="app-brand-text demo text-heading fw-bold fs-3 mt-1">tech-xpert</span>
                 </a>
               </div>
               <!-- /Logo -->

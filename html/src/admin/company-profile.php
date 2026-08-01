@@ -63,7 +63,7 @@ $company = $service->getCompanyProfile();
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-    <title>Company Profile - Service Provider Admin</title>
+    <title>Company Profile - tech-xpert Admin</title>
 
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -185,7 +185,7 @@ $company = $service->getCompanyProfile();
                         class="form-control"
                         id="company_name"
                         name="company_name"
-                        placeholder="e.g. Sneat Services Pvt Ltd"
+                        placeholder="e.g. tech-xpert Services Pvt Ltd"
                         value="<?= htmlspecialchars((string)($company !== null ? $company->getCompanyName() : ''), ENT_QUOTES, 'UTF-8') ?>"
                         required />
                     </div>
@@ -250,7 +250,7 @@ $company = $service->getCompanyProfile();
                         class="form-control"
                         id="email"
                         name="email"
-                        placeholder="e.g. contact@sneatservices.com"
+                        placeholder="e.g. contact@techxpert.com"
                         value="<?= htmlspecialchars((string)($company !== null ? (string)$company->getEmail() : ''), ENT_QUOTES, 'UTF-8') ?>" />
                     </div>
 
@@ -280,7 +280,7 @@ $company = $service->getCompanyProfile();
             <footer class="content-footer footer bg-footer-theme">
               <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
                 <div class="mb-2 mb-md-0">
-                  © <?= date('Y') ?>, Service Provider Admin Panel
+                  © <?= date('Y') ?>, tech-xpert Admin Panel
                 </div>
               </div>
             </footer>

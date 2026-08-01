@@ -67,7 +67,7 @@ $services = (array) ($servicesResult['response']['data']['services'] ?? []);
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Services List - Sneat Admin</title>
+    <title>Services List - tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -283,11 +283,19 @@ $services = (array) ($servicesResult['response']['data']['services'] ?? []);
                         <tr>
                           <td data-order="<?= (int)$srv['id'] ?>"><strong>#<?= (int)$srv['id'] ?></strong></td>
                           <td>
-                            <?php if (!empty($srv['service_image'])): ?>
+                            <?php
+                            $imgPath = (string) ($srv['service_image'] ?? '');
+                            $cleanPath = ltrim($imgPath, '/');
+                            if (strpos($cleanPath, 'html/') === 0) {
+                                $cleanPath = substr($cleanPath, 5);
+                            }
+                            $imgSrc = '../../' . ($cleanPath ?: 'uploads/services/cctv_service.png');
+                            ?>
+                            <?php if (!empty($imgPath)): ?>
                               <img
-                                src="<?= htmlspecialchars((string)$srv['service_image'], ENT_QUOTES, 'UTF-8') ?>"
+                                src="<?= htmlspecialchars($imgSrc, ENT_QUOTES, 'UTF-8') ?>"
                                 alt="<?= htmlspecialchars((string)$srv['service_name'], ENT_QUOTES, 'UTF-8') ?>"
-                                class="rounded"
+                                class="rounded shadow-sm"
                                 style="width: 50px; height: 50px; object-fit: cover;" />
                             <?php else: ?>
                               <span class="badge bg-label-secondary">No Image</span>

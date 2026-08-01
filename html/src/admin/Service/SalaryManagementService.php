@@ -178,7 +178,7 @@ class SalaryManagementService
     /**
      * Check if an employee is eligible for salary generation in a given month.
      */
-    public function isEligibleForSalary(\App\Model\Employee $emp, string $month): bool
+    public function isEligibleForSalary(\App\Admin\Model\Employee $emp, string $month): bool
     {
         if ($emp->getStatus() === 'active') {
             return true;

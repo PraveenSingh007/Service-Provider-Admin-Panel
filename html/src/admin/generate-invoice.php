@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/dbConnection.php';
 require_once __DIR__ . '/Model/Invoice.php';
 require_once __DIR__ . '/Model/InvoiceItem.php';
+require_once __DIR__ . '/Model/InvoiceVersion.php';
 require_once __DIR__ . '/Model/Quotation.php';
 require_once __DIR__ . '/Model/QuotationVersion.php';
 require_once __DIR__ . '/Model/QuotationItem.php';
@@ -45,30 +46,64 @@ $controller = new InvoiceController($service);
 
 $quotationId = isset($_GET['quotation_id']) ? (int) $_GET['quotation_id'] : 0;
 $invoiceId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+$isRevision = isset($_GET['revision']) && $_GET['revision'] === '1';
 
 $existingInvoice = $invoiceId > 0 ? $service->getInvoiceById($invoiceId) : null;
 $linkedQuotation = $quotationId > 0 ? $quoRepo->findById($quotationId) : null;
+$versionNum = isset($_GET['version']) ? (int) $_GET['version'] : (isset($_POST['quotation_version']) ? (int) $_POST['quotation_version'] : null);
 
-// Pre-fill from Quotation if converting
+// Determine mode
+$isEditing = ($existingInvoice !== null && !$isRevision);
+$isAddingRevision = ($existingInvoice !== null && $isRevision);
+
+// Pre-fill from Quotation or existing invoice
 $preFillItems = [];
 $preFillSubtotal = 0.0;
 $preFillDiscount = 0.0;
 $preFillTax = 0.0;
+$preFillPStatus = 'unpaid';
+$preFillPMethod = 'UPI';
+$preFillInvoiceDate = date('Y-m-d');
+$preFillDueDate = date('Y-m-d', strtotime('+7 days'));
+$preFillNotes = '';
 
 if ($linkedQuotation !== null) {
     $versions = $quoRepo->findVersionsByQuotationId($quotationId);
-    if (!empty($versions)) {
-        $latestVer = end($versions);
+    $selectedVer = null;
+    if ($versionNum !== null) {
+        foreach ($versions as $v) {
+            if ($v->getVersionNumber() === $versionNum) {
+                $selectedVer = $v;
+                break;
+            }
+        }
+    }
+    if ($selectedVer === null && !empty($versions)) {
+        $selectedVer = end($versions);
+    }
+    if ($selectedVer !== null) {
+        $versionNum = $selectedVer->getVersionNumber();
+        $preFillItems = $selectedVer->getItems();
+        $preFillSubtotal = $selectedVer->getSubtotal();
+        $preFillDiscount = $selectedVer->getDiscount();
+        $preFillTax = $selectedVer->getTax();
+        $preFillNotes = "Tax Invoice generated from Quotation {$linkedQuotation->getQuotationNumber()} (Version {$versionNum})";
+    }
+} elseif ($existingInvoice !== null) {
+    $latestVer = $existingInvoice->getLatestVersion();
+    if ($latestVer !== null) {
         $preFillItems = $latestVer->getItems();
         $preFillSubtotal = $latestVer->getSubtotal();
         $preFillDiscount = $latestVer->getDiscount();
         $preFillTax = $latestVer->getTax();
+        $preFillPStatus = $isAddingRevision ? 'unpaid' : $latestVer->getPaymentStatus();
+        $preFillPMethod = $latestVer->getPaymentMethod();
+        $preFillInvoiceDate = $isAddingRevision ? date('Y-m-d') : $latestVer->getInvoiceDate();
+        $preFillDueDate = $isAddingRevision ? date('Y-m-d', strtotime('+7 days')) : $latestVer->getDueDate();
+        $preFillNotes = $isAddingRevision 
+            ? "Revised invoice Version " . ($existingInvoice->getCurrentVersion() + 1)
+            : ($latestVer->getRevisionNotes() ?? '');
     }
-} elseif ($existingInvoice !== null) {
-    $preFillItems = $existingInvoice->getItems();
-    $preFillSubtotal = $existingInvoice->getSubtotal();
-    $preFillDiscount = $existingInvoice->getDiscount();
-    $preFillTax = $existingInvoice->getTax();
 }
 
 $actionError = null;
@@ -80,12 +115,28 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     } else {
         $result = $controller->handleRequest($_POST);
         if ($result['success']) {
-            header('Location: invoices.php');
+            $redirectId = $result['invoice_id'] ?? $result['id'] ?? $invoiceId;
+            if ($redirectId > 0) {
+                header("Location: invoice-details.php?id={$redirectId}&msg=" . urlencode($result['message']));
+            } else {
+                header('Location: invoices.php');
+            }
             exit;
         } else {
             $actionError = $result['message'];
         }
     }
+}
+
+// Page title
+if ($isAddingRevision) {
+    $pageTitle = "Add Invoice Revision (v" . ($existingInvoice->getCurrentVersion() + 1) . ") — " . $existingInvoice->getInvoiceNumber();
+} elseif ($isEditing) {
+    $pageTitle = "Edit Invoice ({$existingInvoice->getInvoiceNumber()})";
+} elseif ($linkedQuotation !== null) {
+    $pageTitle = "Generate Tax Invoice from Quotation {$linkedQuotation->getQuotationNumber()}";
+} else {
+    $pageTitle = "Create New Tax Invoice";
 }
 ?>
 <!doctype html>
@@ -101,7 +152,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title><?= $existingInvoice !== null ? 'Edit Invoice' : 'Generate Tax Invoice' ?> - Sneat Admin</title>
+    <title><?= $isAddingRevision ? 'Add Invoice Revision' : ($isEditing ? 'Edit Invoice' : 'Generate Tax Invoice') ?> - tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -196,13 +247,27 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
           <div class="content-wrapper">
             <div class="container-xxl flex-grow-1 container-p-y">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold py-3 mb-0">
-                  <?= $existingInvoice !== null ? 'Edit Invoice (' . $existingInvoice->getInvoiceNumber() . ')' : ($linkedQuotation !== null ? 'Generate Tax Invoice from Quotation ' . $linkedQuotation->getQuotationNumber() : 'Create New Tax Invoice') ?>
-                </h4>
-                <a href="invoices.php" class="btn btn-outline-secondary">
-                  <i class="icon-base bx bx-arrow-back me-1"></i> Back to Invoices
-                </a>
+                <h4 class="fw-bold py-3 mb-0"><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></h4>
+                <div class="d-flex gap-2">
+                  <?php if ($existingInvoice !== null): ?>
+                    <a href="invoice-details.php?id=<?= (int)$existingInvoice->getId() ?>" class="btn btn-outline-info">
+                      <i class="icon-base bx bx-file me-1"></i> View Invoice
+                    </a>
+                  <?php endif; ?>
+                  <a href="invoices.php" class="btn btn-outline-secondary">
+                    <i class="icon-base bx bx-arrow-back me-1"></i> Back to Invoices
+                  </a>
+                </div>
               </div>
+
+              <?php if ($isAddingRevision): ?>
+                <div class="alert alert-info alert-dismissible mb-4" role="alert">
+                  <i class="icon-base bx bx-info-circle me-1"></i>
+                  You are creating <strong>Version <?= $existingInvoice->getCurrentVersion() + 1 ?></strong> of Invoice <strong><?= htmlspecialchars($existingInvoice->getInvoiceNumber(), ENT_QUOTES, 'UTF-8') ?></strong>.
+                  The previous version(s) will be preserved in the revision history.
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              <?php endif; ?>
 
               <?php if ($actionError !== null): ?>
                 <div class="alert alert-danger alert-dismissible" role="alert">
@@ -211,15 +276,66 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 </div>
               <?php endif; ?>
 
-              <form method="POST" action="generate-invoice.php">
+              <form method="POST" action="generate-invoice.php<?= $invoiceId > 0 ? "?id={$invoiceId}" . ($isRevision ? '&revision=1' : '') : '' ?>">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
-                <input type="hidden" name="action" value="save" />
-                <?php if ($existingInvoice !== null): ?>
-                  <input type="hidden" name="id" value="<?= (int)$existingInvoice->getId() ?>" />
-                  <input type="hidden" name="invoice_number" value="<?= htmlspecialchars($existingInvoice->getInvoiceNumber(), ENT_QUOTES, 'UTF-8') ?>" />
+
+                <?php if ($isAddingRevision): ?>
+                  <input type="hidden" name="action" value="add_revision" />
+                  <input type="hidden" name="invoice_id" value="<?= (int)$existingInvoice->getId() ?>" />
+                <?php else: ?>
+                  <input type="hidden" name="action" value="save" />
+                  <?php if ($isEditing): ?>
+                    <input type="hidden" name="id" value="<?= (int)$existingInvoice->getId() ?>" />
+                    <input type="hidden" name="invoice_number" value="<?= htmlspecialchars($existingInvoice->getInvoiceNumber(), ENT_QUOTES, 'UTF-8') ?>" />
+                  <?php endif; ?>
                 <?php endif; ?>
-                <?php if ($linkedQuotation !== null): ?>
-                  <input type="hidden" name="quotation_id" value="<?= (int)$linkedQuotation->getId() ?>" />
+
+                <input type="hidden" name="quotation_id" id="quotation_id" value="<?= $linkedQuotation !== null ? (int)$linkedQuotation->getId() : '' ?>" />
+                <input type="hidden" name="quotation_version" id="quotation_version" value="<?= $versionNum !== null ? (int)$versionNum : '' ?>" />
+
+                <!-- Quotation Search & Selector Card -->
+                <?php if (!$isEditing && !$isAddingRevision): ?>
+                  <div class="card p-4 mb-4 border-primary">
+                    <h5 class="card-title text-primary mb-3">
+                      <i class="icon-base bx bx-search-alt me-1"></i> Step 1: Select Quotation <span class="text-danger">*</span>
+                    </h5>
+                    <div class="row g-3 align-items-end">
+                      <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="quotation_search_input">Quotation Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="quotation_search_input"
+                            placeholder="Enter Quotation No (e.g. QUO-2026-001)"
+                            value="<?= $linkedQuotation !== null ? htmlspecialchars($linkedQuotation->getQuotationNumber(), ENT_QUOTES, 'UTF-8') : '' ?>"
+                            required />
+                          <button type="button" class="btn btn-primary" id="btn_search_quotation">
+                            <i class="icon-base bx bx-search me-1"></i> Search & Load
+                          </button>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="quotation_version_select">Quotation Version</label>
+                        <select class="form-select" id="quotation_version_select" disabled>
+                          <option value="">-- Select Version --</option>
+                          <?php if ($linkedQuotation !== null): ?>
+                            <option value="<?= (int)$versionNum ?>" selected>Version <?= (int)$versionNum ?></option>
+                          <?php endif; ?>
+                        </select>
+                      </div>
+                      <div class="col-md-2">
+                        <div id="quotation_status_badge">
+                          <?php if ($linkedQuotation !== null): ?>
+                            <span class="badge bg-success w-100 py-2"><i class="icon-base bx bx-check-circle me-1"></i> Quotation Loaded</span>
+                          <?php else: ?>
+                            <span class="badge bg-warning text-dark w-100 py-2"><i class="icon-base bx bx-error me-1"></i> Quotation Required</span>
+                          <?php endif; ?>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="quotation_search_msg" class="form-text mt-2"></div>
+                  </div>
                 <?php endif; ?>
 
                 <!-- Customer & Invoice Details -->
@@ -235,8 +351,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         class="form-control"
                         id="service_request_id"
                         name="service_request_id"
-                        value="<?= htmlspecialchars($existingInvoice !== null ? $existingInvoice->getServiceRequestId() : ($linkedQuotation !== null ? $linkedQuotation->getServiceRequestId() : 'REQ-'), ENT_QUOTES, 'UTF-8') ?>"
-                        required />
+                        value="<?= htmlspecialchars($existingInvoice !== null ? $existingInvoice->getServiceRequestId() : ($linkedQuotation !== null ? $linkedQuotation->getServiceRequestId() : ''), ENT_QUOTES, 'UTF-8') ?>"
+                        required
+                        readonly />
                     </div>
 
                     <div class="col-md-4">
@@ -289,7 +406,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         class="form-control"
                         id="invoice_date"
                         name="invoice_date"
-                        value="<?= htmlspecialchars($existingInvoice !== null ? $existingInvoice->getInvoiceDate() : date('Y-m-d'), ENT_QUOTES, 'UTF-8') ?>"
+                        value="<?= htmlspecialchars($preFillInvoiceDate, ENT_QUOTES, 'UTF-8') ?>"
                         required />
                     </div>
 
@@ -300,28 +417,26 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         class="form-control"
                         id="due_date"
                         name="due_date"
-                        value="<?= htmlspecialchars($existingInvoice !== null ? $existingInvoice->getDueDate() : date('Y-m-d', strtotime('+7 days')), ENT_QUOTES, 'UTF-8') ?>"
+                        value="<?= htmlspecialchars($preFillDueDate, ENT_QUOTES, 'UTF-8') ?>"
                         required />
                     </div>
 
                     <div class="col-md-3">
                       <label class="form-label" for="payment_status">Payment Status</label>
                       <select class="form-select" id="payment_status" name="payment_status">
-                        <?php $curPStat = $existingInvoice !== null ? $existingInvoice->getPaymentStatus() : 'unpaid'; ?>
-                        <option value="unpaid" <?= $curPStat === 'unpaid' ? 'selected' : '' ?>>UNPAID</option>
-                        <option value="paid" <?= $curPStat === 'paid' ? 'selected' : '' ?>>PAID</option>
-                        <option value="partially_paid" <?= $curPStat === 'partially_paid' ? 'selected' : '' ?>>PARTIALLY PAID</option>
+                        <option value="unpaid" <?= $preFillPStatus === 'unpaid' ? 'selected' : '' ?>>UNPAID</option>
+                        <option value="paid" <?= $preFillPStatus === 'paid' ? 'selected' : '' ?>>PAID</option>
+                        <option value="partially_paid" <?= $preFillPStatus === 'partially_paid' ? 'selected' : '' ?>>PARTIALLY PAID</option>
                       </select>
                     </div>
 
                     <div class="col-md-3">
                       <label class="form-label" for="payment_method">Payment Method</label>
                       <select class="form-select" id="payment_method" name="payment_method">
-                        <?php $curPMeth = $existingInvoice !== null ? $existingInvoice->getPaymentMethod() : 'UPI'; ?>
-                        <option value="UPI" <?= $curPMeth === 'UPI' ? 'selected' : '' ?>>UPI / QR Code</option>
-                        <option value="Cash" <?= $curPMeth === 'Cash' ? 'selected' : '' ?>>Cash</option>
-                        <option value="Card" <?= $curPMeth === 'Card' ? 'selected' : '' ?>>Credit / Debit Card</option>
-                        <option value="Net Banking" <?= $curPMeth === 'Net Banking' ? 'selected' : '' ?>>Net Banking</option>
+                        <option value="UPI" <?= $preFillPMethod === 'UPI' ? 'selected' : '' ?>>UPI / QR Code</option>
+                        <option value="Cash" <?= $preFillPMethod === 'Cash' ? 'selected' : '' ?>>Cash</option>
+                        <option value="Card" <?= $preFillPMethod === 'Card' ? 'selected' : '' ?>>Credit / Debit Card</option>
+                        <option value="Net Banking" <?= $preFillPMethod === 'Net Banking' ? 'selected' : '' ?>>Net Banking</option>
                       </select>
                     </div>
                   </div>
@@ -413,15 +528,26 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 <!-- Notes Card -->
                 <div class="card p-4 mb-4">
                   <div class="mb-3">
-                    <label class="form-label" for="notes">Invoice Terms & Notes:</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Payment due within 7 days. Thank you for your business!"><?= htmlspecialchars($existingInvoice !== null ? (string)$existingInvoice->getNotes() : ($linkedQuotation !== null ? 'Tax Invoice generated from Quotation ' . $linkedQuotation->getQuotationNumber() : 'Tax Invoice generated by Sneat Admin'), ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <label class="form-label" for="notes"><?= $isAddingRevision ? 'Revision Notes:' : 'Invoice Terms & Notes:' ?></label>
+                    <textarea class="form-control" id="notes" name="<?= $isAddingRevision ? 'revision_notes' : 'notes' ?>" rows="2" placeholder="<?= $isAddingRevision ? 'Describe what changed in this revision...' : 'Payment due within 7 days. Thank you for your business!' ?>"><?= htmlspecialchars($preFillNotes, ENT_QUOTES, 'UTF-8') ?></textarea>
                   </div>
 
                   <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-success px-4">
-                      <i class="icon-base bx bx-check me-1"></i> Save & Generate Invoice
+                      <i class="icon-base bx bx-check me-1"></i>
+                      <?php if ($isAddingRevision): ?>
+                        Save Revision (v<?= $existingInvoice->getCurrentVersion() + 1 ?>)
+                      <?php elseif ($isEditing): ?>
+                        Update Invoice
+                      <?php else: ?>
+                        Save & Generate Invoice
+                      <?php endif; ?>
                     </button>
-                    <a href="invoices.php" class="btn btn-outline-secondary">Cancel</a>
+                    <?php if ($existingInvoice !== null): ?>
+                      <a href="invoice-details.php?id=<?= (int)$existingInvoice->getId() ?>" class="btn btn-outline-secondary">Cancel</a>
+                    <?php else: ?>
+                      <a href="invoices.php" class="btn btn-outline-secondary">Cancel</a>
+                    <?php endif; ?>
                   </div>
                 </div>
               </form>
@@ -514,6 +640,120 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         });
 
         calculateTotals();
+
+        // Quotation AJAX search & loading
+        function loadQuotationData(quotationNum, versionNum) {
+          let url = 'api-get-quotation.php?q=' + encodeURIComponent(quotationNum);
+          if (versionNum) {
+            url += '&version=' + versionNum;
+          }
+
+          $('#quotation_search_msg').html('<span class="text-info"><i class="icon-base bx bx-loader-alt bx-spin me-1"></i> Searching quotation details...</span>');
+
+          $.getJSON(url, function (res) {
+            if (!res.success) {
+              $('#quotation_search_msg').html('<span class="text-danger"><i class="icon-base bx bx-error me-1"></i> ' + res.message + '</span>');
+              $('#quotation_status_badge').html('<span class="badge bg-danger w-100 py-2"><i class="icon-base bx bx-x-circle me-1"></i> Not Found</span>');
+              $('#quotation_id').val('');
+              $('#quotation_version').val('');
+              return;
+            }
+
+            let q = res.quotation;
+            let v = res.version;
+
+            $('#quotation_id').val(q.id);
+            $('#quotation_version').val(v.version_number);
+            $('#service_request_id').val(q.service_request_id);
+            $('#customer_name').val(q.customer_name);
+            $('#customer_mobile').val(q.customer_mobile);
+            $('#customer_email').val(q.customer_email);
+            $('#service_name').val(q.service_name);
+            $('#inputDiscount').val(v.discount.toFixed(2));
+            $('#notes').val('Tax Invoice generated from Quotation ' + q.quotation_number + ' (Version ' + v.version_number + ')');
+
+            // Populate versions dropdown
+            let verSelect = $('#quotation_version_select');
+            verSelect.empty().prop('disabled', false);
+            res.available_versions.forEach(function (ver) {
+              let selected = (ver.version_number === v.version_number) ? 'selected' : '';
+              verSelect.append(`<option value="${ver.version_number}" ${selected}>Version ${ver.version_number} (₹${parseFloat(ver.total_amount).toFixed(2)})</option>`);
+            });
+
+            // Populate line items
+            let container = $('#itemsContainer');
+            container.empty();
+            rowCounter = 0;
+
+            if (v.items && v.items.length > 0) {
+              v.items.forEach(function (item) {
+                rowCounter++;
+                let newRow = `
+                  <tr class="item-row">
+                    <td>
+                      <input type="text" class="form-control item-desc" name="items[${rowCounter}][description]" value="${item.description.replace(/"/g, '&quot;')}" placeholder="Item / Labor description..." required />
+                    </td>
+                    <td>
+                      <input type="number" class="form-control item-qty" name="items[${rowCounter}][quantity]" value="${item.quantity}" min="1" required />
+                    </td>
+                    <td>
+                      <input type="number" step="0.01" class="form-control item-price" name="items[${rowCounter}][unit_price]" value="${parseFloat(item.unit_price).toFixed(2)}" min="0" required />
+                    </td>
+                    <td>
+                      <input type="number" step="0.01" class="form-control item-total" name="items[${rowCounter}][total_price]" value="${parseFloat(item.total_price).toFixed(2)}" readonly />
+                    </td>
+                    <td class="text-center">
+                      <button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-row"><i class="icon-base bx bx-trash"></i></button>
+                    </td>
+                  </tr>
+                `;
+                container.append(newRow);
+              });
+            }
+
+            calculateTotals();
+
+            $('#quotation_search_msg').html('<span class="text-success"><i class="icon-base bx bx-check-circle me-1"></i> Loaded Quotation ' + q.quotation_number + ' (Version ' + v.version_number + ') successfully!</span>');
+            $('#quotation_status_badge').html('<span class="badge bg-success w-100 py-2"><i class="icon-base bx bx-check-circle me-1"></i> Quotation Loaded</span>');
+          }).fail(function () {
+            $('#quotation_search_msg').html('<span class="text-danger"><i class="icon-base bx bx-error me-1"></i> Error loading quotation details. Please try again.</span>');
+            $('#quotation_status_badge').html('<span class="badge bg-danger w-100 py-2"><i class="icon-base bx bx-x-circle me-1"></i> Error</span>');
+          });
+        }
+
+        $('#btn_search_quotation').on('click', function () {
+          let qNum = $('#quotation_search_input').val().trim();
+          if (!qNum) {
+            alert('Please enter a Quotation Number to search.');
+            return;
+          }
+          loadQuotationData(qNum, null);
+        });
+
+        $('#quotation_search_input').on('keypress', function (e) {
+          if (e.which === 13) {
+            e.preventDefault();
+            $('#btn_search_quotation').click();
+          }
+        });
+
+        $('#quotation_version_select').on('change', function () {
+          let qNum = $('#quotation_search_input').val().trim();
+          let verNum = $(this).val();
+          if (qNum && verNum) {
+            loadQuotationData(qNum, verNum);
+          }
+        });
+
+        $('form').on('submit', function (e) {
+          let qId = $('#quotation_id').val();
+          let isEditing = <?= ($isEditing || $isAddingRevision) ? 'true' : 'false' ?>;
+          if (!isEditing && (!qId || parseInt(qId) <= 0)) {
+            e.preventDefault();
+            alert('A valid Quotation is required to generate an invoice. Please enter a Quotation Number and click "Search & Load".');
+            $('#quotation_search_input').focus();
+          }
+        });
       });
     </script>
   </body>

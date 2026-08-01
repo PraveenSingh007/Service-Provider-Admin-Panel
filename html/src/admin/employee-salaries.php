@@ -98,7 +98,7 @@ foreach ($empRepo->findAll() as $e) {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Salaries & Payslips - Sneat Admin</title>
+    <title>Salaries & Payslips - tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -320,6 +320,9 @@ foreach ($empRepo->findAll() as $e) {
                           <td><?= htmlspecialchars($sal->getPaymentDate() ?? '—', ENT_QUOTES, 'UTF-8') ?></td>
                           <td>
                             <div class="d-flex align-items-center gap-2">
+                              <a href="employee-payslip.php?id=<?= (int)$sal->getId() ?>" target="_blank" class="btn btn-sm btn-outline-info" title="View & Print Payslip">
+                                <i class="icon-base bx bx-file me-1"></i> Payslip
+                              </a>
                               <?php if ($sal->getPaymentStatus() !== 'paid'): ?>
                                 <form method="POST" action="employee-salaries.php" onsubmit="return confirm('Mark this salary as PAID?');">
                                   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />

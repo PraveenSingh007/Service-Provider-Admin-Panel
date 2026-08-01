@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Admin\Model;
 
 /**
- * Entity model for a Service Invoice.
+ * Entity model for a Service Invoice (Header).
+ * Financial details are now stored in InvoiceVersion records.
  */
 class Invoice
 {
@@ -17,19 +18,12 @@ class Invoice
     private string $customerMobile;
     private ?string $customerEmail;
     private string $serviceName;
-    private float $subtotal;
-    private float $discount;
-    private float $tax;
-    private float $totalAmount;
-    private string $paymentStatus;
-    private string $paymentMethod;
-    private string $invoiceDate;
-    private string $dueDate;
-    private ?string $notes;
+    private int $currentVersion;
+    private string $status;
     private ?string $createdAt;
     private ?string $updatedAt;
-    /** @var InvoiceItem[] */
-    private array $items;
+    /** @var InvoiceVersion[] */
+    private array $versions;
 
     public function __construct(
         ?int $id,
@@ -40,18 +34,11 @@ class Invoice
         string $customerMobile,
         ?string $customerEmail,
         string $serviceName,
-        float $subtotal,
-        float $discount,
-        float $tax,
-        float $totalAmount,
-        string $paymentStatus = 'unpaid',
-        string $paymentMethod = 'Cash',
-        string $invoiceDate = '',
-        string $dueDate = '',
-        ?string $notes = null,
+        int $currentVersion = 1,
+        string $status = 'active',
         ?string $createdAt = null,
         ?string $updatedAt = null,
-        array $items = []
+        array $versions = []
     ) {
         $this->id = $id;
         $this->invoiceNumber = $invoiceNumber;
@@ -61,18 +48,11 @@ class Invoice
         $this->customerMobile = $customerMobile;
         $this->customerEmail = $customerEmail;
         $this->serviceName = $serviceName;
-        $this->subtotal = $subtotal;
-        $this->discount = $discount;
-        $this->tax = $tax;
-        $this->totalAmount = $totalAmount;
-        $this->paymentStatus = $paymentStatus;
-        $this->paymentMethod = $paymentMethod;
-        $this->invoiceDate = !empty($invoiceDate) ? $invoiceDate : date('Y-m-d');
-        $this->dueDate = !empty($dueDate) ? $dueDate : date('Y-m-d', strtotime('+7 days'));
-        $this->notes = $notes;
+        $this->currentVersion = $currentVersion;
+        $this->status = $status;
         $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
-        $this->items = $items;
+        $this->versions = $versions;
     }
 
     public function getId(): ?int
@@ -115,49 +95,14 @@ class Invoice
         return $this->serviceName;
     }
 
-    public function getSubtotal(): float
+    public function getCurrentVersion(): int
     {
-        return $this->subtotal;
+        return $this->currentVersion;
     }
 
-    public function getDiscount(): float
+    public function getStatus(): string
     {
-        return $this->discount;
-    }
-
-    public function getTax(): float
-    {
-        return $this->tax;
-    }
-
-    public function getTotalAmount(): float
-    {
-        return $this->totalAmount;
-    }
-
-    public function getPaymentStatus(): string
-    {
-        return $this->paymentStatus;
-    }
-
-    public function getPaymentMethod(): string
-    {
-        return $this->paymentMethod;
-    }
-
-    public function getInvoiceDate(): string
-    {
-        return $this->invoiceDate;
-    }
-
-    public function getDueDate(): string
-    {
-        return $this->dueDate;
-    }
-
-    public function getNotes(): ?string
-    {
-        return $this->notes;
+        return $this->status;
     }
 
     public function getCreatedAt(): ?string
@@ -171,15 +116,109 @@ class Invoice
     }
 
     /**
+     * @return InvoiceVersion[]
+     */
+    public function getVersions(): array
+    {
+        return $this->versions;
+    }
+
+    public function setVersions(array $versions): void
+    {
+        $this->versions = $versions;
+    }
+
+    /**
+     * Get the latest (current) version object.
+     */
+    public function getLatestVersion(): ?InvoiceVersion
+    {
+        if (empty($this->versions)) {
+            return null;
+        }
+        return end($this->versions);
+    }
+
+    /**
+     * Get a specific version by version number.
+     */
+    public function getVersion(int $versionNumber): ?InvoiceVersion
+    {
+        foreach ($this->versions as $v) {
+            if ($v->getVersionNumber() === $versionNumber) {
+                return $v;
+            }
+        }
+        return null;
+    }
+
+    // Convenience accessors that delegate to the latest version for backward compatibility
+    public function getTotalAmount(): float
+    {
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getTotalAmount() : 0.0;
+    }
+
+    public function getSubtotal(): float
+    {
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getSubtotal() : 0.0;
+    }
+
+    public function getDiscount(): float
+    {
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getDiscount() : 0.0;
+    }
+
+    public function getTax(): float
+    {
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getTax() : 0.0;
+    }
+
+    public function getPaymentStatus(): string
+    {
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getPaymentStatus() : 'unpaid';
+    }
+
+    public function getPaymentMethod(): string
+    {
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getPaymentMethod() : 'Cash';
+    }
+
+    public function getInvoiceDate(): string
+    {
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getInvoiceDate() : date('Y-m-d');
+    }
+
+    public function getDueDate(): string
+    {
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getDueDate() : date('Y-m-d', strtotime('+7 days'));
+    }
+
+    public function getNotes(): ?string
+    {
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getRevisionNotes() : null;
+    }
+
+    /**
      * @return InvoiceItem[]
      */
     public function getItems(): array
     {
-        return $this->items;
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getItems() : [];
     }
 
-    public function setItems(array $items): void
+    public function getQuotationVersion(): ?int
     {
-        $this->items = $items;
+        $latest = $this->getLatestVersion();
+        return $latest !== null ? $latest->getQuotationVersion() : null;
     }
 }
