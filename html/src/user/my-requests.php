@@ -316,18 +316,27 @@ foreach ($invoiceRepo->findAll() as $inv) {
                                     <div class="row g-3 mb-4">
                                       <div class="col-md-6">
                                         <div class="border rounded-3 p-3 h-100 bg-white">
-                                          <h6 class="fw-bold mb-2 text-dark"><i class="bx bx-user-check text-primary me-2"></i>Assigned Technician</h6>
-                                          <div class="fw-semibold text-dark"><?= htmlspecialchars((string)($req['assign_to'] ?: 'Pending Assignment'), ENT_QUOTES, 'UTF-8') ?></div>
-                                          <?php if (!empty($req['preferred_visit_date'])): ?>
-                                            <div class="text-muted fs-7 mt-2"><i class="bx bx-time-five me-1"></i>Preferred Slot: <?= htmlspecialchars((string)$req['preferred_visit_date'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars(ucfirst((string)$req['preferred_time_slot']), ENT_QUOTES, 'UTF-8') ?>)</div>
-                                          <?php endif; ?>
+                                          <h6 class="fw-bold mb-2 text-dark"><i class="bx bx-user-check text-primary me-2"></i>Assigned Technician & Schedule</h6>
+                                          <div class="fw-semibold text-dark mb-1"><?= htmlspecialchars((string)($req['assign_to'] ?: 'Pending Assignment'), ENT_QUOTES, 'UTF-8') ?></div>
+                                          <div class="text-muted fs-7 mt-2"><i class="bx bx-calendar-event me-1 text-primary"></i><strong>Visit Date:</strong> <?= !empty($req['preferred_visit_date']) ? htmlspecialchars((string)$req['preferred_visit_date'], ENT_QUOTES, 'UTF-8') : 'Flexible / TBD' ?></div>
+                                          <div class="text-muted fs-7 mt-1"><i class="bx bx-time-five me-1 text-primary"></i><strong>Time Slot:</strong> <?= htmlspecialchars(ucfirst((string)($req['preferred_time_slot'] ?? 'anytime')), ENT_QUOTES, 'UTF-8') ?></div>
+                                          <div class="mt-2">
+                                            <?php if (!empty($req['site_inspection_required'])): ?>
+                                              <span class="badge bg-warning text-dark"><i class="bx bx-wrench me-1"></i>Site Inspection Required</span>
+                                            <?php else: ?>
+                                              <span class="badge bg-light text-muted">No Site Inspection</span>
+                                            <?php endif; ?>
+                                          </div>
                                         </div>
                                       </div>
                                       <div class="col-md-6">
                                         <div class="border rounded-3 p-3 h-100 bg-white">
                                           <h6 class="fw-bold mb-2 text-dark"><i class="bx bx-map-pin text-primary me-2"></i>Service Address</h6>
-                                          <div class="fs-7 text-dark"><?= htmlspecialchars((string)$req['request_address'], ENT_QUOTES, 'UTF-8') ?></div>
-                                          <div class="fs-7 text-muted"><?= htmlspecialchars((string)$req['request_city'] . ', ' . (string)$req['request_state'] . ' - ' . (string)$req['request_pincode'], ENT_QUOTES, 'UTF-8') ?></div>
+                                          <div class="fs-7 text-dark fw-semibold"><?= htmlspecialchars((string)$req['request_address'], ENT_QUOTES, 'UTF-8') ?></div>
+                                          <?php if (!empty($req['landmark'])): ?>
+                                            <div class="fs-7 text-dark"><i class="bx bx-building-house me-1 text-muted"></i><strong>Landmark:</strong> <?= htmlspecialchars((string)$req['landmark'], ENT_QUOTES, 'UTF-8') ?></div>
+                                          <?php endif; ?>
+                                          <div class="fs-7 text-muted mt-1"><?= htmlspecialchars((string)$req['request_city'] . ', ' . (string)$req['request_state'] . ' - ' . (string)$req['request_pincode'], ENT_QUOTES, 'UTF-8') ?></div>
                                         </div>
                                       </div>
                                     </div>
@@ -352,9 +361,11 @@ foreach ($invoiceRepo->findAll() as $inv) {
                                           <h6 class="fw-bold mb-2 text-dark"><i class="bx bx-file text-primary me-2"></i>Quotation Status</h6>
                                           <?php if ($quoNo !== '' && isset($allQuotations[$quoNo])): ?>
                                             <?php $quoObj = $allQuotations[$quoNo]; ?>
-                                            <div class="mb-2">
-                                              <a href="../admin/quotation-details.php?id=<?= $quoObj->getId() ?>" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">
-                                                <i class="bx bxs-file-pdf me-1"></i> View <?= htmlspecialchars($quoNo, ENT_QUOTES, 'UTF-8') ?>
+                                            <div class="mb-3">
+                                              <a href="../admin/quotation-details.php?id=<?= $quoObj->getId() ?>&print=1" target="_blank" class="d-inline-flex align-items-center gap-2 p-2 px-3 border border-danger border-opacity-25 rounded-3 bg-danger-subtle text-danger text-decoration-none fw-semibold shadow-xs">
+                                                <i class="bx bxs-file-pdf fs-4"></i>
+                                                <span><?= htmlspecialchars($quoNo, ENT_QUOTES, 'UTF-8') ?>.pdf</span>
+                                                <i class="bx bx-export fs-6 ms-1"></i>
                                               </a>
                                             </div>
                                             <div class="fw-bold text-dark mb-2">Total Amount: ₹<?= number_format((float)$quoObj->getTotalAmount(), 2) ?></div>
@@ -382,9 +393,11 @@ foreach ($invoiceRepo->findAll() as $inv) {
                                             <span class="badge bg-label-warning text-dark"><i class="bx bx-lock-alt me-1"></i> Approve Quotation First</span>
                                           <?php elseif ($invNo !== '' && isset($allInvoices[$invNo])): ?>
                                             <?php $invObj = $allInvoices[$invNo]; ?>
-                                            <div class="mb-2">
-                                              <a href="../admin/invoice-details.php?id=<?= $invObj->getId() ?>" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">
-                                                <i class="bx bxs-file-pdf me-1"></i> View <?= htmlspecialchars($invNo, ENT_QUOTES, 'UTF-8') ?>
+                                            <div class="mb-3">
+                                              <a href="../admin/invoice-details.php?id=<?= $invObj->getId() ?>&print=1" target="_blank" class="d-inline-flex align-items-center gap-2 p-2 px-3 border border-danger border-opacity-25 rounded-3 bg-danger-subtle text-danger text-decoration-none fw-semibold shadow-xs">
+                                                <i class="bx bxs-file-pdf fs-4"></i>
+                                                <span><?= htmlspecialchars($invNo, ENT_QUOTES, 'UTF-8') ?>.pdf</span>
+                                                <i class="bx bx-export fs-6 ms-1"></i>
                                               </a>
                                             </div>
                                             <div class="fw-bold text-dark mb-2">Total Amount: ₹<?= number_format((float)$invObj->getTotalAmount(), 2) ?></div>

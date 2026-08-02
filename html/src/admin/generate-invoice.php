@@ -457,11 +457,13 @@ if ($isAddingRevision) {
                     <table class="table table-bordered align-middle" id="itemsTable">
                       <thead class="table-light">
                         <tr>
-                          <th style="width: 45%;">Description</th>
-                          <th style="width: 15%;">Qty</th>
-                          <th style="width: 20%;">Unit Price (₹)</th>
-                          <th style="width: 15%;">Total (₹)</th>
-                          <th style="width: 5%;">Action</th>
+                          <th style="width: 35%;">Description</th>
+                          <th style="width: 10%;">Qty</th>
+                          <th style="width: 15%;">Unit Price (₹)</th>
+                          <th style="width: 12%;">Discount (%)</th>
+                          <th style="width: 12%;">GST (%)</th>
+                          <th style="width: 12%;">Total (₹)</th>
+                          <th style="width: 4%;">Action</th>
                         </tr>
                       </thead>
                       <tbody id="itemsContainer">
@@ -473,6 +475,8 @@ if ($isAddingRevision) {
                             $desc = $item !== null ? $item->getItemDescription() : '';
                             $qty = $item !== null ? $item->getQuantity() : 1;
                             $uPrice = $item !== null ? $item->getUnitPrice() : 0.0;
+                            $discPct = $item !== null ? $item->getDiscountPercent() : 0.0;
+                            $gstPct = $item !== null ? $item->getGstPercent() : 18.0;
                             $tPrice = $item !== null ? $item->getTotalPrice() : 0.0;
                         ?>
                           <tr class="item-row">
@@ -484,6 +488,12 @@ if ($isAddingRevision) {
                             </td>
                             <td>
                               <input type="number" step="0.01" class="form-control item-price" name="items[<?= $idx ?>][unit_price]" value="<?= number_format($uPrice, 2, '.', '') ?>" min="0" required />
+                            </td>
+                            <td>
+                              <input type="number" step="0.01" class="form-control item-disc-pct" name="items[<?= $idx ?>][discount_percent]" value="<?= number_format($discPct, 2, '.', '') ?>" min="0" max="100" placeholder="0" />
+                            </td>
+                            <td>
+                              <input type="number" step="0.01" class="form-control item-gst-pct" name="items[<?= $idx ?>][gst_percent]" value="<?= number_format($gstPct, 2, '.', '') ?>" min="0" max="100" placeholder="18" />
                             </td>
                             <td>
                               <input type="number" step="0.01" class="form-control item-total" name="items[<?= $idx ?>][total_price]" value="<?= number_format($tPrice, 2, '.', '') ?>" readonly />
@@ -502,16 +512,17 @@ if ($isAddingRevision) {
                     <div class="col-md-5">
                       <div class="border rounded p-3 bg-light">
                         <div class="d-flex justify-content-between mb-2">
-                          <span>Subtotal:</span>
+                          <span>Subtotal (Base Amount):</span>
                           <strong id="dispSubtotal">₹0.00</strong>
                           <input type="hidden" name="subtotal" id="inputSubtotal" value="0" />
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                          <span>Discount (₹):</span>
-                          <input type="number" step="0.01" class="form-control form-control-sm text-end w-50" name="discount" id="inputDiscount" value="<?= number_format($preFillDiscount, 2, '.', '') ?>" />
+                          <span>Item Discounts:</span>
+                          <strong id="dispDiscount">₹0.00</strong>
+                          <input type="hidden" name="discount" id="inputDiscount" value="0" />
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                          <span>GST Tax (18%):</span>
+                          <span>GST Tax Amount:</span>
                           <strong id="dispTax">₹0.00</strong>
                           <input type="hidden" name="tax" id="inputTax" value="0" />
                         </div>
@@ -574,34 +585,43 @@ if ($isAddingRevision) {
 
         function calculateTotals() {
           let subtotal = 0;
+          let totalDiscount = 0;
+          let totalTax = 0;
 
           $('#itemsContainer tr.item-row').each(function () {
             let qty = parseFloat($(this).find('.item-qty').val()) || 0;
             let price = parseFloat($(this).find('.item-price').val()) || 0;
-            let total = qty * price;
-            $(this).find('.item-total').val(total.toFixed(2));
-            subtotal += total;
+            let discPct = parseFloat($(this).find('.item-disc-pct').val()) || 0;
+            let gstPct = parseFloat($(this).find('.item-gst-pct').val()) || 0;
+
+            let baseTotal = qty * price;
+            let discAmt = baseTotal * (discPct / 100);
+            let taxable = baseTotal - discAmt;
+            let gstAmt = taxable * (gstPct / 100);
+            let itemTotal = taxable + gstAmt;
+
+            $(this).find('.item-total').val(itemTotal.toFixed(2));
+
+            subtotal += baseTotal;
+            totalDiscount += discAmt;
+            totalTax += gstAmt;
           });
 
-          let discount = parseFloat($('#inputDiscount').val()) || 0;
-          let taxableAmount = Math.max(0, subtotal - discount);
-          let tax = taxableAmount * 0.18; // 18% GST
-          let finalTotal = taxableAmount + tax;
+          let finalTotal = (subtotal - totalDiscount) + totalTax;
 
           $('#dispSubtotal').text('₹' + subtotal.toFixed(2));
           $('#inputSubtotal').val(subtotal.toFixed(2));
 
-          $('#dispTax').text('₹' + tax.toFixed(2));
-          $('#inputTax').val(tax.toFixed(2));
+          $('#dispDiscount').text('₹' + totalDiscount.toFixed(2));
+          $('#inputDiscount').val(totalDiscount.toFixed(2));
+
+          $('#dispTax').text('₹' + totalTax.toFixed(2));
+          $('#inputTax').val(totalTax.toFixed(2));
 
           $('#dispTotal').text('₹' + finalTotal.toFixed(2));
         }
 
-        $('#itemsContainer').on('input', '.item-qty, .item-price', function () {
-          calculateTotals();
-        });
-
-        $('#inputDiscount').on('input', function () {
+        $('#itemsContainer').on('input', '.item-qty, .item-price, .item-disc-pct, .item-gst-pct', function () {
           calculateTotals();
         });
 
@@ -617,6 +637,12 @@ if ($isAddingRevision) {
               </td>
               <td>
                 <input type="number" step="0.01" class="form-control item-price" name="items[${rowCounter}][unit_price]" value="0.00" min="0" required />
+              </td>
+              <td>
+                <input type="number" step="0.01" class="form-control item-disc-pct" name="items[${rowCounter}][discount_percent]" value="0.00" min="0" max="100" placeholder="0" />
+              </td>
+              <td>
+                <input type="number" step="0.01" class="form-control item-gst-pct" name="items[${rowCounter}][gst_percent]" value="18.00" min="0" max="100" placeholder="18" />
               </td>
               <td>
                 <input type="number" step="0.01" class="form-control item-total" name="items[${rowCounter}][total_price]" value="0.00" readonly />

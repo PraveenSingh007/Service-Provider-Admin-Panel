@@ -20,8 +20,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (empty($_SESSION['user'])) {
-    header('Location: index.php');
+if (empty($_SESSION['user']) && empty($_SESSION['customer_user'])) {
+    header('Location: ../user/login.php');
     exit;
 }
 
@@ -54,15 +54,11 @@ if ($activeVersion === null && !empty($versions)) {
 $activeVersionNum = $activeVersion !== null ? $activeVersion->getVersionNumber() : $quotation->getCurrentVersion();
 $existingVersionInvoice = null;
 
-$checkVerInvSql = "SELECT id, invoice_number FROM invoices 
-    WHERE (quotation_id = ? AND quotation_version = ?) 
-       OR (quotation_id = ? AND notes LIKE ?) 
-    LIMIT 1";
+$checkVerInvSql = "SELECT id, invoice_number FROM invoices WHERE quotation_id = ? LIMIT 1";
 $checkVerStmt = $dbConn->prepare($checkVerInvSql);
 if ($checkVerStmt) {
     $qId = $quotation->getId();
-    $notePattern = "%(Version {$activeVersionNum})%";
-    $checkVerStmt->bind_param('iiis', $qId, $activeVersionNum, $qId, $notePattern);
+    $checkVerStmt->bind_param('i', $qId);
     $checkVerStmt->execute();
     $resVerInv = $checkVerStmt->get_result();
     if ($resVerInv && $invRow = $resVerInv->fetch_assoc()) {
@@ -141,33 +137,41 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
   </head>
   <body>
     <div class="container no-print mb-4 d-flex justify-content-between align-items-center" style="max-width: 900px;">
-      <a href="quotations.php" class="btn btn-outline-secondary">
-        <i class="icon-base bx bx-arrow-back me-1"></i> Back to Quotations
-      </a>
-      <div class="d-flex gap-2">
-        <?php if ($existingVersionInvoice === null): ?>
-          <a href="generate-invoice.php?quotation_id=<?= $quotation->getId() ?>&version=<?= $activeVersionNum ?>" class="btn btn-success">
-            <i class="icon-base bx bx-file me-1"></i> Generate Invoice (v<?= $activeVersionNum ?>)
-          </a>
-        <?php else: ?>
-          <a href="invoice-details.php?id=<?= (int)$existingVersionInvoice['id'] ?>" class="btn btn-outline-success">
-            <i class="icon-base bx bx-check-circle me-1"></i> View Invoice (<?= htmlspecialchars((string)$existingVersionInvoice['invoice_number'], ENT_QUOTES, 'UTF-8') ?>)
-          </a>
-        <?php endif; ?>
-        <a href="add-quotation.php?id=<?= $quotation->getId() ?>" class="btn btn-warning">
-          <i class="icon-base bx bx-plus-circle me-1"></i> Add Revision (v<?= $quotation->getCurrentVersion() + 1 ?>)
+      <?php if (!empty($_SESSION['customer_user'])): ?>
+        <a href="../user/my-requests.php" class="btn btn-outline-secondary">
+          <i class="icon-base bx bx-arrow-back me-1"></i> Back
         </a>
-        <?php if ($existingVersionInvoice !== null): ?>
-          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#deleteVersionModal" title="Deletion locked because invoice exists">
-            <i class="icon-base bx bx-lock-alt me-1"></i> Delete v<?= $activeVersionNum ?> (Locked)
-          </button>
-        <?php else: ?>
-          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteVersionModal">
-            <i class="icon-base bx bx-trash me-1"></i> Delete v<?= $activeVersionNum ?>
-          </button>
+      <?php else: ?>
+        <a href="quotations.php" class="btn btn-outline-secondary">
+          <i class="icon-base bx bx-arrow-back me-1"></i> Back to Quotations
+        </a>
+      <?php endif; ?>
+      <div class="d-flex gap-2">
+        <?php if (!empty($_SESSION['user'])): ?>
+          <?php if ($existingVersionInvoice === null): ?>
+            <a href="generate-invoice.php?quotation_id=<?= $quotation->getId() ?>&version=<?= $activeVersionNum ?>" class="btn btn-success">
+              <i class="icon-base bx bx-file me-1"></i> Create Invoice (v<?= $activeVersionNum ?>)
+            </a>
+          <?php else: ?>
+            <a href="invoice-details.php?id=<?= (int)$existingVersionInvoice['id'] ?>" class="btn btn-outline-success">
+              <i class="icon-base bx bx-check-circle me-1"></i> View Invoice (<?= htmlspecialchars((string)$existingVersionInvoice['invoice_number'], ENT_QUOTES, 'UTF-8') ?>)
+            </a>
+          <?php endif; ?>
+          <a href="add-quotation.php?id=<?= $quotation->getId() ?>" class="btn btn-warning">
+            <i class="icon-base bx bx-plus-circle me-1"></i> Add Revision (v<?= $quotation->getCurrentVersion() + 1 ?>)
+          </a>
+          <?php if ($existingVersionInvoice !== null): ?>
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#deleteVersionModal" title="Deletion locked because invoice exists">
+              <i class="icon-base bx bx-lock-alt me-1"></i> Delete v<?= $activeVersionNum ?> (Locked)
+            </button>
+          <?php else: ?>
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteVersionModal">
+              <i class="icon-base bx bx-trash me-1"></i> Delete v<?= $activeVersionNum ?>
+            </button>
+          <?php endif; ?>
         <?php endif; ?>
         <button onclick="window.print();" class="btn btn-primary">
-          <i class="icon-base bx bx-printer me-1"></i> Print / PDF
+          <i class="icon-base bx bx-printer me-1"></i> Print
         </button>
       </div>
     </div>
@@ -236,7 +240,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
           <h3 class="fw-bold text-dark mb-1">QUOTATION</h3>
           <span class="badge bg-label-primary fs-6"><?= htmlspecialchars($quotation->getQuotationNumber(), ENT_QUOTES, 'UTF-8') ?></span>
           <div class="mt-1 text-muted">
-            <strong>Version:</strong> <?= $activeVersion !== null ? $activeVersion->getVersionNumber() : 1 ?> of <?= $quotation->getCurrentVersion() ?>
+            <!-- <strong>Version:</strong> <?= $activeVersion !== null ? $activeVersion->getVersionNumber() : 1 ?> of <?= $quotation->getCurrentVersion() ?> -->
           </div>
         </div>
       </div>
@@ -246,8 +250,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
         <div class="col-6">
           <h6 class="fw-bold text-secondary text-uppercase mb-2">Service Request Info</h6>
           <div><strong>Request ID:</strong> <span class="badge bg-label-info"><?= htmlspecialchars($quotation->getServiceRequestId(), ENT_QUOTES, 'UTF-8') ?></span></div>
-          <div><strong>Service Name:</strong> <?= htmlspecialchars($quotation->getServiceName(), ENT_QUOTES, 'UTF-8') ?></div>
           <div><strong>Date Created:</strong> <?= htmlspecialchars($activeVersion !== null ? (string)$activeVersion->getCreatedAt() : (string)$quotation->getCreatedAt(), ENT_QUOTES, 'UTF-8') ?></div>
+          <div><strong>Service Name:</strong> <?= htmlspecialchars($quotation->getServiceName(), ENT_QUOTES, 'UTF-8') ?></div>
         </div>
         <div class="col-6 text-end">
           <h6 class="fw-bold text-secondary text-uppercase mb-2">Customer Details</h6>
@@ -261,7 +265,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
 
       <?php if ($activeVersion !== null && !empty($activeVersion->getRevisionNotes())): ?>
         <div class="alert alert-warning mb-4">
-          <strong><i class="icon-base bx bx-info-circle me-1"></i> Revision Remarks for Version <?= $activeVersion->getVersionNumber() ?>:</strong>
+          <strong><i class="icon-base bx bx-info-circle me-1"></i> Remarks for Version <?= $activeVersion->getVersionNumber() ?>:</strong>
           <?= htmlspecialchars($activeVersion->getRevisionNotes(), ENT_QUOTES, 'UTF-8') ?>
         </div>
       <?php endif; ?>
@@ -271,10 +275,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
         <table class="table table-bordered align-middle">
           <thead class="table-light">
             <tr>
-              <th style="width: 50%;">Item / Labor Particulars</th>
-              <th style="width: 15%;" class="text-center">Qty</th>
-              <th style="width: 17%;" class="text-end">Unit Price (₹)</th>
-              <th style="width: 18%;" class="text-end">Total Amount (₹)</th>
+              <th style="width: 35%;">Particulars</th>
+              <th style="width: 10%;" class="text-center">Qty</th>
+              <th style="width: 15%;" class="text-end">Unit Price (₹)</th>
+              <th style="width: 12%;" class="text-center">Disc (%)</th>
+              <th style="width: 12%;" class="text-center">GST (%)</th>
+              <th style="width: 16%;" class="text-end">Total Amount (₹)</th>
             </tr>
           </thead>
           <tbody>
@@ -284,11 +290,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
                   <td><?= htmlspecialchars($item->getItemDescription(), ENT_QUOTES, 'UTF-8') ?></td>
                   <td class="text-center"><?= $item->getQuantity() ?></td>
                   <td class="text-end">₹<?= number_format($item->getUnitPrice(), 2) ?></td>
+                  <td class="text-center"><?= number_format($item->getDiscountPercent(), 2) ?>%</td>
+                  <td class="text-center"><?= number_format($item->getGstPercent(), 2) ?>%</td>
                   <td class="text-end fw-semibold">₹<?= number_format($item->getTotalPrice(), 2) ?></td>
                 </tr>
               <?php endforeach; ?>
             <?php else: ?>
-              <tr><td colspan="4" class="text-center text-muted">No items recorded for this version.</td></tr>
+              <tr><td colspan="6" class="text-center text-muted">No items recorded for this version.</td></tr>
             <?php endif; ?>
           </tbody>
         </table>
@@ -299,21 +307,21 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
         <div class="col-md-5">
           <table class="table table-borderless">
             <tr>
-              <td>Subtotal:</td>
+              <td>Subtotal (Base Amount):</td>
               <td class="text-end fw-semibold">₹<?= number_format($activeVersion !== null ? $activeVersion->getSubtotal() : 0, 2) ?></td>
             </tr>
             <?php if ($activeVersion !== null && $activeVersion->getDiscount() > 0): ?>
               <tr>
-                <td>Discount:</td>
+                <td>Total Discount:</td>
                 <td class="text-end text-danger">- ₹<?= number_format($activeVersion->getDiscount(), 2) ?></td>
               </tr>
             <?php endif; ?>
             <tr>
-              <td>GST Tax (18%):</td>
+              <td>GST Tax Amount:</td>
               <td class="text-end fw-semibold">₹<?= number_format($activeVersion !== null ? $activeVersion->getTax() : 0, 2) ?></td>
             </tr>
             <tr class="border-top border-2">
-              <td class="fs-5 fw-bold text-primary">Final Total:</td>
+              <td class="fs-5 fw-bold text-primary">Grand Total:</td>
               <td class="text-end fs-5 fw-bold text-primary">₹<?= number_format($activeVersion !== null ? $activeVersion->getTotalAmount() : 0, 2) ?></td>
             </tr>
           </table>
@@ -322,7 +330,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
 
       <div class="border-top pt-4 mt-4 text-muted" style="font-size: 12px;">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <div>Prepared by: <strong><?= htmlspecialchars($activeVersion !== null && $activeVersion->getCreatedBy() !== null ? $activeVersion->getCreatedBy() : 'Admin', ENT_QUOTES, 'UTF-8') ?></strong></div>
+          <div></div>
           <div class="fw-semibold" style="color: #1a9df4;">Thank you for choosing <?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'tech-xpert Services', ENT_QUOTES, 'UTF-8') ?>!</div>
         </div>
         <div class="text-center text-secondary border-top pt-2 mt-2">
@@ -375,5 +383,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
     <!-- JS Scripts -->
     <script src="../../../assets/vendor/libs/jquery/jquery.js"></script>
     <script src="../../../assets/vendor/js/bootstrap.js"></script>
+    <script>
+      $(document).ready(function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === '1' || urlParams.get('pdf') === '1') {
+          setTimeout(function() {
+            window.print();
+          }, 300);
+        }
+      });
+    </script>
   </body>
 </html>

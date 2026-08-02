@@ -291,8 +291,17 @@ class ServiceRequestRepository
             $priority = (string) ($data['priority'] ?? 'medium');
             $status = (string) ($data['request_status'] ?? 'pending');
             $statusNotes = !empty($data['request_status_notes']) ? (string) $data['request_status_notes'] : null;
-            $assignTo = !empty($data['assign_to']) ? (string) $data['assign_to'] : null;
             $empId = !empty($data['assigned_employee_id']) ? (int) $data['assigned_employee_id'] : null;
+            $assignTo = !empty($data['assign_to']) ? (string) $data['assign_to'] : null;
+            if ($empId !== null && empty($assignTo)) {
+                $employees = $this->getActiveEmployees();
+                foreach ($employees as $emp) {
+                    if ($emp['id'] === $empId) {
+                        $assignTo = $emp['emp_name'] . ' (' . $emp['emp_role'] . ')';
+                        break;
+                    }
+                }
+            }
             $amcNo = !empty($data['amc_contract_number']) ? (string) $data['amc_contract_number'] : null;
             $quoNo = !empty($data['request_quotation_no']) ? (string) $data['request_quotation_no'] : null;
             $invNo = !empty($data['request_invoice_no']) ? (string) $data['request_invoice_no'] : null;
@@ -367,14 +376,23 @@ class ServiceRequestRepository
             $priority = (string) ($data['priority'] ?? 'medium');
             $status = (string) ($data['request_status'] ?? 'pending');
             $statusNotes = !empty($data['request_status_notes']) ? (string) $data['request_status_notes'] : null;
-            $assignTo = !empty($data['assign_to']) ? (string) $data['assign_to'] : null;
             $empId = !empty($data['assigned_employee_id']) ? (int) $data['assigned_employee_id'] : null;
+            $assignTo = !empty($data['assign_to']) ? (string) $data['assign_to'] : null;
+            if ($empId !== null && empty($assignTo)) {
+                $employees = $this->getActiveEmployees();
+                foreach ($employees as $emp) {
+                    if ($emp['id'] === $empId) {
+                        $assignTo = $emp['emp_name'] . ' (' . $emp['emp_role'] . ')';
+                        break;
+                    }
+                }
+            }
             $amcNo = !empty($data['amc_contract_number']) ? (string) $data['amc_contract_number'] : null;
             $quoNo = !empty($data['request_quotation_no']) ? (string) $data['request_quotation_no'] : null;
             $invNo = !empty($data['request_invoice_no']) ? (string) $data['request_invoice_no'] : null;
 
             $stmt->bind_param(
-                'sssissssssssssissssiissssi',
+                'sssissssssssssssississssisi',
                 $custName, $mobile, $email,
                 $serviceId, $serviceName, $category, $requestType,
                 $description, $deviceDetails,

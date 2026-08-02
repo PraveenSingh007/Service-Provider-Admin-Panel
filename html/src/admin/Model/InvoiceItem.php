@@ -15,6 +15,8 @@ class InvoiceItem
     private string $itemDescription;
     private int $quantity;
     private float $unitPrice;
+    private float $discountPercent;
+    private float $gstPercent;
     private float $totalPrice;
 
     public function __construct(
@@ -23,7 +25,9 @@ class InvoiceItem
         string $itemDescription,
         int $quantity,
         float $unitPrice,
-        float $totalPrice
+        float $totalPrice,
+        float $discountPercent = 0.0,
+        float $gstPercent = 0.0
     ) {
         $this->id = $id;
         $this->versionId = $versionId;
@@ -31,6 +35,8 @@ class InvoiceItem
         $this->quantity = $quantity;
         $this->unitPrice = $unitPrice;
         $this->totalPrice = $totalPrice;
+        $this->discountPercent = $discountPercent;
+        $this->gstPercent = $gstPercent;
     }
 
     public function getId(): ?int
@@ -56,6 +62,16 @@ class InvoiceItem
     public function getUnitPrice(): float
     {
         return $this->unitPrice;
+    }
+
+    public function getDiscountPercent(): float
+    {
+        return $this->discountPercent;
+    }
+
+    public function getGstPercent(): float
+    {
+        return $this->gstPercent;
     }
 
     public function getTotalPrice(): float

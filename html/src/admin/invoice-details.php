@@ -27,7 +27,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (empty($_SESSION['user'])) {
+if (empty($_SESSION['user']) && empty($_SESSION['customer_user'])) {
     header('Location: index.php');
     exit;
 }
@@ -308,10 +308,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
         <table class="table table-bordered align-middle">
           <thead class="table-light">
             <tr>
-              <th style="width: 50%;">Item / Service Description</th>
-              <th style="width: 15%;" class="text-center">Qty</th>
-              <th style="width: 17%;" class="text-end">Unit Price (₹)</th>
-              <th style="width: 18%;" class="text-end">Total Amount (₹)</th>
+              <th style="width: 35%;">Item / Service Description</th>
+              <th style="width: 10%;" class="text-center">Qty</th>
+              <th style="width: 15%;" class="text-end">Unit Price (₹)</th>
+              <th style="width: 12%;" class="text-center">Disc (%)</th>
+              <th style="width: 12%;" class="text-center">GST (%)</th>
+              <th style="width: 16%;" class="text-end">Total Amount (₹)</th>
             </tr>
           </thead>
           <tbody>
@@ -321,11 +323,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
                   <td><?= htmlspecialchars($item->getItemDescription(), ENT_QUOTES, 'UTF-8') ?></td>
                   <td class="text-center"><?= $item->getQuantity() ?></td>
                   <td class="text-end">₹<?= number_format($item->getUnitPrice(), 2) ?></td>
+                  <td class="text-center"><?= number_format($item->getDiscountPercent(), 2) ?>%</td>
+                  <td class="text-center"><?= number_format($item->getGstPercent(), 2) ?>%</td>
                   <td class="text-end fw-semibold">₹<?= number_format($item->getTotalPrice(), 2) ?></td>
                 </tr>
               <?php endforeach; ?>
             <?php else: ?>
-              <tr><td colspan="4" class="text-center text-muted">No line items recorded.</td></tr>
+              <tr><td colspan="6" class="text-center text-muted">No line items recorded.</td></tr>
             <?php endif; ?>
           </tbody>
         </table>
@@ -336,17 +340,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
         <div class="col-md-5">
           <table class="table table-borderless">
             <tr>
-              <td>Subtotal:</td>
+              <td>Subtotal (Base Amount):</td>
               <td class="text-end fw-semibold">₹<?= number_format($activeVersion !== null ? $activeVersion->getSubtotal() : 0, 2) ?></td>
             </tr>
             <?php if ($activeVersion !== null && $activeVersion->getDiscount() > 0): ?>
               <tr>
-                <td>Discount:</td>
+                <td>Total Discount:</td>
                 <td class="text-end text-danger">- ₹<?= number_format($activeVersion->getDiscount(), 2) ?></td>
               </tr>
             <?php endif; ?>
             <tr>
-              <td>GST Tax (18%):</td>
+              <td>GST Tax Amount:</td>
               <td class="text-end fw-semibold">₹<?= number_format($activeVersion !== null ? $activeVersion->getTax() : 0, 2) ?></td>
             </tr>
             <tr class="border-top border-2">

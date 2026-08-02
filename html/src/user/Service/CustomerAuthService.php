@@ -34,7 +34,7 @@ class CustomerAuthService
      *
      * @return array{success: bool, message: string, otp_code?: string, errors?: string[]}
      */
-    public function requestOtp(string $email): array
+    public function requestOtp(string $email, bool $forceNew = false): array
     {
         $email = strtolower(trim($email));
 
@@ -46,11 +46,10 @@ class CustomerAuthService
             ];
         }
 
-        // Check for existing active (unexpired, unused) OTP for this email
         $activeOtp = $this->repository->getActiveOtp($email);
         $isReused = false;
 
-        if ($activeOtp !== null && !empty($activeOtp['otp_code'])) {
+        if ($activeOtp !== null && !empty($activeOtp['otp_code']) && !$forceNew) {
             // Reuse existing active OTP without creating a new record in DB
             $otpCode = (string) $activeOtp['otp_code'];
             $isReused = true;
@@ -74,9 +73,18 @@ class CustomerAuthService
             }
         }
 
-        // Load SMTP Configuration
-        $smtpConfigFile = __DIR__ . '/../../smtp_config.php';
-        $smtpConfig = file_exists($smtpConfigFile) ? require $smtpConfigFile : ['enabled' => false];
+        // Calculate expiration timestamp using active OTP if reused, otherwise 30 minutes from now
+        $expiresAtTimestamp = isset($activeOtp['expires_at']) && $isReused ? strtotime($activeOtp['expires_at']) : (time() + 1800);
+        $formattedExpiry = date('h:i A \I\S\T', $expiresAtTimestamp);
+
+        // Load SMTP configuration. The SMTP config file lives at html/smtp_config.php.
+        $smtpConfigFile = __DIR__ . '/../../../smtp_config.php';
+        if (!file_exists($smtpConfigFile)) {
+            error_log('CustomerAuthService: SMTP config file not found at ' . $smtpConfigFile);
+            $smtpConfig = ['enabled' => false];
+        } else {
+            $smtpConfig = require $smtpConfigFile;
+        }
 
         $emailSent = false;
         $smtpError = null;
@@ -91,43 +99,80 @@ class CustomerAuthService
             $mail->Password = (string) ($smtpConfig['password'] ?? '');
 
             $mail->setFrom(
-                (string) ($smtpConfig['from_email'] ?? $smtpConfig['username']),
+                (string) ($smtpConfig['from_email'] ?? $smtpConfig['username'] ?? 'no-reply@example.com'),
                 (string) ($smtpConfig['from_name'] ?? 'tech-xpert Portal')
             );
             $mail->addAddress($email);
-            $mail->Subject = 'Your tech-xpert Portal Login OTP: ' . $otpCode;
+            $mail->Subject = 'tech-xpert Verification Code: ' . $otpCode;
             $mail->isHTML(true);
 
+            $logoPath = __DIR__ . '/../../../uploads/logo.png';
+            $logoSrc = '';
+            if (file_exists($logoPath)) {
+                $logoContent = file_get_contents($logoPath);
+                if ($logoContent !== false) {
+                    $logoSrc = 'data:image/png;base64,' . base64_encode($logoContent);
+                }
+            }
+
+            $logoImageHtml = $logoSrc !== '' ? "<img src='{$logoPath}' alt='tech-xpert Logo' width='108' style='display:block; margin: 0 auto 14px; max-width: 120px; height: auto;' />" : '';
+
             $mail->Body = "
-                <div style='font-family: Arial, sans-serif; max-width: 500px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;'>
-                    <h2 style='color: #696cff; text-align: center;'>tech-xpert Portal</h2>
-                    <p>Hello,</p>
-                    <p>Your 6-digit One-Time Password (OTP) for logging into your customer account is:</p>
-                    <div style='background-color: #f5f5f9; text-align: center; padding: 15px; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #333; border-radius: 6px; margin: 20px 0;'>
-                        {$otpCode}
+                <div style='font-family: \"Segoe UI\", Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);'>
+                    <!-- Header Banner -->
+                    <div style='background: linear-gradient(135deg, #696cff 0%, #3938b3 100%); padding: 25px 20px; text-align: center;'>
+                        <img src='logo.png' alt='tech-xpert Logo' width='108' style='display:block; margin: 0 auto 14px; max-width: 120px; height: auto;' />
+                        <h2 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 0.5px;'>tech-xpert Portal</h2>
                     </div>
-                    <p style='color: #666; font-size: 13px;'>This OTP code is valid for 30 minutes. Do not share this code with anyone.</p>
-                    <hr style='border: none; border-top: 1px solid #eee; margin-top: 20px;' />
-                    <p style='color: #999; font-size: 11px; text-align: center;'>© " . date('Y') . " tech-xpert Portal. All rights reserved.</p>
+
+                    <!-- Body Content -->
+                    <div style='padding: 30px 25px; color: #4a5568; font-size: 15px; line-height: 1.6;'>
+                        <p style='margin-top: 0; font-size: 16px; color: #2d3748;'>Hello,</p>
+                        <p>We received a request to access your account via <strong>{$email}</strong>. Please use the following 6-digit One-Time Password (OTP) to complete your verification:</p>
+                        
+                        <!-- OTP Box -->
+                        <div style='background-color: #f8fafc; border: 2px dashed #696cff; text-align: center; padding: 20px; border-radius: 10px; margin: 25px 0;'>
+                            <span style='display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #718096; letter-spacing: 1px; margin-bottom: 8px;'>Your One-Time Password</span>
+                            <span style='font-size: 34px; font-weight: 800; letter-spacing: 10px; color: #696cff; font-family: monospace;'>{$otpCode}</span>
+                        </div>
+
+                        <!-- Expiry Notification -->
+                        <div style='background-color: #fffaf0; border-left: 4px solid #dd6b20; padding: 12px 15px; border-radius: 4px; margin-bottom: 20px;'>
+                            <p style='margin: 0; color: #9c4221; font-size: 13px;'>
+                                ⏳ <strong>Validity:</strong> This OTP is valid for <strong>30 minutes</strong>.
+                            </p>
+                        </div>
+
+                        <p style='color: #718096; font-size: 13px; margin-bottom: 0;'>If you did not request this OTP code, please ignore this email or contact support if you suspect unauthorized access.</p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style='background-color: #f7fafc; padding: 18px 25px; border-top: 1px solid #edf2f7; text-align: center; font-size: 12px; color: #a0aec0;'>
+                        <p style='margin: 0 0 4px 0;'>Need help? Contact support at <a href='mailto:support.teckxpert@gmail.com' style='color: #696cff; text-decoration: none;'>support.teckxpert@gmail.com</a></p>
+                        <p style='margin: 0;'>© " . date('Y') . " tech-xpert Services Pvt Ltd. All rights reserved.</p>
+                    </div>
                 </div>
             ";
 
+            $mail->AltBody = "Hello,\n\nYour tech-xpert One-Time Password (OTP) is: {$otpCode}\n\nThis code is valid for 30 minutes (expires at {$formattedExpiry}). Do not share this code with anyone.\n\n© " . date('Y') . " tech-xpert Services Pvt Ltd.";
             $emailSent = $mail->send();
             if (!$emailSent) {
                 $smtpError = $mail->getErrorInfo();
+                return [
+                    'success' => false,
+                    'message' => 'Email delivery failed: ' . $smtpError,
+                    'errors' => ['SMTP Error: ' . $smtpError],
+                ];
             }
         } else {
             // Fallback to PHP native mail function
-            $subject = 'Your tech-xpert Portal Login OTP: ' . $otpCode;
-            $message = "Hello,\n\nYour OTP for logging in is: {$otpCode}\n\nValid for 30 minutes.";
+            $subject = 'tech-xpert Verification Code: ' . $otpCode;
+            $message = "Hello,\n\nYour OTP for logging in is: {$otpCode}\n\nValid for 30 minutes (expires at {$formattedExpiry}).";
             $headers = 'From: no-reply@techxpert.com';
             @mail($email, $subject, $message, $headers);
         }
 
-        $resMessage = $isReused ? "Your active OTP code has been re-sent to {$email} (valid for 30 minutes)." : "OTP sent to {$email} (valid for 30 minutes).";
-        if ($smtpError) {
-            $resMessage .= " (SMTP Warning: {$smtpError})";
-        }
+        $resMessage = "OTP has been successfully sent to {$email}. Please check your inbox or spam folder (valid until {$formattedExpiry}).";
 
         return [
             'success' => true,

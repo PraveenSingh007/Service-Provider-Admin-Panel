@@ -13,7 +13,7 @@ class SMTP
     private $error = [];
     private $helo_rply;
 
-    public function connect($host, $port = null, $timeout = 30, $options = []): bool
+    public function connect($host, $port = null, $timeout = 10, $options = []): bool
     {
         $this->error = [];
         $port = $port ?: self::DEFAULT_PORT;

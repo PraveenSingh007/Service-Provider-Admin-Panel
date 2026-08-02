@@ -14,7 +14,7 @@ return [
     'smtp_secure' => 'tls',
     'smtp_auth'   => true,
     'username'    => 'support.teckxpert@gmail.com',
-    'password'    => 'Teckxpert@1982',
+    'password'    => 'egrsiatllykyjnnj',
     'from_email'  => 'support.teckxpert@gmail.com',
-    'from_name'   => 'tech-xpert Portal',
+    'from_name'   => 'techxpert Portal',
 ];

@@ -234,7 +234,7 @@ class EmployeeManagementService
 
             if (move_uploaded_file($tmpName, $destPath) || copy($tmpName, $destPath)) {
                 @chmod($destPath, 0644);
-                return 'uploads/employees/' . $newFilename;
+                return '../../uploads/employees/' . $newFilename;
             }
         } catch (Throwable $e) {
             error_log('Employee photo upload error: ' . $e->getMessage());

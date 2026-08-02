@@ -77,7 +77,35 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     }
 }
 
+// Handle Manual Salary Edit Request (Present Days, Leaves, Deductions)
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit_salary') {
+    $submittedToken = (string) ($_POST['csrf_token'] ?? '');
+    if (empty($submittedToken) || !hash_equals($csrfToken, $submittedToken)) {
+        $actionError = 'CSRF validation failed. Please refresh and try again.';
+    } else {
+        $salaryId = (int) ($_POST['salary_id'] ?? 0);
+        $presentDays = (int) ($_POST['present_days'] ?? 0);
+        $halfDays = (int) ($_POST['half_days'] ?? 0);
+        $leaveDays = (int) ($_POST['leave_days'] ?? 0);
+        $bonus = (float) ($_POST['bonus'] ?? 0.0);
+        $deductions = (float) ($_POST['deductions'] ?? 0.0);
+        $notes = !empty($_POST['notes']) ? trim((string)$_POST['notes']) : null;
+
+        $res = $salaryService->updateSalaryRecord($salaryId, $presentDays, $halfDays, $leaveDays, $bonus, $deductions, $notes);
+        if ($res['success']) {
+            $actionMessage = $res['message'];
+        } else {
+            $actionError = $res['message'];
+        }
+    }
+}
+
 $salaries = $salaryService->getSalariesByMonth($selectedMonth);
+if (empty($salaries)) {
+    $salaryService->generateMonthlySalaries($selectedMonth);
+    $salaries = $salaryService->getSalariesByMonth($selectedMonth);
+}
+
 $employeeMap = [];
 foreach ($empRepo->findAll() as $e) {
     if ($e->getId() !== null) {
@@ -259,8 +287,8 @@ foreach ($empRepo->findAll() as $e) {
                       <input type="hidden" name="action" value="generate" />
                       <input type="hidden" name="month" value="<?= htmlspecialchars($selectedMonth, ENT_QUOTES, 'UTF-8') ?>" />
                       <?php if ($allSalariesGenerated): ?>
-                        <button type="button" class="btn btn-secondary" disabled title="Salaries already generated for all eligible employees for this month">
-                          <i class="icon-base bx bx-check-circle me-1"></i> Salaries Generated for <?= htmlspecialchars($selectedMonth, ENT_QUOTES, 'UTF-8') ?>
+                        <button type="submit" class="btn btn-outline-primary" title="Re-calculate and update salaries based on latest attendance">
+                          <i class="icon-base bx bx-refresh me-1"></i> Re-Calculate Salaries (<?= htmlspecialchars($selectedMonth, ENT_QUOTES, 'UTF-8') ?>)
                         </button>
                       <?php else: ?>
                         <button type="submit" class="btn btn-success">
@@ -319,9 +347,17 @@ foreach ($empRepo->findAll() as $e) {
                           </td>
                           <td><?= htmlspecialchars($sal->getPaymentDate() ?? '—', ENT_QUOTES, 'UTF-8') ?></td>
                           <td>
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center gap-1">
+                              <!-- Edit Salary Details Button -->
+                              <button
+                                type="button"
+                                class="btn btn-sm btn-outline-warning"
+                                title="Edit Days Present, Leaves & Deductions"
+                                onclick="openEditSalaryModal(<?= (int)$sal->getId() ?>, '<?= htmlspecialchars($empName, ENT_QUOTES, 'UTF-8') ?>', <?= $sal->getPresentDays() ?>, <?= $sal->getHalfDays() ?>, <?= $sal->getLeaveDays() ?>, <?= $sal->getAbsentDays() ?>, <?= $sal->getTotalDays() ?>, <?= $sal->getBaseSalary() ?>, <?= $sal->getBonus() ?>, <?= $sal->getDeductions() ?>, '<?= htmlspecialchars((string)($sal->getNotes() ?? ''), ENT_QUOTES, 'UTF-8') ?>')">
+                                <i class="icon-base bx bx-edit-alt"></i>
+                              </button>
                               <a href="employee-payslip.php?id=<?= (int)$sal->getId() ?>" target="_blank" class="btn btn-sm btn-outline-info" title="View & Print Payslip">
-                                <i class="icon-base bx bx-file me-1"></i> Payslip
+                                <i class="icon-base bx bx-file"></i> Payslip
                               </a>
                               <?php if ($sal->getPaymentStatus() !== 'paid'): ?>
                                 <form method="POST" action="employee-salaries.php" onsubmit="return confirm('Mark this salary as PAID?');">
@@ -329,7 +365,7 @@ foreach ($empRepo->findAll() as $e) {
                                   <input type="hidden" name="action" value="mark_paid" />
                                   <input type="hidden" name="salary_id" value="<?= (int)$sal->getId() ?>" />
                                   <button type="submit" class="btn btn-sm btn-success">
-                                    <i class="icon-base bx bx-check-circle me-1"></i> Mark Paid
+                                    <i class="icon-base bx bx-check-circle"></i> Paid
                                   </button>
                                 </form>
                               <?php else: ?>
@@ -349,6 +385,66 @@ foreach ($empRepo->findAll() as $e) {
         </div>
       </div>
       <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Edit Salary Modal -->
+    <div class="modal fade" id="editSalaryModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-warning">
+            <h5 class="modal-title text-white fw-bold"><i class="icon-base bx bx-edit me-1"></i> Edit Salary & Attendance Days</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="employee-salaries.php">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
+            <input type="hidden" name="action" value="edit_salary" />
+            <input type="hidden" name="salary_id" id="edit_salary_id" value="" />
+
+            <div class="modal-body p-4">
+              <div class="alert alert-light border mb-3">
+                <strong id="edit_emp_name" class="text-dark fs-6">Employee Name</strong>
+                <div class="text-muted small">Total Working Days in Month: <strong id="edit_total_days" class="text-dark">0</strong> | Base Monthly Salary: <strong id="edit_base_salary" class="text-dark">₹0.00</strong></div>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-6">
+                  <label class="form-label fw-semibold" for="edit_present_days">Days Present <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" id="edit_present_days" name="present_days" min="0" max="31" required />
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-semibold" for="edit_leave_days">Paid Leaves</label>
+                  <input type="number" class="form-control" id="edit_leave_days" name="leave_days" min="0" max="31" value="0" />
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-semibold" for="edit_half_days">Half Days</label>
+                  <input type="number" class="form-control" id="edit_half_days" name="half_days" min="0" max="31" value="0" />
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-semibold text-danger">Unpaid Absences</label>
+                  <input type="number" class="form-control bg-light" id="edit_absent_days" readonly />
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-semibold" for="edit_bonus">Bonus (₹)</label>
+                  <input type="number" step="0.01" class="form-control" id="edit_bonus" name="bonus" min="0" value="0.00" />
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-semibold text-danger" for="edit_deductions">Leave Deductions (₹)</label>
+                  <input type="number" step="0.01" class="form-control" id="edit_deductions" name="deductions" min="0" value="0.00" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold" for="edit_notes">Remarks / Notes</label>
+                  <textarea class="form-control" id="edit_notes" name="notes" rows="2" placeholder="Specify reason for manual adjustment..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer bg-light">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-warning fw-bold"><i class="icon-base bx bx-check me-1"></i> Update & Recalculate Salary</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- Core JS -->
@@ -432,6 +528,35 @@ foreach ($empRepo->findAll() as $e) {
             { orderable: false, targets: [8] },
             { orderSequence: ['asc', 'desc'], targets: [0, 1, 2, 3, 4, 5, 6, 7] }
           ]
+        });
+      });
+
+      function openEditSalaryModal(id, name, present, half, leave, absent, totalDays, baseSalary, bonus, deductions, notes) {
+        $('#edit_salary_id').val(id);
+        $('#edit_emp_name').text(name);
+        $('#edit_total_days').text(totalDays);
+        $('#edit_base_salary').text('₹' + parseFloat(baseSalary).toFixed(2));
+
+        $('#edit_present_days').val(present).attr('max', totalDays);
+        $('#edit_leave_days').val(leave).attr('max', totalDays);
+        $('#edit_half_days').val(half).attr('max', totalDays);
+        $('#edit_absent_days').val(absent);
+        $('#edit_bonus').val(parseFloat(bonus).toFixed(2));
+        $('#edit_deductions').val(parseFloat(deductions).toFixed(2));
+        $('#edit_notes').val(notes);
+
+        $('#editSalaryModal').modal('show');
+      }
+
+      $(document).ready(function() {
+        $('#edit_present_days, #edit_leave_days, #edit_half_days').on('input', function() {
+          let totalDays = parseInt($('#edit_total_days').text()) || 0;
+          let present = parseInt($('#edit_present_days').val()) || 0;
+          let leave = parseInt($('#edit_leave_days').val()) || 0;
+          let half = parseInt($('#edit_half_days').val()) || 0;
+
+          let absent = Math.max(0, totalDays - (present + leave + half));
+          $('#edit_absent_days').val(absent);
         });
       });
     </script>

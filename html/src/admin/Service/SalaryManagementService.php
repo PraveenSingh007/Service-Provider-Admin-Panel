@@ -144,6 +144,63 @@ class SalaryManagementService
     }
 
     /**
+     * Update salary record manually (Days Present, Leaves, Bonus, Deductions).
+     *
+     * @return array{success: bool, message: string, errors: string[]}
+     */
+    public function updateSalaryRecord(
+        int $salaryId,
+        int $presentDays,
+        int $halfDays,
+        int $leaveDays,
+        float $bonus,
+        float $deductions,
+        ?string $notes
+    ): array {
+        $sal = $this->salaryRepository->findById($salaryId);
+        if ($sal === null) {
+            return ['success' => false, 'message' => 'Salary record not found.', 'errors' => []];
+        }
+
+        $totalDays = $sal->getTotalDays();
+        $baseSalary = $sal->getBaseSalary();
+        $absentDays = max(0, $totalDays - ($presentDays + $leaveDays + $halfDays));
+
+        // Effective paid working days = Present + Paid Leaves + (Half Days * 0.5)
+        $effectiveDays = $presentDays + $leaveDays + ($halfDays * 0.5);
+
+        $dailyRate = $totalDays > 0 ? ($baseSalary / $totalDays) : 0.0;
+        $calculatedSalary = round($dailyRate * $effectiveDays, 2);
+        
+        // Auto-calculate leave/unpaid absence deduction if not manually specified
+        $leaveDeduction = round($dailyRate * $absentDays, 2);
+        if ($deductions <= 0 && $absentDays > 0) {
+            $deductions = $leaveDeduction;
+        }
+
+        $netSalary = max(0.0, round($calculatedSalary + $bonus - $deductions, 2));
+
+        $updated = $this->salaryRepository->updateSalaryDetails(
+            $salaryId,
+            $presentDays,
+            $leaveDays,
+            $halfDays,
+            $absentDays,
+            $calculatedSalary,
+            $bonus,
+            $deductions,
+            $netSalary,
+            $notes
+        );
+
+        if (!$updated) {
+            return ['success' => false, 'message' => 'Failed to update salary details in database.', 'errors' => []];
+        }
+
+        return ['success' => true, 'message' => 'Salary details updated successfully.', 'errors' => []];
+    }
+
+    /**
      * Check if salary has already been generated for all eligible employees for a given month.
      */
     public function isSalaryGeneratedForAllEligibleEmployees(string $month): bool

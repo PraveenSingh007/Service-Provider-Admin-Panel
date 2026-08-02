@@ -108,6 +108,49 @@ class SalaryRepository
     }
 
     /**
+     * Find salary by ID.
+     */
+    public function findById(int $id): ?Salary
+    {
+        try {
+            $sql = 'SELECT id, employee_id, salary_month, base_salary, total_days, present_days, absent_days, half_days, leave_days, calculated_salary, bonus, deductions, net_salary, payment_status, payment_date, notes, created_at, updated_at FROM employee_salaries WHERE id = ?';
+            $stmt = $this->connection->prepare($sql);
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($row = $result->fetch_assoc()) {
+                    $stmt->close();
+                    return new Salary(
+                        (int) $row['id'],
+                        (int) $row['employee_id'],
+                        (string) $row['salary_month'],
+                        (float) $row['base_salary'],
+                        (int) $row['total_days'],
+                        (int) $row['present_days'],
+                        (int) $row['absent_days'],
+                        (int) $row['half_days'],
+                        (int) $row['leave_days'],
+                        (float) $row['calculated_salary'],
+                        (float) $row['bonus'],
+                        (float) $row['deductions'],
+                        (float) $row['net_salary'],
+                        (string) ($row['payment_status'] ?? 'pending'),
+                        isset($row['payment_date']) ? (string) $row['payment_date'] : null,
+                        isset($row['notes']) ? (string) $row['notes'] : null,
+                        isset($row['created_at']) ? (string) $row['created_at'] : null,
+                        isset($row['updated_at']) ? (string) $row['updated_at'] : null
+                    );
+                }
+                $stmt->close();
+            }
+        } catch (Throwable $e) {
+            error_log('SalaryRepository findById error: ' . $e->getMessage());
+        }
+        return null;
+    }
+
+    /**
      * Update payment status.
      */
     public function markAsPaid(int $salaryId, string $paymentDate): bool
@@ -126,6 +169,39 @@ class SalaryRepository
             return $success;
         } catch (Throwable $e) {
             error_log('SalaryRepository markAsPaid error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update manual days present, leaves, deductions, and recalculated net salary.
+     */
+    public function updateSalaryDetails(
+        int $salaryId,
+        int $presentDays,
+        int $leaveDays,
+        int $halfDays,
+        int $absentDays,
+        float $calculatedSalary,
+        float $bonus,
+        float $deductions,
+        float $netSalary,
+        ?string $notes
+    ): bool {
+        try {
+            $sql = 'UPDATE employee_salaries SET present_days = ?, leave_days = ?, half_days = ?, absent_days = ?, calculated_salary = ?, bonus = ?, deductions = ?, net_salary = ?, notes = ? WHERE id = ?';
+            $stmt = $this->connection->prepare($sql);
+
+            if (!$stmt) {
+                return false;
+            }
+
+            $stmt->bind_param('iiiiddddsi', $presentDays, $leaveDays, $halfDays, $absentDays, $calculatedSalary, $bonus, $deductions, $netSalary, $notes, $salaryId);
+            $success = $stmt->execute();
+            $stmt->close();
+            return $success;
+        } catch (Throwable $e) {
+            error_log('SalaryRepository updateSalaryDetails error: ' . $e->getMessage());
             return false;
         }
     }

@@ -262,9 +262,9 @@ foreach ($serviceRequests as $req) {
                   <h4 class="fw-bold py-1 mb-0"><i class="bx bx-wrench me-2 text-primary"></i>Service Requests Management</h4>
                   <small class="text-muted">CCTV Installation & Repair | Computer Hardware & Service | AMC Contracts</small>
                 </div>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRequestModal">
+                <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRequestModal">
                   <i class="icon-base bx bx-plus me-1"></i> New Service Request
-                </button>
+                </button> -->
               </div>
 
               <!-- Alerts -->
@@ -860,6 +860,13 @@ foreach ($serviceRequests as $req) {
                     <option value="evening">Evening (5 PM - 8 PM)</option>
                   </select>
                 </div>
+                <div class="col-md-4">
+                  <label class="form-label">Site Inspection</label>
+                  <select name="site_inspection_required" id="edit_site_inspection_required" class="form-select">
+                    <option value="0">No Site Inspection Required</option>
+                    <option value="1">Site Inspection Required</option>
+                  </select>
+                </div>
                 <div class="col-md-12">
                   <label class="form-label">Status Update / Resolution Notes</label>
                   <textarea name="request_status_notes" id="edit_request_status_notes" class="form-control" rows="2" placeholder="Add technician notes, work progress, or resolution details..."></textarea>
@@ -1119,6 +1126,7 @@ foreach ($serviceRequests as $req) {
         $('#edit_amc_contract_number').val(req.amc_contract_number || '');
         $('#edit_preferred_visit_date').val(req.preferred_visit_date || '');
         $('#edit_preferred_time_slot').val(req.preferred_time_slot || 'anytime');
+        $('#edit_site_inspection_required').val(parseInt(req.site_inspection_required) || 0);
         $('#edit_request_status_notes').val(req.request_status_notes || '');
 
         // Set Select2 values for quotation and invoice in edit modal
@@ -1141,8 +1149,14 @@ foreach ($serviceRequests as $req) {
         html += '<div class="col-md-6"><strong>Request Type:</strong> ' + escapeHtml(req.request_type) + '</div>';
         html += '<div class="col-md-12"><strong>Address:</strong> ' + escapeHtml(req.request_address) + ', ' + escapeHtml(req.request_city) + ', ' + escapeHtml(req.request_state) + ' - <span class="badge bg-label-info">' + escapeHtml(req.request_pincode) + ' (Verified Area)</span></div>';
         if (req.landmark) {
-          html += '<div class="col-md-12"><strong>Landmark:</strong> ' + escapeHtml(req.landmark) + '</div>';
+          html += '<div class="col-md-6"><strong>Landmark:</strong> ' + escapeHtml(req.landmark) + '</div>';
+        } else {
+          html += '<div class="col-md-6"><strong>Landmark:</strong> N/A</div>';
         }
+        html += '<div class="col-md-6"><strong>Preferred Visit Date:</strong> ' + (req.preferred_visit_date ? escapeHtml(req.preferred_visit_date) : 'Not Specified') + '</div>';
+        html += '<div class="col-md-6"><strong>Preferred Time Slot:</strong> <span class="badge bg-label-secondary">' + escapeHtml((req.preferred_time_slot || 'anytime').toUpperCase()) + '</span></div>';
+        var siteInspBadge = (parseInt(req.site_inspection_required) === 1) ? '<span class="badge bg-warning text-dark"><i class="bx bx-check me-1"></i>Yes Required</span>' : '<span class="badge bg-light text-muted">No</span>';
+        html += '<div class="col-md-6"><strong>Site Inspection Required:</strong> ' + siteInspBadge + '</div>';
         html += '<div class="col-md-6"><strong>Priority:</strong> <span class="badge bg-dark">' + escapeHtml(req.priority.toUpperCase()) + '</span></div>';
         html += '<div class="col-md-6"><strong>Status:</strong> <span class="badge bg-success">' + escapeHtml(req.request_status.toUpperCase()) + '</span></div>';
         html += '<div class="col-md-6"><strong>Assigned Technician:</strong> ' + escapeHtml(req.assign_to || 'Not Assigned Yet') + '</div>';

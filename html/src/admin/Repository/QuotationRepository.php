@@ -175,7 +175,7 @@ class QuotationRepository
     public function findItemsByVersionId(int $versionId): array
     {
         $items = [];
-        $stmt = $this->connection->prepare('SELECT id, version_id, item_description, quantity, unit_price, total_price FROM quotation_items WHERE version_id = ? ORDER BY id ASC');
+        $stmt = $this->connection->prepare('SELECT id, version_id, item_description, quantity, unit_price, discount_percent, gst_percent, total_price FROM quotation_items WHERE version_id = ? ORDER BY id ASC');
         if (!$stmt) {
             return [];
         }
@@ -191,7 +191,9 @@ class QuotationRepository
                 (string) $row['item_description'],
                 (int) $row['quantity'],
                 (float) $row['unit_price'],
-                (float) $row['total_price']
+                (float) $row['total_price'],
+                (float) ($row['discount_percent'] ?? 0.0),
+                (float) ($row['gst_percent'] ?? 0.0)
             );
         }
 
@@ -268,15 +270,24 @@ class QuotationRepository
             $stmt->close();
 
             if ($versionId > 0 && !empty($itemsData)) {
-                $itemStmt = $this->connection->prepare('INSERT INTO quotation_items (version_id, item_description, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?)');
+                $itemStmt = $this->connection->prepare('INSERT INTO quotation_items (version_id, item_description, quantity, unit_price, discount_percent, gst_percent, total_price) VALUES (?, ?, ?, ?, ?, ?, ?)');
                 foreach ($itemsData as $item) {
                     $desc = (string) ($item['description'] ?? '');
                     $qty = (int) ($item['quantity'] ?? 1);
                     $uPrice = (float) ($item['unit_price'] ?? 0.0);
-                    $tPrice = (float) ($item['total_price'] ?? ($qty * $uPrice));
+                    $discPct = (float) ($item['discount_percent'] ?? 0.0);
+                    $gstPct = (float) ($item['gst_percent'] ?? 0.0);
+                    
+                    $baseTotal = $qty * $uPrice;
+                    $discAmt = $baseTotal * ($discPct / 100);
+                    $taxable = $baseTotal - $discAmt;
+                    $gstAmt = $taxable * ($gstPct / 100);
+                    $calculatedTotal = round($taxable + $gstAmt, 2);
+                    
+                    $tPrice = isset($item['total_price']) ? (float) $item['total_price'] : $calculatedTotal;
 
                     if (!empty($desc)) {
-                        $itemStmt->bind_param('isidd', $versionId, $desc, $qty, $uPrice, $tPrice);
+                        $itemStmt->bind_param('isidddd', $versionId, $desc, $qty, $uPrice, $discPct, $gstPct, $tPrice);
                         $itemStmt->execute();
                     }
                 }

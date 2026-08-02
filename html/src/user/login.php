@@ -35,8 +35,8 @@ $dbConn = DatabaseConnection::createFromEnv()->getConnection();
 $repository = new CustomerRepository($dbConn);
 $authService = new CustomerAuthService($repository);
 
-$step = 'email'; // 'email' or 'otp'
 $targetEmail = (string) ($_SESSION['pending_otp_email'] ?? '');
+$step = ($targetEmail !== '') ? 'otp' : 'email'; // 'email' or 'otp'
 
 $successMsg = null;
 $errorMsg = null;
@@ -57,7 +57,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
                 $targetEmail = $email;
                 $step = 'otp';
                 $successMsg = $res['message'];
-                $demoOtp = $res['otp_code'] ?? null;
             } else {
                 $errorMsg = implode(' ', $res['errors'] ?? [$res['message']]);
             }
@@ -78,18 +77,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
                 $step = 'otp';
                 $errorMsg = implode(' ', $res['errors'] ?? [$res['message']]);
             }
-        } elseif ($action === 'resend_otp') {
-            if ($targetEmail !== '') {
-                $res = $authService->requestOtp($targetEmail);
-                if ($res['success']) {
-                    $step = 'otp';
-                    $successMsg = 'A new 6-digit OTP code has been sent.';
-                    $demoOtp = $res['otp_code'] ?? null;
-                } else {
-                    $step = 'otp';
-                    $errorMsg = implode(' ', $res['errors'] ?? [$res['message']]);
-                }
-            }
+        } elseif ($action === 'change_email') {
+            unset($_SESSION['pending_otp_email']);
+            $targetEmail = '';
+            $step = 'email';
         }
     }
 }
@@ -124,7 +115,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
             <span class="avatar-initial rounded-circle bg-label-primary fs-2"><i class="bx bx-envelope"></i></span>
           </div>
           <h4 class="fw-bold mb-1">Sign In</h4>
-          <p class="text-muted small">Enter your email address to receive OTP</p>
+          <!-- <p class="text-muted small">Enter your email address to receive OTP</p> -->
         </div>
 
         <?php if ($successMsg !== null): ?>
@@ -139,11 +130,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
           </div>
         <?php endif; ?>
 
-        <?php if ($demoOtp !== null): ?>
-          <div class="alert alert-warning text-center fw-bold mb-3" role="alert">
-            <i class="bx bx-key me-1 fs-5 align-middle"></i> Test OTP Code: <span class="fs-4 text-dark"><?= htmlspecialchars($demoOtp, ENT_QUOTES, 'UTF-8') ?></span>
-          </div>
-        <?php endif; ?>
+
 
         <?php if ($step === 'email'): ?>
           <!-- STEP 1: EMAIL ENTRY FORM -->
@@ -156,8 +143,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
               <input type="email" name="email" class="form-control form-control-lg" placeholder="name@example.com" value="<?= htmlspecialchars($targetEmail, ENT_QUOTES, 'UTF-8') ?>" required autofocus />
             </div>
 
-            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
-              <i class="bx bx-paper-plane me-1"></i> Get OTP
+            <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm" id="sendOtpBtn">
+              <span id="sendOtpText">Get OTP on Email</span>
+              <span id="sendOtpSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+              <i class="bx bx-right-arrow-alt ms-1"></i>
             </button>
           </form>
 
@@ -170,22 +159,21 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
 
             <div class="mb-3">
               <label class="form-label fw-semibold">Enter 6-Digit OTP</label>
-              <!-- <p class="text-muted fs-xs">Sent to <strong><?= htmlspecialchars($targetEmail, ENT_QUOTES, 'UTF-8') ?></strong></p> -->
+              <p class="text-muted small mb-2">Sent to <strong><?= htmlspecialchars($targetEmail, ENT_QUOTES, 'UTF-8') ?></strong></p>
               <input type="text" name="otp_code" class="form-control form-control-lg otp-input" maxlength="6" placeholder="123456" required autofocus autocomplete="off" />
             </div>
 
             <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm mb-3">
-              <i class="bx bx-log-in-circle me-1"></i> Verify OTP & Sign In
+              <i class="bx bx-check-circle me-1"></i> Verify OTP & Login
             </button>
           </form>
 
-          <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+          <div class="text-center mt-2 pt-2 border-top">
             <form method="POST" action="login.php">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>" />
-              <input type="hidden" name="action" value="resend_otp" />
-              <button type="submit" class="btn btn-link btn-sm text-primary p-0">Resend OTP Code</button>
+              <input type="hidden" name="action" value="change_email" />
+              <button type="submit" class="btn btn-link btn-sm text-muted p-0"><i class="bx bx-left-arrow-alt me-1"></i> Change Email</button>
             </form>
-            <a href="login.php" class="btn btn-link btn-sm text-muted p-0">Change Email</a>
           </div>
 
         <?php endif; ?>
@@ -200,5 +188,26 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
 
   <script src="../../../assets/vendor/libs/jquery/jquery.js"></script>
   <script src="../../../assets/vendor/js/bootstrap.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var sendOtpBtn = document.getElementById('sendOtpBtn');
+      var sendOtpText = document.getElementById('sendOtpText');
+      var sendOtpSpinner = document.getElementById('sendOtpSpinner');
+
+      if (sendOtpBtn) {
+        var sendOtpForm = sendOtpBtn.closest('form');
+        if (sendOtpForm) {
+          sendOtpForm.addEventListener('submit', function (event) {
+            if (!sendOtpForm.checkValidity()) {
+              return;
+            }
+            sendOtpBtn.disabled = true;
+            sendOtpText.textContent = 'Sending...';
+            sendOtpSpinner.classList.remove('d-none');
+          });
+        }
+      }
+    });
+  </script>
 </body>
 </html>

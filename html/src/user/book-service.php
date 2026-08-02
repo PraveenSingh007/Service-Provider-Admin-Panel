@@ -182,9 +182,13 @@ $selectedCategory = (string) ($_GET['category'] ?? 'cctv_camera');
               <!-- Location & Pincode Selection -->
               <h6 class="fw-bold text-primary mb-3"><i class="bx bx-map-pin me-1"></i> Location & Service Area Pincode</h6>
               <div class="row g-3 mb-4">
-                <div class="col-md-12">
+                <div class="col-md-8">
                   <label class="form-label">Street Address <span class="text-danger">*</span></label>
                   <input type="text" name="request_address" class="form-control" placeholder="House/Shop No., Street Name, Area..." value="<?= htmlspecialchars((string)($currentUser['address'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" required />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Landmark</label>
+                  <input type="text" name="landmark" class="form-control" placeholder="e.g. Near City Hospital" value="<?= htmlspecialchars((string)($currentUser['landmark'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Service Pincode <span class="text-danger">* (Select Authorized Pincode)</span></label>
@@ -205,6 +209,32 @@ $selectedCategory = (string) ($_GET['category'] ?? 'cctv_camera');
                 <div class="col-md-3">
                   <label class="form-label">State <i class="bx bx-lock-alt text-muted"></i></label>
                   <input type="text" name="request_state" id="user_state" class="form-control bg-light" placeholder="Auto-filled" value="<?= htmlspecialchars((string)($currentUser['state'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" readonly required />
+                </div>
+              </div>
+
+              <!-- Schedule & Site Inspection Preference -->
+              <h6 class="fw-bold text-primary mb-3"><i class="bx bx-calendar-event me-1"></i> Visit Schedule & Inspection Preference</h6>
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <label class="form-label">Preferred Visit Date</label>
+                  <input type="date" name="preferred_visit_date" class="form-control" min="<?= date('Y-m-d') ?>" />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Preferred Time Slot</label>
+                  <select name="preferred_time_slot" class="form-select">
+                    <option value="anytime">Anytime (09:00 AM - 07:00 PM)</option>
+                    <option value="morning">Morning (09:00 AM - 12:00 PM)</option>
+                    <option value="afternoon">Afternoon (12:00 PM - 04:00 PM)</option>
+                    <option value="evening">Evening (04:00 PM - 07:00 PM)</option>
+                  </select>
+                </div>
+                <div class="col-md-12">
+                  <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" name="site_inspection_required" id="siteInspectionSwitch" value="1" />
+                    <label class="form-check-label fw-semibold" for="siteInspectionSwitch">
+                      Site Inspection Required <span class="text-muted fw-normal">(Tick if a technician needs to visit for on-site measurement / evaluation)</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
