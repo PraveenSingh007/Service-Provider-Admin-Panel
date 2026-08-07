@@ -30,6 +30,57 @@ $serviceRepo = new ServiceRepository($dbConn);
 $serviceAreas = $serviceAreaRepo->findAll();
 $services = $serviceRepo->findAll();
 
+$serviceMetadata = [
+    1 => [
+        'badge' => '24/7 Security & Surveillance',
+        'carousel_title' => 'Smart CCTV Installation & HD Monitoring',
+        'carousel_desc' => 'Protect your home, office, and enterprise with crystal-clear IP cameras, night vision, DVR/NVR configuration, and instant mobile live view setup.',
+        'desc' => 'Complete 1080p/4K HD & IP CCTV surveillance system setup, DVR/NVR configuration, night vision camera installation, cable routing, and remote mobile viewing integration.',
+        'icon' => 'bx-camcorder',
+        'category' => 'cctv_camera'
+    ],
+    2 => [
+        'badge' => 'Expert IT & Hardware Support',
+        'carousel_title' => 'Computer Repair, Upgrades & IT Support',
+        'carousel_desc' => 'Fast doorstep repair for desktops, laptops, servers, and networking hardware by certified field engineers.',
+        'desc' => 'Expert doorstep computer & laptop repairs, SSD & RAM speed upgrades, custom PC assembly, motherboard chip-level troubleshooting, data recovery, and IT hardware sales.',
+        'icon' => 'bx-laptop',
+        'category' => 'computer_hardware'
+    ],
+    3 => [
+        'badge' => 'Hassle-Free Protection',
+        'carousel_title' => 'Annual Maintenance Contracts (AMC)',
+        'carousel_desc' => 'Zero downtime with proactive quarterly checkups, priority technician dispatch, and zero service charges.',
+        'desc' => 'Hassle-free quarterly preventive maintenance, zero labor charges, 24/7 priority technician response, free emergency calls, and extended hardware lifespan for businesses.',
+        'icon' => 'bx-shield-alt-2',
+        'category' => 'amc_contract'
+    ],
+    9 => [
+        'badge' => 'Cooling & Climate Control',
+        'carousel_title' => 'Air Conditioner Installation & Jet Service',
+        'carousel_desc' => 'Beat the heat with certified AC installation, deep chemical jet foam washing, gas top-up, and PCB repairs.',
+        'desc' => 'Split & window AC installation, uninstallation, deep chemical foam jet cleaning, R32/R410a refrigerant gas top-up, compressor repair, and PCB troubleshooting.',
+        'icon' => 'bx-wind',
+        'category' => 'air_conditioner'
+    ],
+    10 => [
+        'badge' => 'Smart Access & Time Attendance',
+        'carousel_title' => 'Biometric Installation & Attendance Systems',
+        'carousel_desc' => 'Secure your premises with facial recognition, fingerprint readers, and cloud payroll time tracking.',
+        'desc' => 'Advanced biometric fingerprint, face recognition, and RFID card access control terminal installation synced with cloud attendance & payroll management software.',
+        'icon' => 'bx-fingerprint',
+        'category' => 'biometric'
+    ],
+    11 => [
+        'badge' => 'Enterprise Equipment Care',
+        'carousel_title' => 'Commercial Laundry Equipment Maintenance',
+        'carousel_desc' => 'Industrial washer & dryer maintenance, electrical panel repairs, and motor servicing for commercial setups.',
+        'desc' => 'Heavy-duty commercial washer & dryer installation, motor & belt replacement, electrical panel troubleshooting, and scheduled preventive care for hotels & laundromats.',
+        'icon' => 'bx-closet',
+        'category' => 'commercial_laundry'
+    ]
+];
+
 $callbackSuccess = false;
 $callbackError = null;
 $callbackReqNo = '';
@@ -395,6 +446,36 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       flex-shrink: 0;
     }
 
+        .brand-logo-card {
+      background: #ffffff;
+      border: 1px solid rgba(161, 172, 184, 0.25);
+      border-radius: 1.1rem;
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      min-width: 180px;
+      height: 90px;
+      flex-shrink: 0;
+    }
+
+    .brand-logo-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 28px rgba(105, 108, 255, 0.25);
+      border-color: #696cff;
+    }
+
+    .brand-logo-img {
+      max-height: 65px;
+      max-width: 150px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
+    }
+
     /* Floating Callback Button */
     .floating-callback-btn {
       position: fixed;
@@ -527,81 +608,59 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     </div>
   <?php endif; ?>
 
-  <!-- Services Image Carousel at Top -->
+    <!-- Services Image Carousel at Top -->
   <div class="hero-carousel-container">
     <div id="topServicesCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="4500">
       
       <!-- Slide Indicators -->
       <div class="carousel-indicators mb-4">
-        <button type="button" data-bs-target="#topServicesCarousel" data-bs-slide-to="0" class="active"></button>
-        <button type="button" data-bs-target="#topServicesCarousel" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#topServicesCarousel" data-bs-slide-to="2"></button>
+        <?php foreach ($services as $index => $srv): ?>
+          <button type="button" data-bs-target="#topServicesCarousel" data-bs-slide-to="<?= $index ?>" class="<?= $index === 0 ? 'active' : '' ?>"></button>
+        <?php endforeach; ?>
       </div>
 
       <div class="carousel-inner">
-        <!-- Slide 1: CCTV Surveillance -->
-        <div class="carousel-item active hero-slide-item" style="background-image: url('/sneat/html/uploads/services/cctv_service.png');">
-          <div class="hero-overlay">
-            <div class="container">
-              <div class="row align-items-center">
-                <div class="col-lg-8 text-white">
-                  <span class="slide-badge mb-3"><i class="bx bx-camcorder me-1"></i> 24/7 Security & Surveillance</span>
-                  <h1 class="display-4 fw-extrabold mb-3 text-white">Smart CCTV Installation & HD Monitoring</h1>
-                  <p class="lead mb-4 text-light opacity-90">Protect your home, office, and enterprise with crystal-clear IP cameras, night vision, and instant mobile view setup.</p>
-                  <div class="d-flex flex-wrap gap-3">
-                    <a href="book-service.php?category=cctv_camera" class="btn btn-primary btn-lg fw-bold rounded-pill px-4 shadow"><i class="bx bx-calendar-check me-2"></i> Book CCTV Service</a>
-                    <button type="button" class="btn btn-outline-light btn-lg fw-bold rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" data-service="cctv_camera">
-                      <i class="bx bx-phone-call me-2"></i> Request Call Back
-                    </button>
+        <?php foreach ($services as $index => $srv): ?>
+          <?php
+          $srvId = (int)$srv->getId();
+          $srvName = $srv->getServiceName();
+          $srvImg = $srv->getServiceImage();
+          
+          $meta = $serviceMetadata[$srvId] ?? [
+              'badge' => 'Professional Service',
+              'carousel_title' => $srvName,
+              'carousel_desc' => 'Certified technician visit, maintenance, installation, and doorstep repairs tailored to your needs.',
+              'desc' => 'Comprehensive technician visit, inspection, diagnostics, and doorstep repairs for ' . $srvName . '.',
+              'icon' => 'bx-wrench',
+              'category' => 'other'
+          ];
+
+          $cleanPath = ltrim((string)$srvImg, '/');
+          if (strpos($cleanPath, 'html/') === 0) {
+              $cleanPath = substr($cleanPath, 5);
+          }
+          $bgImgSrc = '/sneat/html/' . ($cleanPath ?: 'uploads/services/cctv_service.png');
+          ?>
+          <div class="carousel-item <?= $index === 0 ? 'active' : '' ?> hero-slide-item" style="background-image: url('<?= htmlspecialchars($bgImgSrc, ENT_QUOTES, 'UTF-8') ?>');">
+            <div class="hero-overlay">
+              <div class="container">
+                <div class="row align-items-center">
+                  <div class="col-lg-8 text-white">
+                    <span class="slide-badge mb-3"><i class="bx <?= htmlspecialchars($meta['icon'], ENT_QUOTES, 'UTF-8') ?> me-1"></i> <?= htmlspecialchars($meta['badge'], ENT_QUOTES, 'UTF-8') ?></span>
+                    <h1 class="display-4 fw-extrabold mb-3 text-white"><?= htmlspecialchars($meta['carousel_title'], ENT_QUOTES, 'UTF-8') ?></h1>
+                    <p class="lead mb-4 text-light opacity-90"><?= htmlspecialchars($meta['carousel_desc'], ENT_QUOTES, 'UTF-8') ?></p>
+                    <div class="d-flex flex-wrap gap-3">
+                      <a href="book-service.php?category=<?= urlencode($meta['category']) ?>&service_id=<?= $srvId ?>" class="btn btn-primary btn-lg fw-bold rounded-pill px-4 shadow"><i class="bx bx-calendar-check me-2"></i> Book <?= htmlspecialchars($srvName, ENT_QUOTES, 'UTF-8') ?></a>
+                      <button type="button" class="btn btn-outline-light btn-lg fw-bold rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" data-service="<?= htmlspecialchars($meta['category'], ENT_QUOTES, 'UTF-8') ?>">
+                        <i class="bx bx-phone-call me-2"></i> Request Call Back
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Slide 2: Computer Hardware -->
-        <div class="carousel-item hero-slide-item" style="background-image: url('/sneat/html/uploads/services/computer_service.png');">
-          <div class="hero-overlay">
-            <div class="container">
-              <div class="row align-items-center">
-                <div class="col-lg-8 text-white">
-                  <span class="slide-badge mb-3"><i class="bx bx-laptop me-1"></i> Expert IT & Hardware Repair</span>
-                  <h1 class="display-4 fw-extrabold mb-3 text-white">Computer Repair, Upgrades & Support</h1>
-                  <p class="lead mb-4 text-light opacity-90">Fast doorstep repair for desktops, laptops, servers, and networking hardware by certified field engineers.</p>
-                  <div class="d-flex flex-wrap gap-3">
-                    <a href="book-service.php?category=computer_hardware" class="btn btn-primary btn-lg fw-bold rounded-pill px-4 shadow"><i class="bx bx-wrench me-2"></i> Book Hardware Repair</a>
-                    <button type="button" class="btn btn-outline-light btn-lg fw-bold rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" data-service="computer_hardware">
-                      <i class="bx bx-phone-call me-2"></i> Request Call Back
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Slide 3: AMC Services -->
-        <div class="carousel-item hero-slide-item" style="background-image: url('/sneat/html/uploads/services/amc_service.png');">
-          <div class="hero-overlay">
-            <div class="container">
-              <div class="row align-items-center">
-                <div class="col-lg-8 text-white">
-                  <span class="slide-badge mb-3"><i class="bx bx-shield-alt-2 me-1"></i> Hassle-Free AMC Protection</span>
-                  <h1 class="display-4 fw-extrabold mb-3 text-white">Annual Maintenance Contracts (AMC)</h1>
-                  <p class="lead mb-4 text-light opacity-90">Zero downtime with proactive quarterly checkups, priority technician dispatch, and zero service charges.</p>
-                  <div class="d-flex flex-wrap gap-3">
-                    <a href="book-service.php?category=amc_contract" class="btn btn-primary btn-lg fw-bold rounded-pill px-4 shadow"><i class="bx bx-award me-2"></i> Explore AMC Plans</a>
-                    <button type="button" class="btn btn-outline-light btn-lg fw-bold rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" data-service="amc_contract">
-                      <i class="bx bx-phone-call me-2"></i> Request Call Back
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <?php endforeach; ?>
       </div>
 
       <!-- Controls -->
@@ -665,48 +724,43 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
         <p class="text-muted max-w-600 mx-auto">Professional technician visit, maintenance, installation, and repairs tailored to your needs.</p>
       </div>
       
-      <div class="row g-4">
+            <div class="row g-4">
         <?php if (count($services) === 0): ?>
           <div class="col-12 text-center text-muted py-5">No service offerings available at the moment.</div>
         <?php else: ?>
           <?php foreach ($services as $srv): ?>
             <?php
+            $srvId = (int)$srv->getId();
             $srvName = $srv->getServiceName();
             $srvImg = $srv->getServiceImage();
             
+            $meta = $serviceMetadata[$srvId] ?? [
+                'badge' => 'Professional Service',
+                'desc' => 'Comprehensive technician visit, inspection, diagnostics, and doorstep repairs for ' . $srvName . '.',
+                'category' => 'other'
+            ];
+
             $cleanPath = ltrim((string)$srvImg, '/');
             if (strpos($cleanPath, 'html/') === 0) {
                 $cleanPath = substr($cleanPath, 5);
             }
             $imgSrc = '/sneat/html/' . ($cleanPath ?: 'uploads/services/cctv_service.png');
-            
-            $catParam = 'other';
-            $badgeText = 'General Service';
-            if (stripos($srvName, 'CCTV') !== false) { 
-                $catParam = 'cctv_camera'; 
-                $badgeText = 'Security System';
-            } elseif (stripos($srvName, 'Computer') !== false || stripos($srvName, 'Hardware') !== false) { 
-                $catParam = 'computer_hardware'; 
-                $badgeText = 'Hardware & IT';
-            } elseif (stripos($srvName, 'AMC') !== false || stripos($srvName, 'Contract') !== false) { 
-                $catParam = 'amc_contract'; 
-                $badgeText = 'Maintenance AMC';
-            }
             ?>
             <div class="col-lg-4 col-md-6">
               <div class="card service-card">
                 <div class="service-img-container">
                   <img src="<?= htmlspecialchars($imgSrc, ENT_QUOTES, 'UTF-8') ?>" class="service-card-img" alt="<?= htmlspecialchars($srvName, ENT_QUOTES, 'UTF-8') ?>" />
-                  <span class="category-pill"><i class="bx bx-check-circle me-1 text-primary"></i> <?= htmlspecialchars($badgeText, ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="category-pill"><i class="bx bx-check-circle me-1 text-primary"></i> <?= htmlspecialchars($meta['badge'], ENT_QUOTES, 'UTF-8') ?></span>
                 </div>
                 <div class="card-body service-card-body">
-                  <h5 class="fw-bold text-dark mb-4"><?= htmlspecialchars($srvName, ENT_QUOTES, 'UTF-8') ?></h5>
+                  <h5 class="fw-bold text-dark mb-2"><?= htmlspecialchars($srvName, ENT_QUOTES, 'UTF-8') ?></h5>
+                  <p class="text-muted fs-7 mb-4 flex-grow-1"><?= htmlspecialchars($meta['desc'], ENT_QUOTES, 'UTF-8') ?></p>
                   
                   <div class="mt-auto d-flex gap-2 pt-2">
-                    <a href="book-service.php?category=<?= urlencode($catParam) ?>&service_id=<?= $srv->getId() ?>" class="btn btn-primary fw-bold flex-grow-1 py-2 shadow-sm">
+                    <a href="book-service.php?category=<?= urlencode($meta['category']) ?>&service_id=<?= $srvId ?>" class="btn btn-primary fw-bold flex-grow-1 py-2 shadow-sm">
                       <i class="bx bx-calendar-plus me-1"></i> Book Now
                     </a>
-                    <button type="button" class="btn btn-outline-primary fw-semibold px-3 py-2" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" data-service="<?= htmlspecialchars($catParam, ENT_QUOTES, 'UTF-8') ?>" title="Quick Call Back">
+                    <button type="button" class="btn btn-outline-primary fw-semibold px-3 py-2" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" data-service="<?= htmlspecialchars($meta['category'], ENT_QUOTES, 'UTF-8') ?>" title="Quick Call Back">
                       <i class="bx bx-phone-call"></i>
                     </button>
                   </div>
@@ -716,14 +770,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
           <?php endforeach; ?>
         <?php endif; ?>
       </div>
-    </div>
 
     <!-- Brands Logo Automatic Scroll Section (Replaces Authorized Service Locations) -->
     <div class="brands-section-wrapper mb-5">
       <div class="text-center mb-4">
-        <span class="badge bg-label-primary px-3 py-2 rounded-pill fs-7 fw-bold text-uppercase mb-2">Industry Partners & Products</span>
+        <span class="badge bg-label-primary px-3 py-2 rounded-pill fs-7 fw-bold text-uppercase mb-2">Industry Partners & Brands</span>
         <h3 class="fw-extrabold text-dark mb-1">Top Brands We Install & Support</h3>
-        <p class="text-muted">We work directly with leading security, IT hardware, and networking manufacturers.</p>
+        <p class="text-muted">We work directly with leading security, IT hardware, HVAC, and commercial equipment manufacturers.</p>
       </div>
 
       <div class="marquee-container">
@@ -734,7 +787,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             <div>
               <div class="fw-bold text-dark fs-6">Hikvision</div>
               <div class="text-muted fs-7">CCTV & Cameras</div>
-            </div>
+              </div>
           </div>
 
           <div class="brand-badge-card">
@@ -979,10 +1032,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             <div class="mb-3">
               <label for="cb_service" class="form-label fw-bold text-dark fs-7">Service Interested In</label>
               <select class="form-select" id="cb_service" name="callback_service">
-                <option value="cctv_camera">CCTV Camera & Security</option>
-                <option value="computer_hardware">Computer Hardware & IT Support</option>
-                <option value="amc_contract">Annual Maintenance Contract (AMC)</option>
-                <option value="other">General Inquiry / Other</option>
+                <option value="">-- Select Service Interested In --</option>
+                <?php foreach ($services as $srv): ?>
+                  <option value="<?= htmlspecialchars($srv->getServiceName(), ENT_QUOTES, 'UTF-8') ?>">
+                    <?= htmlspecialchars($srv->getServiceName(), ENT_QUOTES, 'UTF-8') ?>
+                  </option>
+                <?php endforeach; ?>
+                <option value="Other / General Inquiry">Other / General Inquiry</option>
               </select>
             </div>
 

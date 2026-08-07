@@ -80,8 +80,8 @@ $userRole = (string) ($currentUser['role'] ?? 'admin');
       </li>
     <?php endif; ?>
 
-    <!-- Quotations Section -->
-    <?php if (hasModulePermission($userRole, 'quotations')): ?>
+    <!-- Quotations Section (Hidden as requested) -->
+    <?php if (false && hasModulePermission($userRole, 'quotations')): ?>
       <?php $isQuotationsOpen = in_array($activePage, ['quotations', 'add-quotation', 'quotation-details'], true); ?>
       <li class="menu-item <?= $isQuotationsOpen ? 'active open' : '' ?>">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -103,8 +103,8 @@ $userRole = (string) ($currentUser['role'] ?? 'admin');
       </li>
     <?php endif; ?>
 
-    <!-- Invoices Section -->
-    <?php if (hasModulePermission($userRole, 'invoices')): ?>
+    <!-- Invoices Section (Hidden as requested) -->
+    <?php if (false && hasModulePermission($userRole, 'invoices')): ?>
       <?php $isInvoicesOpen = in_array($activePage, ['invoices', 'generate-invoice', 'invoice-details'], true); ?>
       <li class="menu-item <?= $isInvoicesOpen ? 'active open' : '' ?>">
         <a href="javascript:void(0);" class="menu-link menu-toggle">

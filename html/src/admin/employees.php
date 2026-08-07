@@ -176,7 +176,7 @@ $employees = (array) ($empResult['response']['data']['employees'] ?? []);
         <div class="layout-page">
           <!-- Navbar -->
           <nav
-            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            class="layout-navbar container-fluid px-3 px-md-4 navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
             id="layout-navbar">
             <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
               <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
@@ -242,9 +242,9 @@ $employees = (array) ($empResult['response']['data']['employees'] ?? []);
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-            <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="container-fluid px-3 px-md-4 flex-grow-1 container-p-y">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold py-3 mb-0">Employees List</h4>
+                <h4 class="fw-bold py-1 mb-0">Employees List</h4>
                 <div class="d-flex gap-2">
                   <a href="employee-attendance.php" class="btn btn-outline-primary">
                     <i class="icon-base bx bx-calendar-check me-1"></i> Attendance

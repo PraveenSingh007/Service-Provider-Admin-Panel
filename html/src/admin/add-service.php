@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="layout-page">
           <!-- Navbar -->
           <nav
-            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            class="layout-navbar container-fluid px-3 px-md-4 navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
             id="layout-navbar">
             <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
               <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
@@ -165,9 +165,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-            <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="container-fluid px-3 px-md-4 flex-grow-1 container-p-y">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold py-3 mb-0"><?= $isEditMode ? 'Edit Service' : 'Add New Service' ?></h4>
+                <h4 class="fw-bold py-1 mb-0"><?= $isEditMode ? 'Edit Service' : 'Add New Service' ?></h4>
                 <a href="services.php" class="btn btn-outline-secondary">
                   <i class="icon-base bx bx-arrow-back me-1"></i> Back to Services
                 </a>
@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
               <!-- Service Form Card -->
               <div class="row">
-                <div class="col-xl-8 col-lg-10">
+                <div class="col-12">
                   <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                       <h5 class="mb-0"><?= $isEditMode ? 'Service Details (# ' . $serviceId . ')' : 'Service Details' ?></h5>

@@ -7,10 +7,13 @@ require_once __DIR__ . '/Model/ServiceRequest.php';
 require_once __DIR__ . '/Repository/ServiceRequestRepository.php';
 require_once __DIR__ . '/Service/ServiceRequestManagementService.php';
 require_once __DIR__ . '/Controller/ServiceRequestController.php';
+require_once __DIR__ . '/Model/Service.php';
+require_once __DIR__ . '/Repository/ServiceRepository.php';
 
 use App\Admin\Controller\ServiceRequestController;
 use App\Admin\Database\DatabaseConnection;
 use App\Admin\Repository\ServiceRequestRepository;
+use App\Admin\Repository\ServiceRepository;
 use App\Admin\Service\ServiceRequestManagementService;
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -35,6 +38,8 @@ $dbConn = DatabaseConnection::createFromEnv()->getConnection();
 $repository = new ServiceRequestRepository($dbConn);
 $serviceMgmt = new ServiceRequestManagementService($repository);
 $controller = new ServiceRequestController($serviceMgmt);
+$serviceRepo = new ServiceRepository($dbConn);
+$allDbServices = $serviceRepo->findAll();
 
 $actionMessage = null;
 $actionError = null;
@@ -207,7 +212,7 @@ foreach ($serviceRequests as $req) {
         <div class="layout-page">
           <!-- Navbar -->
           <nav
-            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            class="layout-navbar container-fluid px-3 px-md-4 navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
             id="layout-navbar">
             <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
               <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
@@ -254,7 +259,7 @@ foreach ($serviceRequests as $req) {
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-            <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="container-fluid px-3 px-md-4 flex-grow-1 container-p-y">
               
               <!-- Header Section -->
               <div class="d-flex justify-content-between align-items-center mb-4">
@@ -509,10 +514,13 @@ foreach ($serviceRequests as $req) {
                 <div class="col-md-4">
                   <label class="form-label">Service Category <span class="text-danger">*</span></label>
                   <select name="service_category" class="form-select" required>
-                    <option value="cctv_camera">CCTV Camera Setup & Repair</option>
-                    <option value="computer_hardware">Computer Hardware Sales & Repair</option>
-                    <option value="amc_contract">Annual Maintenance Contract (AMC)</option>
-                    <option value="other">Other Service</option>
+                    <option value="">-- Select Service Category --</option>
+                    <?php foreach ($allDbServices as $s): ?>
+                      <option value="<?= htmlspecialchars($s->getServiceName(), ENT_QUOTES, 'UTF-8') ?>">
+                        <?= htmlspecialchars($s->getServiceName(), ENT_QUOTES, 'UTF-8') ?>
+                      </option>
+                    <?php endforeach; ?>
+                    <option value="Other Service">Other Service</option>
                   </select>
                 </div>
                 <div class="col-md-4">
@@ -520,9 +528,7 @@ foreach ($serviceRequests as $req) {
                   <select name="request_type" class="form-select" required>
                     <option value="fresh_installation">Fresh Installation</option>
                     <option value="repair_service">Repair & Maintenance</option>
-                    <option value="hardware_purchase">Hardware Purchase</option>
-                    <option value="amc_new_booking">AMC New Contract Booking</option>
-                    <option value="amc_periodic_service">AMC Periodic Maintenance Visit</option>
+                    <option value="amc_new_booking">AMC</option>
                   </select>
                 </div>
                 <div class="col-md-4">
@@ -711,10 +717,13 @@ foreach ($serviceRequests as $req) {
                 <div class="col-md-4">
                   <label class="form-label">Service Category</label>
                   <select name="service_category" id="edit_service_category" class="form-select">
-                    <option value="cctv_camera">CCTV Camera Setup & Repair</option>
-                    <option value="computer_hardware">Computer Hardware Sales & Repair</option>
-                    <option value="amc_contract">Annual Maintenance Contract (AMC)</option>
-                    <option value="other">Other Service</option>
+                    <option value="">-- Select Service Category --</option>
+                    <?php foreach ($allDbServices as $s): ?>
+                      <option value="<?= htmlspecialchars($s->getServiceName(), ENT_QUOTES, 'UTF-8') ?>">
+                        <?= htmlspecialchars($s->getServiceName(), ENT_QUOTES, 'UTF-8') ?>
+                      </option>
+                    <?php endforeach; ?>
+                    <option value="Other Service">Other Service</option>
                   </select>
                 </div>
                 <div class="col-md-4">
@@ -722,9 +731,7 @@ foreach ($serviceRequests as $req) {
                   <select name="request_type" id="edit_request_type" class="form-select">
                     <option value="fresh_installation">Fresh Installation</option>
                     <option value="repair_service">Repair & Maintenance</option>
-                    <option value="hardware_purchase">Hardware Purchase</option>
-                    <option value="amc_new_booking">AMC New Contract Booking</option>
-                    <option value="amc_periodic_service">AMC Periodic Maintenance Visit</option>
+                    <option value="amc_new_booking">AMC</option>
                   </select>
                 </div>
                 <div class="col-md-4">

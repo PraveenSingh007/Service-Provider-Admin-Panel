@@ -88,7 +88,7 @@ $company = $service->getCompanyProfile();
         <!-- Layout container -->
         <div class="layout-page">
           <!-- Navbar -->
-          <nav class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme" id="layout-navbar">
+          <nav class="layout-navbar container-fluid px-3 px-md-4 navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme" id="layout-navbar">
             <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
               <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
                 <i class="icon-base bx bx-menu icon-md"></i>
@@ -145,9 +145,9 @@ $company = $service->getCompanyProfile();
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-            <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="container-fluid px-3 px-md-4 flex-grow-1 container-p-y">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold py-3 mb-0"><i class="icon-base bx bx-building-house me-2"></i>Company Profile</h4>
+                <h4 class="fw-bold py-1 mb-0"><i class="icon-base bx bx-building-house me-2"></i>Company Profile</h4>
                 <a href="dashboard.php" class="btn btn-outline-secondary">
                   <i class="icon-base bx bx-arrow-back me-1"></i> Back to Dashboard
                 </a>
@@ -278,7 +278,7 @@ $company = $service->getCompanyProfile();
 
             <!-- Footer -->
             <footer class="content-footer footer bg-footer-theme">
-              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+              <div class="container-fluid px-3 px-md-4 d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
                 <div class="mb-2 mb-md-0">
                   © <?= date('Y') ?>, tech-xpert Admin Panel
                 </div>

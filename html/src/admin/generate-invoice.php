@@ -192,7 +192,7 @@ if ($isAddingRevision) {
         <div class="layout-page">
           <!-- Navbar -->
           <nav
-            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            class="layout-navbar container-fluid px-3 px-md-4 navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
             id="layout-navbar">
             <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
               <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
@@ -245,9 +245,9 @@ if ($isAddingRevision) {
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-            <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="container-fluid px-3 px-md-4 flex-grow-1 container-p-y">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold py-3 mb-0"><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></h4>
+                <h4 class="fw-bold py-1 mb-0"><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></h4>
                 <div class="d-flex gap-2">
                   <?php if ($existingInvoice !== null): ?>
                     <a href="invoice-details.php?id=<?= (int)$existingInvoice->getId() ?>" class="btn btn-outline-info">

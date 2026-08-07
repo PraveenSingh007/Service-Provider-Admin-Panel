@@ -8,11 +8,16 @@ use mysqli;
 use mysqli_sql_exception;
 use RuntimeException;
 
+require_once __DIR__ . '/Dotenv.php';
+
+// Auto-load .env file from project root
+Dotenv::load(__DIR__ . '/../../../.env');
+
 /**
  * Database Connection Manager
  *
- * Provides MySQLi database connection management using strict typing,
- * environment configuration, and robust error handling.
+ * Provides MySQLi database connection management using Dotenv configuration,
+ * fallback host checking, strict typing, and robust error handling.
  */
 class DatabaseConnection
 {
@@ -25,36 +30,29 @@ class DatabaseConnection
     private string $charset;
 
     public function __construct(
-        string $host = 'localhost',
-        string $username = 'root',
-        string $password = '',
-        string $database = 'service_provider',
-        int $port = 3306,
-        string $charset = 'utf8mb4'
+        ?string $host = null,
+        ?string $username = null,
+        ?string $password = null,
+        ?string $database = null,
+        ?int $port = null,
+        ?string $charset = null
     ) {
-        $this->host = $host;
-        $this->username = $username;
-        $this->password = $password;
-        $this->database = $database;
-        $this->port = $port;
-        $this->charset = $charset;
+        $this->host = $host ?? (getenv('DB_HOST') ?: '127.0.0.1');
+        $this->username = $username ?? (getenv('DB_USER') ?: 'root');
+        $this->password = $password ?? (getenv('DB_PASS') !== false ? (string) getenv('DB_PASS') : '');
+        $this->database = $database ?? (getenv('DB_NAME') ?: 'service_provider');
+        $this->port = $port ?? ((int) (getenv('DB_PORT') ?: 3306));
+        $this->charset = $charset ?? (getenv('DB_CHARSET') ?: 'utf8mb4');
 
         mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     }
 
     /**
-     * Factory method to initialize connection settings from environment variables.
+     * Factory method to initialize connection settings from environment variables (.env).
      */
     public static function createFromEnv(): self
     {
-        $host = getenv('DB_HOST') ?: '127.0.0.1';
-        $username = getenv('DB_USER') ?: 'root';
-        $password = getenv('DB_PASS') !== false ? (string) getenv('DB_PASS') : '';
-        $database = getenv('DB_NAME') ?: 'service_provider';
-        $port = (int) (getenv('DB_PORT') ?: 3306);
-        $charset = getenv('DB_CHARSET') ?: 'utf8mb4';
-
-        return new self($host, $username, $password, $database, $port, $charset);
+        return new self();
     }
 
     /**
@@ -70,24 +68,62 @@ class DatabaseConnection
     }
 
     /**
-     * Establishes the database connection.
+     * Establishes database connection checking Dotenv primary host & local fallback.
      */
     private function connect(): void
     {
-        try {
-            $this->connection = new mysqli(
-                $this->host,
-                $this->username,
-                $this->password,
-                $this->database,
-                $this->port
-            );
+        $hostsToTry = [
+            [
+                'host' => $this->host,
+                'username' => $this->username,
+                'password' => $this->password,
+                'database' => $this->database,
+                'port' => $this->port,
+            ],
+        ];
 
-            $this->connection->set_charset($this->charset);
-        } catch (mysqli_sql_exception $e) {
-            error_log('Database Connection Failure: ' . $e->getMessage());
-            throw new RuntimeException('Database connection error: ' . $e->getMessage(), (int) $e->getCode(), $e);
+        if (getenv('DB_FALLBACK_HOST')) {
+            $hostsToTry[] = [
+                'host' => (string) getenv('DB_FALLBACK_HOST'),
+                'username' => (string) (getenv('DB_FALLBACK_USER') ?: 'root'),
+                'password' => getenv('DB_FALLBACK_PASS') !== false ? (string) getenv('DB_FALLBACK_PASS') : '',
+                'database' => (string) (getenv('DB_FALLBACK_NAME') ?: 'service_provider'),
+                'port' => (int) (getenv('DB_FALLBACK_PORT') ?: 3306),
+            ];
         }
+
+        $lastException = null;
+
+        foreach ($hostsToTry as $cfg) {
+            try {
+                mysqli_report(MYSQLI_REPORT_OFF);
+                $conn = @new mysqli(
+                    $cfg['host'],
+                    $cfg['username'],
+                    $cfg['password'],
+                    $cfg['database'],
+                    $cfg['port']
+                );
+
+                if (!$conn->connect_errno) {
+                    $conn->set_charset($this->charset);
+                    $this->connection = $conn;
+                    $this->host = $cfg['host'];
+                    $this->username = $cfg['username'];
+                    $this->database = $cfg['database'];
+                    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+                    return;
+                }
+
+                $lastException = new RuntimeException($conn->connect_error, $conn->connect_errno);
+            } catch (\Throwable $e) {
+                $lastException = $e;
+            }
+        }
+
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+        error_log('Database Connection Failure: ' . ($lastException ? $lastException->getMessage() : 'Unknown error'));
+        throw new RuntimeException('Database connection error: ' . ($lastException ? $lastException->getMessage() : 'Could not connect to database host.'), 500, $lastException);
     }
 
     /**
@@ -118,7 +154,7 @@ try {
         }
         echo json_encode([
             'success' => true,
-            'message' => 'Hooray Localhost Database Connected Successfully.',
+            'message' => 'Hooray Database Connected Successfully via Dotenv.',
             'data' => $db->getConnectionDetails(),
         ], JSON_PRETTY_PRINT);
     }

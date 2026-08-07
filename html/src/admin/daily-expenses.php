@@ -178,7 +178,7 @@ foreach ($expenses as $exp) {
         <div class="layout-page">
           <!-- Navbar -->
           <nav
-            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            class="layout-navbar container-fluid px-3 px-md-4 navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
             id="layout-navbar">
             <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
               <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
@@ -231,9 +231,9 @@ foreach ($expenses as $exp) {
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-            <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="container-fluid px-3 px-md-4 flex-grow-1 container-p-y">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold py-3 mb-0">Daily Expenses Tracker</h4>
+                <h4 class="fw-bold py-1 mb-0">Daily Expenses Tracker</h4>
                 <a href="add-daily-expense.php" class="btn btn-primary">
                   <i class="icon-base bx bx-plus me-1"></i> Record New Expense
                 </a>

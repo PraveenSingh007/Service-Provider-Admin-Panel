@@ -149,7 +149,7 @@ $categories = [
         <div class="layout-page">
           <!-- Navbar -->
           <nav
-            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            class="layout-navbar container-fluid px-3 px-md-4 navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
             id="layout-navbar">
             <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
               <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
@@ -202,9 +202,9 @@ $categories = [
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-            <div class="container-xxl flex-grow-1 container-p-y">
+            <div class="container-fluid px-3 px-md-4 flex-grow-1 container-p-y">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold py-3 mb-0">
+                <h4 class="fw-bold py-1 mb-0">
                   <?= $isEditMode ? 'Edit Expense Record' : 'Record Daily Expense' ?>
                 </h4>
                 <a href="daily-expenses.php" class="btn btn-outline-secondary">
@@ -220,7 +220,7 @@ $categories = [
               <?php endif; ?>
 
               <div class="row">
-                <div class="col-md-8 offset-md-2">
+                <div class="col-12">
                   <div class="card mb-4 p-4">
                     <h5 class="card-title text-primary mb-4">
                       <i class="icon-base bx bx-wallet me-1"></i> Expense Details

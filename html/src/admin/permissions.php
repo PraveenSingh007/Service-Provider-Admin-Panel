@@ -23,6 +23,11 @@ if (!function_exists('hasModulePermission')) {
             return in_array($roleKey, ['super_admin', 'super_administrator'], true);
         }
 
+        // Quotations and Invoices are hidden/disabled per client request
+        if (in_array($module, ['quotations', 'invoices'], true)) {
+            return false;
+        }
+
         // Full access roles for other modules: Admin, Administrator, Super Admin, Super Administrator, Manager
         $fullAccessRoles = [
             'admin',

@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <body>
     <!-- Content -->
-    <div class="container-xxl">
+    <div class="container-fluid px-3 px-md-4">
       <div class="authentication-wrapper authentication-basic container-p-y">
         <div class="authentication-inner">
           <div class="card px-sm-6 px-0">

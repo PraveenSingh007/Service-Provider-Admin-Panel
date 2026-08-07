@@ -6,9 +6,12 @@ require_once __DIR__ . '/../admin/dbConnection.php';
 require_once __DIR__ . '/../admin/Model/ServiceRequest.php';
 require_once __DIR__ . '/../admin/Repository/ServiceRequestRepository.php';
 require_once __DIR__ . '/../admin/Service/ServiceRequestManagementService.php';
+require_once __DIR__ . '/../admin/Model/Service.php';
+require_once __DIR__ . '/../admin/Repository/ServiceRepository.php';
 
 use App\Admin\Database\DatabaseConnection;
 use App\Admin\Repository\ServiceRequestRepository;
+use App\Admin\Repository\ServiceRepository;
 use App\Admin\Service\ServiceRequestManagementService;
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -25,6 +28,8 @@ $csrfToken = (string) $_SESSION['csrf_token'];
 $dbConn = DatabaseConnection::createFromEnv()->getConnection();
 $repository = new ServiceRequestRepository($dbConn);
 $serviceMgmt = new ServiceRequestManagementService($repository);
+$serviceRepo = new ServiceRepository($dbConn);
+$dbServices = $serviceRepo->findAll();
 
 $successMessage = null;
 $errorMessage = null;
@@ -49,7 +54,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 }
 
 $serviceAreas = $serviceMgmt->getAvailableServiceAreas();
-$selectedCategory = (string) ($_GET['category'] ?? 'cctv_camera');
+$selectedCategory = (string) ($_GET['category'] ?? '');
+$selectedServiceId = (int) ($_GET['service_id'] ?? 0);
 ?>
 <!doctype html>
 <html lang="en">
@@ -150,19 +156,27 @@ $selectedCategory = (string) ($_GET['category'] ?? 'cctv_camera');
                 <div class="col-md-6">
                   <label class="form-label">Service Category <span class="text-danger">*</span></label>
                   <select name="service_category" class="form-select" required>
-                    <option value="cctv_camera" <?= $selectedCategory === 'cctv_camera' ? 'selected' : '' ?>>CCTV Camera Setup & Repair</option>
-                    <option value="computer_hardware" <?= $selectedCategory === 'computer_hardware' ? 'selected' : '' ?>>Computer Hardware Sales & Service</option>
-                    <option value="amc_contract" <?= $selectedCategory === 'amc_contract' ? 'selected' : '' ?>>Annual Maintenance Contract (AMC)</option>
-                    <option value="other" <?= $selectedCategory === 'other' ? 'selected' : '' ?>>Other Service</option>
+                    <option value="">-- Select Service Category --</option>
+                    <?php foreach ($dbServices as $srv): ?>
+                      <?php
+                      $sName = $srv->getServiceName();
+                      $sId = (int) $srv->getId();
+                      $sVal = strtolower(str_replace([' ', '&', '/', '-'], '_', $sName));
+                      $isSel = ($selectedServiceId === $sId || $selectedCategory === $sVal || stripos($selectedCategory, strtolower(explode(' ', $sName)[0])) !== false) ? 'selected' : '';
+                      ?>
+                      <option value="<?= htmlspecialchars($sName, ENT_QUOTES, 'UTF-8') ?>" <?= $isSel ?>>
+                        <?= htmlspecialchars($sName, ENT_QUOTES, 'UTF-8') ?>
+                      </option>
+                    <?php endforeach; ?>
                   </select>
                 </div>
+                <!-- </div> -->
                 <div class="col-md-6">
                   <label class="form-label">Request Type <span class="text-danger">*</span></label>
                   <select name="request_type" class="form-select" required>
                     <option value="fresh_installation">Fresh Installation</option>
                     <option value="repair_service">Repair & Maintenance</option>
-                    <option value="hardware_purchase">Hardware Purchase</option>
-                    <option value="amc_new_booking">AMC Contract Booking</option>
+                    <option value="amc_new_booking">AMC</option>
                   </select>
                 </div>
                 <div class="col-md-12">
