@@ -67,7 +67,7 @@ $services = (array) ($servicesResult['response']['data']['services'] ?? []);
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Services List - tech-xpert Admin</title>
+    <title>Services List - Tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -120,7 +120,7 @@ $services = (array) ($servicesResult['response']['data']['services'] ?? []);
         color: #ffffff !important;
       }
       .btn-export-csv {
-        background-color: #696cff !important;
+        background-color: #61BEF1 !important;
         color: #ffffff !important;
         border: none !important;
       }

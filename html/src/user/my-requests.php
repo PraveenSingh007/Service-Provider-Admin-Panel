@@ -148,8 +148,8 @@ foreach ($invoiceRepo->findAll() as $inv) {
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3 mb-4">
     <div class="container">
       <a class="navbar-brand fw-bold fs-4 d-flex align-items-center me-3" href="index.php">
-        <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px; background: #fff; padding: 2px;" class="me-2" />
-        <span>tech-</span><span style="color: #696cff;">xpert</span>
+        <img src="../../../assets/img/logo.png" alt="Tech-xpert" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px; background: #fff; padding: 2px;" class="me-2" />
+        <span>Tech-</span><span style="color: #696cff;">xpert</span>
       </a>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
@@ -454,7 +454,7 @@ foreach ($invoiceRepo->findAll() as $inv) {
                                     <?php if ($isInvApproved): ?>
                                       <?php
                                       $invTotal = isset($allInvoices[$invNo]) ? (float)$allInvoices[$invNo]->getTotalAmount() : 0.00;
-                                      $upiString = 'upi://pay?pa=' . urlencode('techxpert@upi') . '&pn=' . urlencode('tech-xpert Portal') . '&am=' . $invTotal . '&cu=INR';
+                                      $upiString = 'upi://pay?pa=' . urlencode('techxpert@upi') . '&pn=' . urlencode('Tech-xpert Portal') . '&am=' . $invTotal . '&cu=INR';
                                       $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' . urlencode($upiString);
                                       ?>
                                       <div class="border border-warning rounded-3 p-4 bg-label-warning text-center">
@@ -468,7 +468,7 @@ foreach ($invoiceRepo->findAll() as $inv) {
                                         <div class="display-6 fw-bold text-success mb-3">Amount: ₹<?= number_format($invTotal, 2) ?></div>
 
                                         <div class="bg-white p-3 rounded-3 text-start small border mx-auto max-w-500">
-                                          <div class="mb-1"><strong>Company:</strong> <?= htmlspecialchars($companyProfile ? $companyProfile->getCompanyName() : 'tech-xpert Services', ENT_QUOTES, 'UTF-8') ?></div>
+                                          <div class="mb-1"><strong>Company:</strong> <?= htmlspecialchars($companyProfile ? $companyProfile->getCompanyName() : 'Tech-xpert Services', ENT_QUOTES, 'UTF-8') ?></div>
                                           <div class="mb-1"><strong>UPI ID:</strong> <span class="text-primary fw-bold">techxpert@upi</span></div>
                                           <div class="mb-1"><strong>Bank Account:</strong> 987654321098</div>
                                           <div class="mb-1"><strong>IFSC Code:</strong> SBIN0001234</div>

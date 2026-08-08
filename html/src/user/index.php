@@ -110,18 +110,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Primary Meta Tags -->
-  <title>CCTV & IT Support | Top-Rated AMC Services | tech-xpert</title>
+  <title>CCTV & IT Support | Top-Rated AMC Services | Tech-xpert</title>
   <meta name="description" content="Professional CCTV setup, IT hardware repair, AMC services, & AC maintenance. Fast 2-hour doorstep service in India. Book a technician today.">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://tech-xpert.in/">
+  <link rel="canonical" href="https://Tech-xpert.in/">
   
   <!-- LocalBusiness Schema Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "tech-xpert Portal",
-    "url": "https://tech-xpert.in/",
+    "name": "Tech-xpert Portal",
+    "url": "https://Tech-xpert.in/",
     "description": "Professional CCTV, IT Hardware & AMC Services.",
     "address": {"@type": "Raipur", "addressCountry": "IN"},
     "telephone": "+91-8085041130, +91-8602234489" 
@@ -768,8 +768,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3">
     <div class="container">
       <a class="navbar-brand fw-bold fs-4 d-flex align-items-center me-4" href="index.php">
-        <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 42px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 2px;" class="me-2 shadow-sm" />
-        <span class="text-white">tech-</span><span style="color: #61BEF1;">xpert</span>
+        <img src="../../../assets/img/logo.png" alt="Tech-xpert" style="height: 42px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 2px;" class="me-2 shadow-sm" />
+        <span class="text-white">Tech-</span><span style="color: #61BEF1;">xpert</span>
       </a>
 
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
@@ -1292,8 +1292,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       <div class="row g-4 mb-4">
         <div class="col-lg-4 col-md-6">
           <a class="navbar-brand fw-bold fs-4 d-flex align-items-center mb-3" href="index.php">
-            <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 44px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 2px;" class="me-2 shadow-sm" />
-            <span class="text-white">tech-</span><span style="color: #61BEF1;">xpert</span>
+            <img src="../../../assets/img/logo.png" alt="Tech-xpert" style="height: 44px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 2px;" class="me-2 shadow-sm" />
+            <span class="text-white">Tech-</span><span style="color: #61BEF1;">xpert</span>
           </a>
           <p class="text-muted fs-7 mb-0">Your trusted partner for professional CCTV installation, computer hardware maintenance, network setup, and Annual Maintenance Contracts (AMC).</p>
         </div>
@@ -1315,7 +1315,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       </div>
       <hr class="border-secondary opacity-25 my-4" />
       <div class="text-center text-muted fs-7">
-        <p class="mb-0">&copy; <?= date('Y') ?> tech-xpert Portal. All Rights Reserved.</p>
+        <p class="mb-0">&copy; <?= date('Y') ?> Tech-xpert Portal. All Rights Reserved.</p>
       </div>
     </div>
   </footer>

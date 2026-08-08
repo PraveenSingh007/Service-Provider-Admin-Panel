@@ -100,10 +100,10 @@ class CustomerAuthService
 
             $mail->setFrom(
                 (string) ($smtpConfig['from_email'] ?? $smtpConfig['username'] ?? 'no-reply@example.com'),
-                (string) ($smtpConfig['from_name'] ?? 'tech-xpert Portal')
+                (string) ($smtpConfig['from_name'] ?? 'Tech-xpert Portal')
             );
             $mail->addAddress($email);
-            $mail->Subject = 'tech-xpert Verification Code: ' . $otpCode;
+            $mail->Subject = 'Tech-xpert Verification Code: ' . $otpCode;
             $mail->isHTML(true);
 
             $logoPath = __DIR__ . '/../../../uploads/logo.png';
@@ -115,14 +115,14 @@ class CustomerAuthService
                 }
             }
 
-            $logoImageHtml = $logoSrc !== '' ? "<img src='{$logoSrc}' alt='tech-xpert Logo' width='108' style='display:block; margin: 0 auto 14px; max-width: 120px; height: auto;' />" : '';
+            $logoImageHtml = $logoSrc !== '' ? "<img src='{$logoSrc}' alt='Tech-xpert Logo' width='108' style='display:block; margin: 0 auto 14px; max-width: 120px; height: auto;' />" : '';
 
             $mail->Body = "
                 <div style='font-family: \"Segoe UI\", Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);'>
                     <!-- Header Banner -->
-                    <div style='background: linear-gradient(135deg, #696cff 0%, #3938b3 100%); padding: 25px 20px; text-align: center;'>
+                    <div style='background: linear-gradient(135deg, #61BEF1 0%, #3938b3 100%); padding: 25px 20px; text-align: center;'>
                         {$logoImageHtml}
-                        <h2 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 0.5px;'>tech-xpert Portal</h2>
+                        <h2 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 0.5px;'>Tech-xpert Portal</h2>
                     </div>
 
                     <!-- Body Content -->
@@ -131,9 +131,9 @@ class CustomerAuthService
                         <p>We received a request to access your account via <strong>{$email}</strong>. Please use the following 6-digit One-Time Password (OTP) to complete your verification:</p>
                         
                         <!-- OTP Box -->
-                        <div style='background-color: #f8fafc; border: 2px dashed #696cff; text-align: center; padding: 20px; border-radius: 10px; margin: 25px 0;'>
+                        <div style='background-color: #f8fafc; border: 2px dashed #61BEF1; text-align: center; padding: 20px; border-radius: 10px; margin: 25px 0;'>
                             <span style='display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #718096; letter-spacing: 1px; margin-bottom: 8px;'>Your One-Time Password</span>
-                            <span style='font-size: 34px; font-weight: 800; letter-spacing: 10px; color: #696cff; font-family: monospace;'>{$otpCode}</span>
+                            <span style='font-size: 34px; font-weight: 800; letter-spacing: 10px; color: #61BEF1; font-family: monospace;'>{$otpCode}</span>
                         </div>
 
                         <!-- Expiry Notification -->
@@ -148,13 +148,13 @@ class CustomerAuthService
 
                     <!-- Footer -->
                     <div style='background-color: #f7fafc; padding: 18px 25px; border-top: 1px solid #edf2f7; text-align: center; font-size: 12px; color: #a0aec0;'>
-                        <p style='margin: 0 0 4px 0;'>Need help? Contact support at <a href='mailto:support.teckxpert@gmail.com' style='color: #696cff; text-decoration: none;'>support.teckxpert@gmail.com</a></p>
-                        <p style='margin: 0;'>© " . date('Y') . " tech-xpert Services Pvt Ltd. All rights reserved.</p>
+                        <p style='margin: 0 0 4px 0;'>Need help? Contact support at <a href='mailto:support.teckxpert@gmail.com' style='color: #61BEF1; text-decoration: none;'>support.teckxpert@gmail.com</a></p>
+                        <p style='margin: 0;'>© " . date('Y') . " Tech-xpert Services Pvt Ltd. All rights reserved.</p>
                     </div>
                 </div>
             ";
 
-            $mail->AltBody = "Hello,\n\nYour tech-xpert One-Time Password (OTP) is: {$otpCode}\n\nThis code is valid for 30 minutes (expires at {$formattedExpiry}). Do not share this code with anyone.\n\n© " . date('Y') . " tech-xpert Services Pvt Ltd.";
+            $mail->AltBody = "Hello,\n\nYour Tech-xpert One-Time Password (OTP) is: {$otpCode}\n\nThis code is valid for 30 minutes (expires at {$formattedExpiry}). Do not share this code with anyone.\n\n© " . date('Y') . " Tech-xpert Services Pvt Ltd.";
             $emailSent = $mail->send();
             if (!$emailSent) {
                 $smtpError = $mail->getErrorInfo();
@@ -166,7 +166,7 @@ class CustomerAuthService
             }
         } else {
             // Fallback to PHP native mail function
-            $subject = 'tech-xpert Verification Code: ' . $otpCode;
+            $subject = 'Tech-xpert Verification Code: ' . $otpCode;
             $message = "Hello,\n\nYour OTP for logging in is: {$otpCode}\n\nValid for 30 minutes (expires at {$formattedExpiry}).";
             $headers = 'From: no-reply@techxpert.com';
             @mail($email, $subject, $message, $headers);

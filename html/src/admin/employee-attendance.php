@@ -101,7 +101,7 @@ $existingAttn = $attnService->getAttendanceByDate($selectedDate);
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Employee Attendance - tech-xpert Admin</title>
+    <title>Employee Attendance - Tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />

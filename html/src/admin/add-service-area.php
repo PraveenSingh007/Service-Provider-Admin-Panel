@@ -71,7 +71,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title><?= $isEditMode ? 'Edit Service Area' : 'Add New Service Area' ?> - tech-xpert Admin</title>
+    <title><?= $isEditMode ? 'Edit Service Area' : 'Add New Service Area' ?> - Tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />

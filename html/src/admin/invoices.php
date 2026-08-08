@@ -97,7 +97,7 @@ foreach ($invoices as $inv) {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Invoices - tech-xpert Admin</title>
+    <title>Invoices - Tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -141,7 +141,7 @@ foreach ($invoices as $inv) {
         box-shadow: 0 0.25rem 0.5rem rgba(165, 163, 174, 0.35);
       }
       .btn-export-copy { background-color: #8592a3 !important; color: #ffffff !important; border: none !important; }
-      .btn-export-csv { background-color: #696cff !important; color: #ffffff !important; border: none !important; }
+      .btn-export-csv { background-color: #61BEF1 !important; color: #ffffff !important; border: none !important; }
       .btn-export-excel { background-color: #71dd37 !important; color: #ffffff !important; border: none !important; }
       .btn-export-pdf { background-color: #ff3e1d !important; color: #ffffff !important; border: none !important; }
       .btn-export-print { background-color: #03c3ec !important; color: #ffffff !important; border: none !important; }

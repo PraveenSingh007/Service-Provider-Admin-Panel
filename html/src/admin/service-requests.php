@@ -123,7 +123,7 @@ foreach ($serviceRequests as $req) {
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Service Requests Management - tech-xpert Admin</title>
+    <title>Service Requests Management - Tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
@@ -170,13 +170,13 @@ foreach ($serviceRequests as $req) {
         box-shadow: 0 0.25rem 0.5rem rgba(165, 163, 174, 0.35);
       }
       .btn-export-copy { background-color: #8592a3 !important; color: #ffffff !important; border: none !important; }
-      .btn-export-csv { background-color: #696cff !important; color: #ffffff !important; border: none !important; }
+      .btn-export-csv { background-color: #61BEF1 !important; color: #ffffff !important; border: none !important; }
       .btn-export-excel { background-color: #71dd37 !important; color: #ffffff !important; border: none !important; }
       .btn-export-pdf { background-color: #ff3e1d !important; color: #ffffff !important; border: none !important; }
       .btn-export-print { background-color: #03c3ec !important; color: #ffffff !important; border: none !important; }
       
       .badge-category { font-size: 0.75rem; padding: 0.35em 0.65em; text-transform: uppercase; letter-spacing: 0.5px; }
-      .badge-cctv { background-color: #e7e7ff; color: #696cff; }
+      .badge-cctv { background-color: #e7e7ff; color: #61BEF1; }
       .badge-computer { background-color: #e8fadf; color: #71dd37; }
       .badge-amc { background-color: #fff2d6; color: #ffab00; }
       .badge-other { background-color: #f1f0f2; color: #8592a3; }

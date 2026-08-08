@@ -1,6 +1,6 @@
 /*
 * demo.css
- * tech-xpert Admin Panel - Custom Modern Professional & Compact Styles
+ * Tech-xpert Admin Panel - Custom Modern Professional & Compact Styles
 ******************************************************************************/
 
 .menu .app-brand.demo {
@@ -116,7 +116,7 @@ body {
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #696cff;
+  border-color: #61BEF1;
   box-shadow: 0 0 0 0.2rem rgba(105, 108, 255, 0.15);
 }
 

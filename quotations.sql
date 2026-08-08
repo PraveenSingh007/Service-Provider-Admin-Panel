@@ -1,4 +1,4 @@
--- Quotations Schema for tech-xpert Admin Panel
+-- Quotations Schema for Tech-xpert Admin Panel
 USE `service_provider`;
 
 CREATE TABLE IF NOT EXISTS `quotations` (

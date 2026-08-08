@@ -15,5 +15,5 @@ ALTER TABLE `company_profile`
   ADD COLUMN `bank_account_no` VARCHAR(50) DEFAULT '987654321098' AFTER `upi_id`,
   ADD COLUMN `ifsc_code` VARCHAR(20) DEFAULT 'SBIN0001234' AFTER `bank_account_no`,
   ADD COLUMN `bank_name` VARCHAR(100) DEFAULT 'State Bank of India' AFTER `ifsc_code`,
-  ADD COLUMN `account_holder` VARCHAR(150) DEFAULT 'tech-xpert Services' AFTER `bank_name`,
+  ADD COLUMN `account_holder` VARCHAR(150) DEFAULT 'Tech-xpert Services' AFTER `bank_name`,
   ADD COLUMN `qr_code_image` VARCHAR(255) DEFAULT NULL AFTER `account_holder`;

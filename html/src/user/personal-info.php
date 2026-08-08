@@ -87,8 +87,8 @@ $userArray = $userObj ? $userObj->toArray() : $currentUser;
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
     <div class="container">
       <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="index.php">
-        <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px; background: #fff; padding: 2px;" class="me-2" />
-        tech-xpert Portal
+        <img src="../../../assets/img/logo.png" alt="Tech-xpert" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px; background: #fff; padding: 2px;" class="me-2" />
+        Tech-xpert Portal
       </a>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">

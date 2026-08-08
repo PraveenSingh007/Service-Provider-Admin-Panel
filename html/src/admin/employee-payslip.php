@@ -112,7 +112,7 @@ $formattedMonth = date('F Y', strtotime($salary->getSalaryMonth() . '-01'));
             <?php if ($company && !empty($company->getLogo())): ?>
               <img src="../../uploads/<?= htmlspecialchars($company->getLogo(), ENT_QUOTES, 'UTF-8') ?>" alt="Company Logo" class="company-logo mb-2" />
             <?php endif; ?>
-            <h3 class="fw-bold text-primary mb-1"><?= htmlspecialchars($company ? $company->getName() : 'tech-xpert', ENT_QUOTES, 'UTF-8') ?></h3>
+            <h3 class="fw-bold text-primary mb-1"><?= htmlspecialchars($company ? $company->getName() : 'Tech-xpert', ENT_QUOTES, 'UTF-8') ?></h3>
             <p class="text-muted small mb-0"><?= htmlspecialchars($company ? $company->getAddress() : 'Services & Solutions', ENT_QUOTES, 'UTF-8') ?></p>
             <p class="text-muted small mb-0">Phone: <?= htmlspecialchars($company ? $company->getMobile() : '', ENT_QUOTES, 'UTF-8') ?> | Email: <?= htmlspecialchars($company ? $company->getEmail() : '', ENT_QUOTES, 'UTF-8') ?></p>
           </div>

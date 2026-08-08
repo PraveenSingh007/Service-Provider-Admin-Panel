@@ -1,4 +1,4 @@
--- Invoices Schema for tech-xpert Admin Panel (Version-based)
+-- Invoices Schema for Tech-xpert Admin Panel (Version-based)
 USE `service_provider`;
 
 -- Drop old tables if re-running (order matters for FK constraints)

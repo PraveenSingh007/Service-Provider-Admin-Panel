@@ -50,7 +50,7 @@ if ($employee === null) {
         margin-bottom: 25px;
       }
       .btn-print {
-        background-color: #696cff;
+        background-color: #61BEF1;
         color: #ffffff;
         border: none;
         padding: 10px 24px;
@@ -78,7 +78,7 @@ if ($employee === null) {
         border: 1px solid #e2e8f0;
       }
       .id-card-header {
-        background: linear-gradient(135deg, #696cff 0%, #393bbf 100%);
+        background: linear-gradient(135deg, #61BEF1 0%, #393bbf 100%);
         color: #ffffff;
         padding: 24px 20px 45px 20px;
         text-align: center;
@@ -124,7 +124,7 @@ if ($employee === null) {
       .emp-role {
         font-size: 12px;
         font-weight: 600;
-        color: #696cff;
+        color: #61BEF1;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin-bottom: 12px;
@@ -132,7 +132,7 @@ if ($employee === null) {
       .emp-code-badge {
         display: inline-block;
         background-color: #e7e7ff;
-        color: #696cff;
+        color: #61BEF1;
         padding: 4px 14px;
         border-radius: 12px;
         font-size: 12px;
@@ -204,8 +204,8 @@ if ($employee === null) {
 
     <div class="id-card-wrapper">
       <div class="id-card-header text-center">
-        <img src="../../../assets/img/logo.png" alt="tech-xpert Logo" style="height: 45px; width: auto; object-fit: contain; filter: brightness(0) invert(1);" class="mb-1" />
-        <h2 style="font-size: 1.1rem; margin-bottom: 2px;">Tech-Xpert</h2>
+        <img src="../../../assets/img/logo.png" alt="Tech-xpert Logo" style="height: 45px; width: auto; object-fit: contain; filter: brightness(0) invert(1);" class="mb-1" />
+        <h2 style="font-size: 1.1rem; margin-bottom: 2px;">Tech-xpert</h2>
         <p style="font-size: 0.75rem; opacity: 0.9;">Official Identity Card</p>
       </div>
 

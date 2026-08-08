@@ -233,9 +233,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
       <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
         <div>
           <div class="d-flex align-items-center gap-3 mb-2">
-            <img src="../../../assets/img/logo.png" alt="tech-xpert Logo" style="height: 65px; width: auto; object-fit: contain;" />
+            <img src="../../../assets/img/logo.png" alt="Tech-xpert Logo" style="height: 65px; width: auto; object-fit: contain;" />
             <div>
-              <h2 class="fw-bold mb-0" style="color: #1a9df4;"><?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'tech-xpert Services Pvt Ltd', ENT_QUOTES, 'UTF-8') ?></h2>
+              <h2 class="fw-bold mb-0" style="color: #1a9df4;"><?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'Tech-xpert Services Pvt Ltd', ENT_QUOTES, 'UTF-8') ?></h2>
               <p class="text-muted mb-0 small">Suraksha, Seva, Santusstti</p>
             </div>
           </div>
@@ -364,7 +364,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
       <div class="border-top pt-4 mt-4 text-muted" style="font-size: 12px;">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <div>Authorized Signatory: <strong>___________________</strong></div>
-          <div class="fw-semibold" style="color: #1a9df4;">Thank you for choosing <?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'tech-xpert Services', ENT_QUOTES, 'UTF-8') ?>!</div>
+          <div class="fw-semibold" style="color: #1a9df4;">Thank you for choosing <?= htmlspecialchars($company !== null ? $company->getCompanyName() : 'Tech-xpert Services', ENT_QUOTES, 'UTF-8') ?>!</div>
         </div>
         <div class="text-center text-secondary border-top pt-2 mt-2">
           <strong>Office Address:</strong> <?= htmlspecialchars($company !== null && !empty($company->getAddress()) ? $company->getAddress() : '123 Business Tower, Tech Park Road, Mumbai, Maharashtra 400001', ENT_QUOTES, 'UTF-8') ?>

@@ -73,7 +73,7 @@ $generatedEmpCode = 'EMP-' . rand(1000, 9999);
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title><?= $isEditMode ? 'Edit Employee' : 'Add New Employee' ?> - tech-xpert Admin</title>
+    <title><?= $isEditMode ? 'Edit Employee' : 'Add New Employee' ?> - Tech-xpert Admin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="../../../assets/img/favicon/favicon.ico" />
