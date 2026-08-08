@@ -22,6 +22,7 @@ if (empty($_SESSION['csrf_token'])) {
 $csrfToken = (string) $_SESSION['csrf_token'];
 
 $currentUser = !empty($_SESSION['customer_user']) ? (array) $_SESSION['customer_user'] : null;
+session_write_close();
 
 $dbConn = DatabaseConnection::createFromEnv()->getConnection();
 $serviceAreaRepo = new ServiceAreaRepository($dbConn);
@@ -134,9 +135,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link rel="preload" href="../../../assets/vendor/css/core.min.css" as="style" />
+  <link rel="preload" href="../../../assets/vendor/fonts/iconify-icons.min.css" as="style" />
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../../../assets/vendor/css/core.css" />
-  <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.css" />
+  <link rel="stylesheet" href="../../../assets/vendor/css/core.min.css" />
+  <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" />
   
   <style>
@@ -837,8 +841,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
         <?php foreach ($heroVideoFiles as $idx => $vPath): ?>
           <div class="carousel-item <?= $idx === 0 ? 'active' : '' ?>">
             <div class="hero-video-banner">
-              <video id="heroVideo<?= $idx + 1 ?>" class="hero-video-element" <?= $idx === 0 ? 'autoplay' : '' ?> playsinline preload="auto">
-                <source src="<?= $vPath ?>" type="video/mp4">
+              <video id="heroVideo<?= $idx + 1 ?>" class="hero-video-element" <?= $idx === 0 ? 'autoplay' : '' ?> playsinline preload="<?= $idx === 0 ? 'auto' : 'none' ?>">
+                <source <?= $idx === 0 ? 'src="' . $vPath . '"' : 'data-src="' . $vPath . '"' ?> type="video/mp4">
               </video>
             </div>
           </div>
@@ -944,7 +948,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             <div class="col-lg-4 col-md-6">
               <div class="card service-card">
                 <div class="service-img-container">
-                  <img src="<?= htmlspecialchars($imgSrc, ENT_QUOTES, 'UTF-8') ?>" class="service-card-img" alt="<?= htmlspecialchars($srvName, ENT_QUOTES, 'UTF-8') ?>" />
+                  <img src="<?= htmlspecialchars($imgSrc, ENT_QUOTES, 'UTF-8') ?>" class="service-card-img" alt="<?= htmlspecialchars($srvName, ENT_QUOTES, 'UTF-8') ?>" loading="lazy" decoding="async" />
                   <span class="category-pill"><i class="bx bx-check-circle me-1 text-primary"></i> <?= htmlspecialchars($meta['badge'], ENT_QUOTES, 'UTF-8') ?></span>
                 </div>
                 <div class="card-body service-card-body">
@@ -1320,8 +1324,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     </div>
   </footer>
 
-  <script src="../../../assets/vendor/libs/jquery/jquery.js"></script>
-  <script src="../../../assets/vendor/js/bootstrap.js"></script>
+  <script src="../../../assets/vendor/libs/jquery/jquery.min.js"></script>
+  <script src="../../../assets/vendor/js/bootstrap.min.js"></script>
   <script>
     $(document).ready(function() {
       // Auto open modal if callback parameter is present
@@ -1362,10 +1366,27 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             wrap: true
           });
 
+          function ensureVideoLoaded(v) {
+            if (!v) return;
+            const source = v.querySelector('source');
+            if (source && source.dataset.src && !source.getAttribute('src')) {
+              source.setAttribute('src', source.dataset.src);
+              v.load();
+            }
+          }
+
+          // Background preload next video after initial hero play starts
+          setTimeout(function() {
+            if (videos[1]) {
+              ensureVideoLoaded(videos[1]);
+            }
+          }, 1500);
+
           videos.forEach(v => { v.muted = false; });
 
           function playVideo(v) {
             if (v) {
+              ensureVideoLoaded(v);
               v.currentTime = 0;
               v.muted = isMuted;
               var playPromise = v.play();
@@ -1399,6 +1420,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
               if (activeItem) {
                 const activeVid = activeItem.querySelector('.hero-video-element');
                 if (activeVid) {
+                  ensureVideoLoaded(activeVid);
                   activeVid.muted = false;
                   activeVid.play();
                 }
@@ -1428,6 +1450,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
                 if (activeItem) {
                   const activeVid = activeItem.querySelector('.hero-video-element');
                   if (activeVid) {
+                    ensureVideoLoaded(activeVid);
                     activeVid.muted = false;
                     activeVid.play();
                   }
@@ -1452,7 +1475,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             });
           });
 
-          // Play active slide video when slide changes
+          // Preload upcoming slide when carousel begins sliding
+          videoCarouselEl.addEventListener('slide.bs.carousel', function(e) {
+            if (videos[e.to]) {
+              ensureVideoLoaded(videos[e.to]);
+            }
+          });
+
+          // Play active slide video when slide transition completes
           videoCarouselEl.addEventListener('slid.bs.carousel', function(e) {
             videos.forEach(v => v.pause());
             if (videos[e.to]) {

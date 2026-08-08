@@ -92,18 +92,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
       rel="stylesheet" />
 
-    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.min.css" />
 
     <!-- Core CSS -->
-    <link rel="stylesheet" href="../../../assets/vendor/css/core.css" />
-    <link rel="stylesheet" href="../../../assets/css/demo.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/css/core.min.css" />
+    <link rel="stylesheet" href="../../../assets/css/demo.min.css" />
 
     <!-- Vendors CSS -->
-    <link rel="stylesheet" href="../../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.min.css" />
 
     <!-- Helpers -->
-    <script src="../../../assets/vendor/js/helpers.js"></script>
-    <script src="../../../assets/js/config.js"></script>
+    <script src="../../../assets/vendor/js/helpers.min.js"></script>
+    <script src="../../../assets/js/config.min.js"></script>
   </head>
 
   <body>
@@ -407,8 +407,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     </div>
 
     <!-- Core JS -->
-    <script src="../../../assets/vendor/libs/jquery/jquery.js"></script>
-    <script src="../../../assets/vendor/js/bootstrap.js"></script>
+    <script src="../../../assets/vendor/libs/jquery/jquery.min.js"></script>
+    <script src="../../../assets/vendor/js/bootstrap.min.js"></script>
     <script src="../../../assets/vendor/libs/select2/select2.js"></script>
 
     <!-- Calculation Script -->

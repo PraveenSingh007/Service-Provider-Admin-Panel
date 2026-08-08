@@ -82,14 +82,14 @@ $quotations = $service->getAllQuotations();
       href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
       rel="stylesheet" />
 
-    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.min.css" />
 
     <!-- Core CSS -->
-    <link rel="stylesheet" href="../../../assets/vendor/css/core.css" />
-    <link rel="stylesheet" href="../../../assets/css/demo.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/css/core.min.css" />
+    <link rel="stylesheet" href="../../../assets/css/demo.min.css" />
 
     <!-- Vendors CSS -->
-    <link rel="stylesheet" href="../../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.min.css" />
 
     <!-- DataTables & Buttons CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
@@ -121,8 +121,8 @@ $quotations = $service->getAllQuotations();
     </style>
 
     <!-- Helpers -->
-    <script src="../../../assets/vendor/js/helpers.js"></script>
-    <script src="../../../assets/js/config.js"></script>
+    <script src="../../../assets/vendor/js/helpers.min.js"></script>
+    <script src="../../../assets/js/config.min.js"></script>
   </head>
 
   <body>
@@ -297,12 +297,12 @@ $quotations = $service->getAllQuotations();
     </div>
 
     <!-- Core JS -->
-    <script src="../../../assets/vendor/libs/jquery/jquery.js"></script>
-    <script src="../../../assets/vendor/libs/popper/popper.js"></script>
-    <script src="../../../assets/vendor/js/bootstrap.js"></script>
-    <script src="../../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
-    <script src="../../../assets/vendor/js/menu.js"></script>
-    <script src="../../../assets/js/main.js"></script>
+    <script src="../../../assets/vendor/libs/jquery/jquery.min.js"></script>
+    <script src="../../../assets/vendor/libs/popper/popper.min.js"></script>
+    <script src="../../../assets/vendor/js/bootstrap.min.js"></script>
+    <script src="../../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.min.js"></script>
+    <script src="../../../assets/vendor/js/menu.min.js"></script>
+    <script src="../../../assets/js/main.min.js"></script>
 
     <!-- DataTables & Export Buttons JS -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>

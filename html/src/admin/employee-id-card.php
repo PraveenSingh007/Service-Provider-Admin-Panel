@@ -35,7 +35,7 @@ if ($employee === null) {
     <title>ID Card - <?= htmlspecialchars($employee->getEmpName(), ENT_QUOTES, 'UTF-8') ?></title>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.min.css" />
     <style>
       body {
         font-family: 'Public Sans', sans-serif;

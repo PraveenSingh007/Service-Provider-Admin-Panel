@@ -105,8 +105,8 @@ foreach ($invoiceRepo->findAll() as $inv) {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../../../assets/vendor/css/core.css" />
-  <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.css" />
+  <link rel="stylesheet" href="../../../assets/vendor/css/core.min.css" />
+  <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" />
   
   <style>
@@ -502,7 +502,7 @@ foreach ($invoiceRepo->findAll() as $inv) {
     </div>
   </div>
 
-  <script src="../../../assets/vendor/libs/jquery/jquery.js"></script>
-  <script src="../../../assets/vendor/js/bootstrap.js"></script>
+  <script src="../../../assets/vendor/libs/jquery/jquery.min.js"></script>
+  <script src="../../../assets/vendor/js/bootstrap.min.js"></script>
 </body>
 </html>

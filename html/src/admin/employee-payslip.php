@@ -68,9 +68,9 @@ $formattedMonth = date('F Y', strtotime($salary->getSalaryMonth() . '-01'));
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.css" />
-    <link rel="stylesheet" href="../../../assets/vendor/css/core.css" />
-    <link rel="stylesheet" href="../../../assets/css/demo.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.min.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/css/core.min.css" />
+    <link rel="stylesheet" href="../../../assets/css/demo.min.css" />
     
     <style>
       @media print {

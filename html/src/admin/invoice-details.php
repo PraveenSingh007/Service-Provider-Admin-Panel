@@ -124,9 +124,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
     <title>Tax Invoice - <?= htmlspecialchars($invoice->getInvoiceNumber(), ENT_QUOTES, 'UTF-8') ?></title>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/fonts/iconify-icons.min.css" />
     <!-- Core CSS -->
-    <link rel="stylesheet" href="../../../assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="../../../assets/vendor/css/core.min.css" />
     <style>
       body {
         font-family: 'Public Sans', sans-serif;
@@ -413,7 +413,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
     <?php endif; ?>
 
     <!-- JS Scripts -->
-    <script src="../../../assets/vendor/libs/jquery/jquery.js"></script>
-    <script src="../../../assets/vendor/js/bootstrap.js"></script>
+    <script src="../../../assets/vendor/libs/jquery/jquery.min.js"></script>
+    <script src="../../../assets/vendor/js/bootstrap.min.js"></script>
   </body>
 </html>
