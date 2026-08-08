@@ -841,7 +841,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
         <?php foreach ($heroVideoFiles as $idx => $vPath): ?>
           <div class="carousel-item <?= $idx === 0 ? 'active' : '' ?>">
             <div class="hero-video-banner">
-              <video id="heroVideo<?= $idx + 1 ?>" class="hero-video-element" <?= $idx === 0 ? 'autoplay' : '' ?> playsinline preload="<?= $idx === 0 ? 'auto' : 'none' ?>">
+              <video id="heroVideo<?= $idx + 1 ?>" class="hero-video-element" <?= $idx === 0 ? 'autoplay' : '' ?> playsinline muted preload="<?= $idx === 0 ? 'auto' : 'none' ?>">
                 <source <?= $idx === 0 ? 'src="' . $vPath . '"' : 'data-src="' . $vPath . '"' ?> type="video/mp4">
               </video>
             </div>
@@ -858,8 +858,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       </button>
 
       <!-- Interactive Sound Toggle Button -->
-      <button id="videoSoundToggleBtn" class="btn hero-sound-btn" type="button" title="Toggle Sound" style="background: #61BEF1;">
-        <i class="bx bx-volume-full me-1 text-warning"></i> On
+      <button id="videoSoundToggleBtn" class="btn hero-sound-btn" type="button" title="Toggle Sound" style="background: rgba(19, 23, 34, 0.8);">
+        <i class="bx bx-volume-mute me-1"></i> Off
       </button>
     </div>
   </div>
@@ -1356,9 +1356,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
 
       if (videoCarouselEl) {
         const videos = Array.from(videoCarouselEl.querySelectorAll('.hero-video-element'));
-        let isMuted = false;           // Default sound enabled
-        let userOverrodeSound = false;  // Tracks if user manually toggled sound
-        let playedIndicesInFirstLoop = new Set(); // Tracks unique slides completed in 1st loop
+        let isMuted = true;                       // Default sound disabled (OFF)
+        let playedIndicesInLoop = new Set();      // Tracks unique slides completed in current loop
 
         if (videos.length > 0) {
           const videoCarousel = new bootstrap.Carousel(videoCarouselEl, {
@@ -1382,7 +1381,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             }
           }, 1500);
 
-          videos.forEach(v => { v.muted = false; });
+          videos.forEach(v => { v.muted = true; });
 
           function playVideo(v) {
             if (v) {
@@ -1394,6 +1393,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
                 playPromise.catch(function(e) {
                   if (e.name === 'NotAllowedError') {
                     v.muted = true;
+                    isMuted = true;
+                    updateSoundBtnUI();
                     v.play();
                   }
                 });
@@ -1412,32 +1413,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             }
           }
 
-          // Unmute upon first user interaction on page if browser blocked sound autoplay initially
-          const enableAudioOnUserGesture = function() {
-            if (!isMuted && !userOverrodeSound) {
-              videos.forEach(v => { v.muted = false; });
-              const activeItem = videoCarouselEl.querySelector('.carousel-item.active');
-              if (activeItem) {
-                const activeVid = activeItem.querySelector('.hero-video-element');
-                if (activeVid) {
-                  ensureVideoLoaded(activeVid);
-                  activeVid.muted = false;
-                  activeVid.play();
-                }
-              }
-            }
-            window.removeEventListener('click', enableAudioOnUserGesture);
-            window.removeEventListener('touchstart', enableAudioOnUserGesture);
-          };
-          window.addEventListener('click', enableAudioOnUserGesture, { once: true });
-          window.addEventListener('touchstart', enableAudioOnUserGesture, { once: true });
-
           // Toggle Sound Button handler
           if (soundBtn) {
             soundBtn.addEventListener('click', function(e) {
               e.stopPropagation();
               isMuted = !isMuted;
-              userOverrodeSound = true;
               
               videos.forEach(v => {
                 v.muted = isMuted;
@@ -1462,13 +1442,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
           // Advance to next video when current video ends
           videos.forEach((v, idx) => {
             v.addEventListener('ended', function() {
-              playedIndicesInFirstLoop.add(idx);
+              playedIndicesInLoop.add(idx);
 
-              // Auto-mute audio after 1 complete loop of all slides (unless user overrode sound)
-              if (playedIndicesInFirstLoop.size >= videos.length && !userOverrodeSound) {
+              // Auto-mute audio after 1 complete loop of all slides
+              if (playedIndicesInLoop.size >= videos.length) {
                 isMuted = true;
                 videos.forEach(vid => { vid.muted = true; });
                 updateSoundBtnUI();
+                playedIndicesInLoop.clear();
               }
 
               videoCarousel.next();
