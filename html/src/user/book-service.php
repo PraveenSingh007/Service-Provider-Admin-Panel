@@ -71,7 +71,11 @@ $selectedServiceId = (int) ($_GET['service_id'] ?? 0);
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Book Service Request - Customer Portal</title>
+  <title>Book Service - Customer Portal</title>
+  
+  <!-- Favicon / Browser Tab Logo Icon -->
+  <link rel="icon" type="image/png" href="../../../assets/img/logo.png" />
+  <link rel="shortcut icon" type="image/png" href="../../../assets/img/logo.png" />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -85,7 +89,7 @@ $selectedServiceId = (int) ($_GET['service_id'] ?? 0);
     <div class="container">
       <a class="navbar-brand fw-bold fs-4 d-flex align-items-center me-3" href="index.php">
         <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px; background: #fff; padding: 2px;" class="me-2" />
-        <span>tech-</span><span style="color: #696cff;">xpert</span>
+        <span>tech-</span><span style="color: #61BEF1;">xpert</span>
       </a>
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
@@ -136,7 +140,7 @@ $selectedServiceId = (int) ($_GET['service_id'] ?? 0);
 
         <div class="card shadow-sm p-4">
           <div class="card-body">
-            <h4 class="card-title fw-bold mb-3"><i class="bx bx-calendar-plus text-primary me-2"></i>Book Service Request</h4>
+            <h4 class="card-title fw-bold mb-3"><i class="bx bx-calendar-plus text-primary me-2"></i>Book Service </h4>
             <p class="text-muted mb-4">Fill out the form below to book your service.</p>
 
             <form method="POST" action="book-service.php">

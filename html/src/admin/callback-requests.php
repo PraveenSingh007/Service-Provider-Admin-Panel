@@ -93,6 +93,10 @@ foreach ($allRequests as $item) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
   <title>Callback Requests Management | Admin Panel</title>
   
+  <!-- Favicon / Browser Tab Logo Icon -->
+  <link rel="icon" type="image/png" href="../../../assets/img/logo.png" />
+  <link rel="shortcut icon" type="image/png" href="../../../assets/img/logo.png" />
+  
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
@@ -130,7 +134,7 @@ foreach ($allRequests as $item) {
       transform: translateY(-2px);
       box-shadow: 0 4px 10px rgba(0,0,0,0.18);
     }
-    .btn-export-copy { background-color: #696cff !important; color: #ffffff !important; border: none !important; }
+    .btn-export-copy { background-color: #61BEF1 !important; color: #ffffff !important; border: none !important; }
     .btn-export-copy:hover { background-color: #5f61e6 !important; color: #ffffff !important; }
     .btn-export-csv { background-color: #03c3ec !important; color: #ffffff !important; border: none !important; }
     .btn-export-csv:hover { background-color: #02acd0 !important; color: #ffffff !important; }

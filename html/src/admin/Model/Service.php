@@ -12,6 +12,7 @@ final class Service
 {
     private ?int $id;
     private string $serviceName;
+    private ?string $serviceDescription;
     private ?string $serviceImage;
     private ?string $createdAt;
     private ?string $updatedAt;
@@ -19,12 +20,14 @@ final class Service
     public function __construct(
         ?int $id,
         string $serviceName,
+        ?string $serviceDescription = null,
         ?string $serviceImage = null,
         ?string $createdAt = null,
         ?string $updatedAt = null
     ) {
         $this->id = $id;
         $this->serviceName = $serviceName;
+        $this->serviceDescription = $serviceDescription;
         $this->serviceImage = $serviceImage;
         $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
@@ -38,6 +41,11 @@ final class Service
     public function getServiceName(): string
     {
         return $this->serviceName;
+    }
+
+    public function getServiceDescription(): ?string
+    {
+        return $this->serviceDescription;
     }
 
     public function getServiceImage(): ?string
@@ -65,6 +73,7 @@ final class Service
         return [
             'id' => $this->id,
             'service_name' => $this->serviceName,
+            'service_description' => $this->serviceDescription,
             'service_image' => $this->serviceImage,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,

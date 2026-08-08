@@ -30,7 +30,7 @@ class ServiceRepository
     {
         $services = [];
         try {
-            $sql = 'SELECT id, service_name, service_image, created_at, updated_at FROM services ORDER BY id ASC';
+            $sql = 'SELECT id, service_name, service_description, service_image, created_at, updated_at FROM services ORDER BY id ASC';
             $stmt = $this->connection->prepare($sql);
 
             if ($stmt) {
@@ -41,6 +41,7 @@ class ServiceRepository
                     $services[] = new Service(
                         (int) $row['id'],
                         (string) $row['service_name'],
+                        isset($row['service_description']) ? (string) $row['service_description'] : null,
                         $row['service_image'] !== null ? (string) $row['service_image'] : null,
                         isset($row['created_at']) ? (string) $row['created_at'] : null,
                         isset($row['updated_at']) ? (string) $row['updated_at'] : null
@@ -61,7 +62,7 @@ class ServiceRepository
     public function findById(int $id): ?Service
     {
         try {
-            $sql = 'SELECT id, service_name, service_image, created_at, updated_at FROM services WHERE id = ? LIMIT 1';
+            $sql = 'SELECT id, service_name, service_description, service_image, created_at, updated_at FROM services WHERE id = ? LIMIT 1';
             $stmt = $this->connection->prepare($sql);
 
             if ($stmt) {
@@ -74,6 +75,7 @@ class ServiceRepository
                     return new Service(
                         (int) $row['id'],
                         (string) $row['service_name'],
+                        isset($row['service_description']) ? (string) $row['service_description'] : null,
                         $row['service_image'] !== null ? (string) $row['service_image'] : null,
                         isset($row['created_at']) ? (string) $row['created_at'] : null,
                         isset($row['updated_at']) ? (string) $row['updated_at'] : null
@@ -91,17 +93,17 @@ class ServiceRepository
     /**
      * Insert a new service.
      */
-    public function create(string $serviceName, ?string $serviceImage): bool
+    public function create(string $serviceName, ?string $serviceDescription = null, ?string $serviceImage = null): bool
     {
         try {
-            $sql = 'INSERT INTO services (service_name, service_image) VALUES (?, ?)';
+            $sql = 'INSERT INTO services (service_name, service_description, service_image) VALUES (?, ?, ?)';
             $stmt = $this->connection->prepare($sql);
 
             if (!$stmt) {
                 return false;
             }
 
-            $stmt->bind_param('ss', $serviceName, $serviceImage);
+            $stmt->bind_param('sss', $serviceName, $serviceDescription, $serviceImage);
             $success = $stmt->execute();
             $stmt->close();
             return $success;
@@ -114,23 +116,23 @@ class ServiceRepository
     /**
      * Update an existing service.
      */
-    public function update(int $id, string $serviceName, ?string $serviceImage): bool
+    public function update(int $id, string $serviceName, ?string $serviceDescription = null, ?string $serviceImage = null): bool
     {
         try {
             if ($serviceImage !== null) {
-                $sql = 'UPDATE services SET service_name = ?, service_image = ? WHERE id = ?';
+                $sql = 'UPDATE services SET service_name = ?, service_description = ?, service_image = ? WHERE id = ?';
                 $stmt = $this->connection->prepare($sql);
                 if (!$stmt) {
                     return false;
                 }
-                $stmt->bind_param('ssi', $serviceName, $serviceImage, $id);
+                $stmt->bind_param('sssi', $serviceName, $serviceDescription, $serviceImage, $id);
             } else {
-                $sql = 'UPDATE services SET service_name = ? WHERE id = ?';
+                $sql = 'UPDATE services SET service_name = ?, service_description = ? WHERE id = ?';
                 $stmt = $this->connection->prepare($sql);
                 if (!$stmt) {
                     return false;
                 }
-                $stmt->bind_param('si', $serviceName, $id);
+                $stmt->bind_param('ssi', $serviceName, $serviceDescription, $id);
             }
 
             $success = $stmt->execute();

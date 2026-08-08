@@ -98,6 +98,10 @@ foreach ($invoiceRepo->findAll() as $inv) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Service Requests | Customer Portal</title>
   
+  <!-- Favicon / Browser Tab Logo Icon -->
+  <link rel="icon" type="image/png" href="../../../assets/img/logo.png" />
+  <link rel="shortcut icon" type="image/png" href="../../../assets/img/logo.png" />
+  
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -108,6 +112,34 @@ foreach ($invoiceRepo->findAll() as $inv) {
   <style>
     body { background-color: #f5f5f9; font-family: 'Public Sans', sans-serif; }
     .max-w-500 { max-width: 500px; }
+
+    /* Clean High-Visibility Modal Close Button */
+    .modal-close-btn {
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 50% !important;
+      background: rgba(255, 255, 255, 0.2) !important;
+      border: 1px solid rgba(255, 255, 255, 0.4) !important;
+      color: #ffffff !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      font-size: 1.35rem !important;
+      line-height: 1 !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease-in-out !important;
+      outline: none !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    }
+    .modal-close-btn:hover {
+      background: #ff3e1d !important;
+      border-color: #ff3e1d !important;
+      color: #ffffff !important;
+      transform: scale(1.08);
+      box-shadow: 0 4px 10px rgba(255, 62, 29, 0.4) !important;
+    }
   </style>
 </head>
 <body class="bg-light">
@@ -280,7 +312,7 @@ foreach ($invoiceRepo->findAll() as $inv) {
                                       </h5>
                                       <span class="badge <?= $badge ?>"><?= htmlspecialchars(strtoupper(str_replace('_', ' ', $st)), ENT_QUOTES, 'UTF-8') ?></span>
                                     </div>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="bx bx-x"></i></button>
                                   </div>
 
                                   <div class="modal-body p-4">

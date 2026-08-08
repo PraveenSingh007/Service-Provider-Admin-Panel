@@ -30,6 +30,17 @@ $serviceRepo = new ServiceRepository($dbConn);
 $serviceAreas = $serviceAreaRepo->findAll();
 $services = $serviceRepo->findAll();
 
+// Hero Videos Playlist (Shuffled on every page refresh for dynamic variation)
+$heroVideoFiles = [
+    '../../../assets/video/hero-bg-1.mp4',
+    '../../../assets/video/hero-bg-2.mp4',
+    '../../../assets/video/hero-bg-3.mp4',
+    '../../../assets/video/hero-bg-4.mp4',
+    '../../../assets/video/hero-bg-5.mp4',
+    '../../../assets/video/hero-bg-6.mp4',
+];
+shuffle($heroVideoFiles);
+
 $callbackSuccess = false;
 $callbackError = null;
 $callbackReqNo = '';
@@ -98,7 +109,28 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tech-xpert Portal | Premium CCTV, Computer Hardware & AMC Services</title>
+  <!-- Primary Meta Tags -->
+  <title>CCTV & IT Support | Top-Rated AMC Services | tech-xpert</title>
+  <meta name="description" content="Professional CCTV setup, IT hardware repair, AMC services, & AC maintenance. Fast 2-hour doorstep service in India. Book a technician today.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://tech-xpert.in/">
+  
+  <!-- LocalBusiness Schema Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "tech-xpert Portal",
+    "url": "https://tech-xpert.in/",
+    "description": "Professional CCTV, IT Hardware & AMC Services.",
+    "address": {"@type": "Raipur", "addressCountry": "IN"},
+    "telephone": "+91-8085041130, +91-8602234489" 
+  }
+  </script>
+  
+  <!-- Favicon / Browser Tab Logo Icon -->
+  <link rel="icon" type="image/png" href="../../../assets/img/logo.png" />
+  <link rel="shortcut icon" type="image/png" href="../../../assets/img/logo.png" />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -109,7 +141,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
   
   <style>
     :root {
-      --primary-color: #696cff;
+      --primary-color: #61BEF1;
       --primary-hover: #5f61e6;
       --secondary-color: #8592a3;
       --accent-color: #ffab00;
@@ -136,7 +168,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     .brand-icon-box {
       width: 40px;
       height: 40px;
-      background: linear-gradient(135deg, #696cff 0%, #393bbf 100%);
+      background: linear-gradient(135deg, #61BEF1 0%, #393bbf 100%);
       border-radius: 12px;
       display: inline-flex;
       align-items: center;
@@ -200,8 +232,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     /* Hero Sound Control Toggle Button */
     .hero-sound-btn {
       position: absolute;
-      bottom: 16px;
+      top: 16px;
       right: 20px;
+      bottom: auto;
       z-index: 20;
       background: rgba(19, 23, 34, 0.8) !important;
       backdrop-filter: blur(10px);
@@ -217,8 +250,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     }
 
     .hero-sound-btn:hover {
-      background: #696cff !important;
-      border-color: #696cff !important;
+      background: #61BEF1 !important;
+      border-color: #61BEF1 !important;
       color: #ffffff !important;
       transform: translateY(-2px) scale(1.03);
     }
@@ -323,7 +356,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       width: 28px;
       border-radius: 6px;
       opacity: 1;
-      background-color: #696cff;
+      background-color: #61BEF1;
     }
 
     .carousel-control-prev, .carousel-control-next {
@@ -348,8 +381,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     }
 
     .carousel-control-btn:hover {
-      background: #696cff;
-      border-color: #696cff;
+      background: #61BEF1;
+      border-color: #61BEF1;
       transform: scale(1.08);
       color: #fff;
     }
@@ -581,7 +614,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     .brand-badge-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 8px 24px rgba(105, 108, 255, 0.2);
-      border-color: #696cff;
+      border-color: #61BEF1;
     }
 
     .brand-icon {
@@ -615,7 +648,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     .brand-logo-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 10px 28px rgba(105, 108, 255, 0.25);
-      border-color: #696cff;
+      border-color: #61BEF1;
     }
 
     .brand-logo-img {
@@ -685,7 +718,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       pointer-events: none;
     }
 
-    /* Modal Tweaks */
+    /* Modal Tweaks & High-Visibility Close Buttons */
     .modal-content-custom {
       border-radius: 1.25rem;
       border: none;
@@ -694,10 +727,38 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     }
 
     .modal-header-custom {
-      background: linear-gradient(135deg, #696cff 0%, #393bbf 100%);
+      background: linear-gradient(135deg, #61BEF1 0%, #393bbf 100%);
       color: #fff;
       padding: 1.5rem 2rem;
       border: none;
+    }
+
+    /* Clean High-Visibility Modal Close Button */
+    .modal-close-btn {
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 50% !important;
+      background: rgba(255, 255, 255, 0.2) !important;
+      border: 1px solid rgba(255, 255, 255, 0.4) !important;
+      color: #ffffff !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      font-size: 1.35rem !important;
+      line-height: 1 !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease-in-out !important;
+      outline: none !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    }
+    .modal-close-btn:hover {
+      background: #ff3e1d !important;
+      border-color: #ff3e1d !important;
+      color: #ffffff !important;
+      transform: scale(1.08);
+      box-shadow: 0 4px 10px rgba(255, 62, 29, 0.4) !important;
     }
   </style>
 </head>
@@ -708,7 +769,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     <div class="container">
       <a class="navbar-brand fw-bold fs-4 d-flex align-items-center me-4" href="index.php">
         <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 42px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 2px;" class="me-2 shadow-sm" />
-        <span class="text-white">tech-</span><span style="color: #696cff;">xpert</span>
+        <span class="text-white">tech-</span><span style="color: #61BEF1;">xpert</span>
       </a>
 
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
@@ -731,7 +792,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
         <div class="d-flex align-items-center gap-2">
           <!-- Request a Call Back Button in Header -->
           <button type="button" class="btn btn-warning fw-bold text-dark rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#requestCallbackModal">
-            <i class="bx bx-phone-call me-1 bx-tada"></i> Request Call Back
+            <i class="bx bx-phone-call me-1 bx-tada"></i>
           </button>
 
           <?php if ($currentUser !== null): ?>
@@ -761,84 +822,27 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     </div>
   <?php endif; ?>
 
-  <!-- Top Hero Dual Video Carousel (100% Width x 350px Height) -->
+  <!-- Top Hero Multi-Video Carousel (Randomized Order on Page Refresh) -->
   <div class="hero-carousel-container">
     <div id="heroVideoCarousel" class="carousel slide carousel-fade" data-bs-ride="false">
       
       <!-- Slide Indicators -->
       <div class="carousel-indicators">
-        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Video 1"></button>
-        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="1" aria-label="Video 2"></button>
-        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="2" aria-label="Video 3"></button>
-        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="3" aria-label="Video 4"></button>
-        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="4" aria-label="Video 5"></button>
-        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="5" aria-label="Video 6"></button>
-        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="6" aria-label="Video 7"></button>
+        <?php foreach ($heroVideoFiles as $idx => $vPath): ?>
+          <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="<?= $idx ?>" class="<?= $idx === 0 ? 'active' : '' ?>" <?= $idx === 0 ? 'aria-current="true"' : '' ?> aria-label="Video <?= $idx + 1 ?>"></button>
+        <?php endforeach; ?>
       </div>
 
       <div class="carousel-inner">
-        <!-- Slide 1: hero-bg-1.mp4 (First) -->
-        <div class="carousel-item active">
-          <div class="hero-video-banner">
-            <video id="heroVideo1" class="hero-video-element" autoplay playsinline preload="auto">
-              <source src="../../../assets/video/hero-bg-1.mp4" type="video/mp4">
-            </video>
+        <?php foreach ($heroVideoFiles as $idx => $vPath): ?>
+          <div class="carousel-item <?= $idx === 0 ? 'active' : '' ?>">
+            <div class="hero-video-banner">
+              <video id="heroVideo<?= $idx + 1 ?>" class="hero-video-element" <?= $idx === 0 ? 'autoplay' : '' ?> playsinline preload="auto">
+                <source src="<?= $vPath ?>" type="video/mp4">
+              </video>
+            </div>
           </div>
-        </div>
-
-        <!-- Slide 2: hero-bg-2.mp4 -->
-        <div class="carousel-item">
-          <div class="hero-video-banner">
-            <video id="heroVideo2" class="hero-video-element" playsinline preload="auto">
-              <source src="../../../assets/video/hero-bg-2.mp4" type="video/mp4">
-            </video>
-          </div>
-        </div>
-
-        <!-- Slide 3: hero-bg-3.mp4 -->
-        <div class="carousel-item">
-          <div class="hero-video-banner">
-            <video id="heroVideo3" class="hero-video-element" playsinline preload="auto">
-              <source src="../../../assets/video/hero-bg-3.mp4" type="video/mp4">
-            </video>
-          </div>
-        </div>
-
-        <!-- Slide 4: hero-bg-4.mp4 -->
-        <div class="carousel-item">
-          <div class="hero-video-banner">
-            <video id="heroVideo4" class="hero-video-element" playsinline preload="auto">
-              <source src="../../../assets/video/hero-bg-4.mp4" type="video/mp4">
-            </video>
-          </div>
-        </div>
-
-        <!-- Slide 5: hero-bg-5.mp4 -->
-        <div class="carousel-item">
-          <div class="hero-video-banner">
-            <video id="heroVideo5" class="hero-video-element" playsinline preload="auto">
-              <source src="../../../assets/video/hero-bg-5.mp4" type="video/mp4">
-            </video>
-          </div>
-        </div>
-
-        <!-- Slide 6: hero-bg-6.mp4 -->
-        <div class="carousel-item">
-          <div class="hero-video-banner">
-            <video id="heroVideo6" class="hero-video-element" playsinline preload="auto">
-              <source src="../../../assets/video/hero-bg-6.mp4" type="video/mp4">
-            </video>
-          </div>
-        </div>
-
-        <!-- Slide 7: hero-bg-1.mp4 (Last) -->
-        <div class="carousel-item">
-          <div class="hero-video-banner">
-            <video id="heroVideo7" class="hero-video-element" playsinline preload="auto">
-              <source src="../../../assets/video/hero-bg-1.mp4" type="video/mp4">
-            </video>
-          </div>
-        </div>
+        <?php endforeach; ?>
       </div>
 
       <!-- Controls -->
@@ -850,8 +854,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       </button>
 
       <!-- Interactive Sound Toggle Button -->
-      <button id="videoSoundToggleBtn" class="btn hero-sound-btn" type="button" title="Toggle Sound" style="background: #696cff;">
-        <i class="bx bx-volume-full me-1 text-warning"></i> Sound On
+      <button id="videoSoundToggleBtn" class="btn hero-sound-btn" type="button" title="Toggle Sound" style="background: #61BEF1;">
+        <i class="bx bx-volume-full me-1 text-warning"></i> On
       </button>
     </div>
   </div>
@@ -917,11 +921,19 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             $srvName = $srv->getServiceName();
             $srvImg = $srv->getServiceImage();
             
+            $dbDesc = $srv->getServiceDescription();
+            $defaultDesc = 'Comprehensive technician visit, inspection, diagnostics, and doorstep repairs for ' . $srvName . '.';
+
             $meta = $serviceMetadata[$srvId] ?? [
-                'badge' => 'Professional Service',
-                'desc' => 'Comprehensive technician visit, inspection, diagnostics, and doorstep repairs for ' . $srvName . '.',
+                'badge' => 'Professional Sales & Service',
+                'desc' => $defaultDesc,
                 'category' => 'other'
             ];
+            
+            // Load service_description directly from database table `services`
+            if (!empty($dbDesc)) {
+                $meta['desc'] = $dbDesc;
+            }
 
             $cleanPath = ltrim((string)$srvImg, '/');
             if (strpos($cleanPath, 'html/') === 0) {
@@ -1173,7 +1185,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
         </div>
         <div class="col-lg-4 text-lg-end">
           <button type="button" class="btn btn-warning btn-lg fw-bold rounded-pill px-4 shadow" data-bs-toggle="modal" data-bs-target="#requestCallbackModal">
-            <i class="bx bx-phone-call me-2"></i> Request Call Back
+            <i class="bx bx-phone-call me-2"></i> 
           </button>
         </div>
       </div>
@@ -1191,7 +1203,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       <div class="modal-content modal-content-custom">
         <div class="modal-header modal-header-custom d-flex align-items-center justify-content-between">
           <h5 class="modal-title fw-bold text-white mb-0"><i class="bx bx-phone-call me-2"></i> Request a Call Back</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="modal-close-btn" data-bs-dismiss="modal" aria-label="Close"><i class="bx bx-x"></i></button>
         </div>
         
         <form method="POST" action="index.php">
@@ -1281,7 +1293,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
         <div class="col-lg-4 col-md-6">
           <a class="navbar-brand fw-bold fs-4 d-flex align-items-center mb-3" href="index.php">
             <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 44px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 2px;" class="me-2 shadow-sm" />
-            <span class="text-white">tech-</span><span style="color: #696cff;">xpert</span>
+            <span class="text-white">tech-</span><span style="color: #61BEF1;">xpert</span>
           </a>
           <p class="text-muted fs-7 mb-0">Your trusted partner for professional CCTV installation, computer hardware maintenance, network setup, and Annual Maintenance Contracts (AMC).</p>
         </div>
@@ -1296,8 +1308,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
         </div>
         <div class="col-lg-4 col-md-12">
           <h6 class="fw-bold text-white mb-3 text-uppercase fs-7 tracking-wider">Customer Support</h6>
-          <p class="text-muted fs-7 mb-2"><i class="bx bx-phone me-2 text-primary"></i> Toll-Free Support: +91 (800) 123-4567</p>
-          <p class="text-muted fs-7 mb-2"><i class="bx bx-envelope me-2 text-primary"></i> Support Email: support@techxpert.com</p>
+          <p class="text-muted fs-7 mb-2"><i class="bx bx-phone me-2 text-primary"></i> Mobile: +91-8085041130, +91-8602234489</p>
+          <p class="text-muted fs-7 mb-2"><i class="bx bx-envelope me-2 text-primary"></i> Support Email: support.techxpert@gmail.com</p>
           <p class="text-muted fs-7 mb-0"><i class="bx bx-time me-2 text-primary"></i> Hours: Monday - Saturday (9:00 AM - 8:00 PM)</p>
         </div>
       </div>
@@ -1371,11 +1383,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
           function updateSoundBtnUI() {
             if (!soundBtn) return;
             if (isMuted) {
-              soundBtn.innerHTML = '<i class="bx bx-volume-mute me-1"></i> Sound Off';
+              soundBtn.innerHTML = '<i class="bx bx-volume-mute me-1"></i> Off';
               soundBtn.style.background = 'rgba(19, 23, 34, 0.8)';
             } else {
-              soundBtn.innerHTML = '<i class="bx bx-volume-full me-1 text-warning"></i> Sound On';
-              soundBtn.style.background = '#696cff';
+              soundBtn.innerHTML = '<i class="bx bx-volume-full me-1 text-warning"></i> On';
+              soundBtn.style.background = '#61BEF1';
             }
           }
 
