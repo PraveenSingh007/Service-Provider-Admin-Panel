@@ -554,7 +554,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3">
     <div class="container">
       <a class="navbar-brand fw-bold fs-4 d-flex align-items-center me-4" href="index.php">
-        <img src="/sneat/assets/img/logo.png" alt="tech-xpert" style="height: 42px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 2px;" class="me-2 shadow-sm" />
+        <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 42px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 2px;" class="me-2 shadow-sm" />
         <span class="text-white">tech-</span><span style="color: #696cff;">xpert</span>
       </a>
 
@@ -639,7 +639,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
           if (strpos($cleanPath, 'html/') === 0) {
               $cleanPath = substr($cleanPath, 5);
           }
-          $bgImgSrc = '/sneat/html/' . ($cleanPath ?: 'uploads/services/cctv_service.png');
+          $bgImgSrc = '../../' . ($cleanPath ?: 'uploads/services/cctv_service.png');
           ?>
           <div class="carousel-item <?= $index === 0 ? 'active' : '' ?> hero-slide-item" style="background-image: url('<?= htmlspecialchars($bgImgSrc, ENT_QUOTES, 'UTF-8') ?>');">
             <div class="hero-overlay">
@@ -744,7 +744,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             if (strpos($cleanPath, 'html/') === 0) {
                 $cleanPath = substr($cleanPath, 5);
             }
-            $imgSrc = '/sneat/html/' . ($cleanPath ?: 'uploads/services/cctv_service.png');
+            $imgSrc = '../../' . ($cleanPath ?: 'uploads/services/cctv_service.png');
             ?>
             <div class="col-lg-4 col-md-6">
               <div class="card service-card">
@@ -1095,7 +1095,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       <div class="row g-4 mb-4">
         <div class="col-lg-4">
           <a class="navbar-brand fw-bold fs-4 d-flex align-items-center mb-3" href="index.php">
-            <img src="/sneat/assets/img/logo.png" alt="tech-xpert" style="height: 48px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 3px;" class="me-2 shadow-sm" />
+            <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 48px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 3px;" class="me-2 shadow-sm" />
             <span class="text-white">tech-</span><span style="color: #696cff;">xpert</span>
           </a>
           <p class="text-muted fs-7">Your trusted partner for professional CCTV installation, computer hardware maintenance, network setup, and Annual Maintenance Contracts (AMC).</p>

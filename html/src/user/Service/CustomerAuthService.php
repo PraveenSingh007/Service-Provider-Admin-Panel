@@ -115,13 +115,13 @@ class CustomerAuthService
                 }
             }
 
-            $logoImageHtml = $logoSrc !== '' ? "<img src='{$logoPath}' alt='tech-xpert Logo' width='108' style='display:block; margin: 0 auto 14px; max-width: 120px; height: auto;' />" : '';
+            $logoImageHtml = $logoSrc !== '' ? "<img src='{$logoSrc}' alt='tech-xpert Logo' width='108' style='display:block; margin: 0 auto 14px; max-width: 120px; height: auto;' />" : '';
 
             $mail->Body = "
                 <div style='font-family: \"Segoe UI\", Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);'>
                     <!-- Header Banner -->
                     <div style='background: linear-gradient(135deg, #696cff 0%, #3938b3 100%); padding: 25px 20px; text-align: center;'>
-                        <img src='logo.png' alt='tech-xpert Logo' width='108' style='display:block; margin: 0 auto 14px; max-width: 120px; height: auto;' />
+                        {$logoImageHtml}
                         <h2 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 0.5px;'>tech-xpert Portal</h2>
                     </div>
 

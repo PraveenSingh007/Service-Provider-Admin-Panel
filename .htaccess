@@ -1,0 +1,5 @@
+RewriteEngine On
+RewriteBase /Service-Provider-Admin-Panel/
+
+# If the request is literally for "admin", route it to index.php
+RewriteRule ^admin/?$ index.php?panel=admin [L,QSA]
