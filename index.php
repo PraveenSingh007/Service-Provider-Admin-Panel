@@ -12,10 +12,10 @@ $requestUri = $_SERVER['REQUEST_URI'] ?? '';
 
 // Check if the URL path ends with '/admin' or '/admin/'
 if (preg_match('/\/admin\/?$/', $requestUri)) {
-    header("Location: $protocol://$host/Service-Provider-Admin-Panel/html/src/admin/index.php");
+    header("Location: $protocol://$host/html/src/admin/index.php");
     exit;
 }
 
 // Default redirect if '/admin' is not in the URL
-header("Location: $protocol://$host/Service-Provider-Admin-Panel/html/src/user/index.php");
+header("Location: $protocol://$host/html/src/user/index.php");
 exit;
