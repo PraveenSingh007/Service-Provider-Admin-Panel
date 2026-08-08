@@ -13,6 +13,10 @@ require_once __DIR__ . '/Dotenv.php';
 // Auto-load .env file from project root
 Dotenv::load(__DIR__ . '/../../../.env');
 
+// Set PHP application timezone to GMT +05:30 (Asia/Kolkata / IST)
+$appTimezone = getenv('APP_TIMEZONE') ?: 'Asia/Kolkata';
+date_default_timezone_set($appTimezone);
+
 /**
  * Database Connection Manager
  *
@@ -107,6 +111,11 @@ class DatabaseConnection
 
                 if (!$conn->connect_errno) {
                     $conn->set_charset($this->charset);
+                    
+                    // Set MySQL session timezone to GMT +05:30
+                    $dbTimezone = getenv('DB_TIMEZONE') ?: '+05:30';
+                    @$conn->query("SET time_zone = '{$dbTimezone}'");
+
                     $this->connection = $conn;
                     $this->host = $cfg['host'];
                     $this->username = $cfg['username'];

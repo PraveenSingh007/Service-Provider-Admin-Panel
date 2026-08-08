@@ -20,6 +20,15 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $currentUser = !empty($_SESSION['customer_user']) ? (array) $_SESSION['customer_user'] : null;
 
+// Require user to be logged in before booking a service
+if ($currentUser === null) {
+    $requestUri = $_SERVER['REQUEST_URI'] ?? 'book-service.php';
+    $_SESSION['redirect_after_login'] = $requestUri;
+    $_SESSION['login_notice'] = 'Please sign in to your account to book a service.';
+    header('Location: login.php');
+    exit;
+}
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }

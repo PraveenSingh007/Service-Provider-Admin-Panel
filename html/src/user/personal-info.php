@@ -43,7 +43,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $res = $authService->updatePersonalInformation($userId, $_POST);
         if ($res['success']) {
             $_SESSION['profile_saved_success'] = 'Personal information saved successfully!';
-            header('Location: book-service.php');
+            $redirectTarget = !empty($_SESSION['redirect_after_login']) ? (string) $_SESSION['redirect_after_login'] : 'book-service.php';
+            unset($_SESSION['redirect_after_login']);
+            header('Location: ' . $redirectTarget);
             exit;
         } else {
             $errorMsg = implode(' ', $res['errors'] ?? [$res['message']]);

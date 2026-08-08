@@ -213,6 +213,26 @@ foreach ($currentMonthExpenses as $exp) {
                 </div>
 
                 <!-- System Stat Widgets (Filtered by User Role Permissions) -->
+                <?php if (hasModulePermission($role, 'callback_requests')): ?>
+                  <?php
+                  $dashPendingCb = 0;
+                  $cbRes = $dbConn->query("SELECT COUNT(*) as cnt FROM callback_requests WHERE status = 'pending'");
+                  if ($cbRes) { $row = $cbRes->fetch_assoc(); $dashPendingCb = (int) ($row['cnt'] ?? 0); }
+                  ?>
+                  <div class="col-lg-2 col-md-4 col-6 mb-4">
+                    <div class="card h-100 p-3 text-center d-flex flex-column justify-content-between align-items-center">
+                      <div class="w-100">
+                        <div class="avatar bg-label-danger rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                          <i class="icon-base bx bx-phone-call text-danger icon-lg"></i>
+                        </div>
+                        <small class="text-muted d-block fw-semibold text-truncate">Callbacks</small>
+                        <h4 class="fw-bold text-dark mb-0 mt-1"><?= $dashPendingCb ?></h4>
+                      </div>
+                      <a href="callback-requests.php" class="btn btn-xs btn-outline-danger mt-3 w-100">View</a>
+                    </div>
+                  </div>
+                <?php endif; ?>
+
                 <?php if (hasModulePermission($role, 'services')): ?>
                   <div class="col-lg-2 col-md-4 col-6 mb-4">
                     <div class="card h-100 p-3 text-center d-flex flex-column justify-content-between align-items-center">

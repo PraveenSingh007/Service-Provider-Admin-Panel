@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `service_requests` (
   `service_id` INT(11) DEFAULT NULL,
   `service_name` VARCHAR(255) NOT NULL,
   `service_category` ENUM('cctv_camera', 'computer_hardware', 'amc_contract', 'other') NOT NULL DEFAULT 'other',
-  `request_type` ENUM('fresh_installation', 'repair_service', 'hardware_purchase', 'amc_new_booking', 'amc_periodic_service') NOT NULL DEFAULT 'repair_service',
+  `request_type` ENUM('fresh_installation', 'repair_service', 'hardware_purchase', 'amc_new_booking', 'amc_periodic_service', 'callback_request') NOT NULL DEFAULT 'repair_service',
   `description` TEXT DEFAULT NULL,
   `device_details` TEXT DEFAULT NULL,
   

@@ -42,6 +42,12 @@ $successMsg = null;
 $errorMsg = null;
 $demoOtp = null;
 
+$loginNotice = null;
+if (!empty($_SESSION['login_notice'])) {
+    $loginNotice = (string) $_SESSION['login_notice'];
+    unset($_SESSION['login_notice']);
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action'])) {
     $submittedToken = (string) ($_POST['csrf_token'] ?? '');
     if (empty($submittedToken) || !hash_equals($csrfToken, $submittedToken)) {
@@ -70,7 +76,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
                 if (empty($res['is_profile_completed'])) {
                     header('Location: personal-info.php');
                 } else {
-                    header('Location: index.php');
+                    $redirectTarget = !empty($_SESSION['redirect_after_login']) ? (string) $_SESSION['redirect_after_login'] : 'index.php';
+                    unset($_SESSION['redirect_after_login']);
+                    header('Location: ' . $redirectTarget);
                 }
                 exit;
             } else {
@@ -117,6 +125,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']))
           <h4 class="fw-bold mb-1">Sign In</h4>
           <!-- <p class="text-muted small">Enter your email address to receive OTP</p> -->
         </div>
+
+        <?php if ($loginNotice !== null): ?>
+          <div class="alert alert-warning alert-dismissible fade show small shadow-sm" role="alert">
+            <i class="bx bx-lock-alt me-1 align-middle"></i> <strong>Sign-in Required:</strong> <?= htmlspecialchars($loginNotice, ENT_QUOTES, 'UTF-8') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        <?php endif; ?>
 
         <?php if ($successMsg !== null): ?>
           <div class="alert alert-success alert-dismissible fade show small" role="alert">

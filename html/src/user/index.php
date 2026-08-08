@@ -30,57 +30,6 @@ $serviceRepo = new ServiceRepository($dbConn);
 $serviceAreas = $serviceAreaRepo->findAll();
 $services = $serviceRepo->findAll();
 
-$serviceMetadata = [
-    1 => [
-        'badge' => '24/7 Security & Surveillance',
-        'carousel_title' => 'Smart CCTV Installation & HD Monitoring',
-        'carousel_desc' => 'Protect your home, office, and enterprise with crystal-clear IP cameras, night vision, DVR/NVR configuration, and instant mobile live view setup.',
-        'desc' => 'Complete 1080p/4K HD & IP CCTV surveillance system setup, DVR/NVR configuration, night vision camera installation, cable routing, and remote mobile viewing integration.',
-        'icon' => 'bx-camcorder',
-        'category' => 'cctv_camera'
-    ],
-    2 => [
-        'badge' => 'Expert IT & Hardware Support',
-        'carousel_title' => 'Computer Repair, Upgrades & IT Support',
-        'carousel_desc' => 'Fast doorstep repair for desktops, laptops, servers, and networking hardware by certified field engineers.',
-        'desc' => 'Expert doorstep computer & laptop repairs, SSD & RAM speed upgrades, custom PC assembly, motherboard chip-level troubleshooting, data recovery, and IT hardware sales.',
-        'icon' => 'bx-laptop',
-        'category' => 'computer_hardware'
-    ],
-    3 => [
-        'badge' => 'Hassle-Free Protection',
-        'carousel_title' => 'Annual Maintenance Contracts (AMC)',
-        'carousel_desc' => 'Zero downtime with proactive quarterly checkups, priority technician dispatch, and zero service charges.',
-        'desc' => 'Hassle-free quarterly preventive maintenance, zero labor charges, 24/7 priority technician response, free emergency calls, and extended hardware lifespan for businesses.',
-        'icon' => 'bx-shield-alt-2',
-        'category' => 'amc_contract'
-    ],
-    9 => [
-        'badge' => 'Cooling & Climate Control',
-        'carousel_title' => 'Air Conditioner Installation & Jet Service',
-        'carousel_desc' => 'Beat the heat with certified AC installation, deep chemical jet foam washing, gas top-up, and PCB repairs.',
-        'desc' => 'Split & window AC installation, uninstallation, deep chemical foam jet cleaning, R32/R410a refrigerant gas top-up, compressor repair, and PCB troubleshooting.',
-        'icon' => 'bx-wind',
-        'category' => 'air_conditioner'
-    ],
-    10 => [
-        'badge' => 'Smart Access & Time Attendance',
-        'carousel_title' => 'Biometric Installation & Attendance Systems',
-        'carousel_desc' => 'Secure your premises with facial recognition, fingerprint readers, and cloud payroll time tracking.',
-        'desc' => 'Advanced biometric fingerprint, face recognition, and RFID card access control terminal installation synced with cloud attendance & payroll management software.',
-        'icon' => 'bx-fingerprint',
-        'category' => 'biometric'
-    ],
-    11 => [
-        'badge' => 'Enterprise Equipment Care',
-        'carousel_title' => 'Commercial Laundry Equipment Maintenance',
-        'carousel_desc' => 'Industrial washer & dryer maintenance, electrical panel repairs, and motor servicing for commercial setups.',
-        'desc' => 'Heavy-duty commercial washer & dryer installation, motor & belt replacement, electrical panel troubleshooting, and scheduled preventive care for hotels & laundromats.',
-        'icon' => 'bx-closet',
-        'category' => 'commercial_laundry'
-    ]
-];
-
 $callbackSuccess = false;
 $callbackError = null;
 $callbackReqNo = '';
@@ -107,12 +56,26 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
             $pincode = !empty($serviceAreas) ? $serviceAreas[0]->getPincode() : '492001';
 
             try {
-                $sql = "INSERT INTO service_requests 
-                    (service_request_no, customer_name, request_by_mobile_no, service_name, service_category, request_type, description, request_address, request_pincode, preferred_time_slot, request_status) 
-                    VALUES (?, ?, ?, ?, ?, 'repair_service', ?, 'Callback Request via Website', ?, ?, 'pending')";
+                // Ensure callback_requests table exists automatically if not yet created
+                @$dbConn->query("CREATE TABLE IF NOT EXISTS callback_requests (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    callback_no VARCHAR(50) NOT NULL UNIQUE,
+                    customer_name VARCHAR(150) NOT NULL,
+                    mobile_no VARCHAR(20) NOT NULL,
+                    service_category VARCHAR(100) DEFAULT 'other',
+                    preferred_time_slot VARCHAR(50) DEFAULT 'anytime',
+                    note TEXT NULL,
+                    status ENUM('pending', 'contacted', 'completed', 'cancelled') DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+                $sql = "INSERT INTO callback_requests 
+                    (callback_no, customer_name, mobile_no, service_category, preferred_time_slot, note, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, 'pending')";
                 $stmt = $dbConn->prepare($sql);
                 if ($stmt) {
-                    $stmt->bind_param('ssssssss', $reqNo, $cbName, $cbMobile, $serviceName, $cbService, $desc, $pincode, $cbTime);
+                    $stmt->bind_param('ssssss', $reqNo, $cbName, $cbMobile, $cbService, $cbTime, $cbNote);
                     if ($stmt->execute()) {
                         $callbackSuccess = true;
                         $callbackReqNo = $reqNo;
@@ -122,7 +85,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
                     $stmt->close();
                 }
             } catch (\Throwable $ex) {
-                $callbackError = 'Database connection error: ' . $ex->getMessage();
+                $callbackError = 'Database error: ' . $ex->getMessage();
             }
         }
     } else {
@@ -161,15 +124,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       overflow-x: hidden;
     }
 
-    /* Sticky Modern Header */
+    /* Modern Header */
     .navbar-custom {
-      background: rgba(19, 23, 34, 0.94) !important;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: #131722 !important;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      position: sticky;
-      top: 0;
+      position: relative;
       z-index: 1040;
+      margin: 0 !important;
     }
 
     .brand-icon-box {
@@ -198,90 +159,280 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       background: rgba(105, 108, 255, 0.15);
     }
 
-    /* Top Services Hero Carousel */
+    /* Top Hero Video Banner (Exact 350px Height, 100% Full-Width Ambient View) */
     .hero-carousel-container {
       position: relative;
-      border-radius: 0 0 2rem 2rem;
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
       overflow: hidden;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+      background-color: #0b0f19;
+      clear: both;
     }
 
-    .hero-slide-item {
-      height: 500px;
-      background-size: cover;
-      background-position: center;
+    .hero-video-banner {
+      width: 100%;
+      height: 550px;
       position: relative;
+      background-color: #0b0f19;
+      overflow: hidden;
     }
 
-    @media (max-width: 768px) {
-      .hero-slide-item {
-        height: 420px;
+    .hero-video-element {
+      width: 100%;
+      height: 550px;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    @media (max-width: 767.98px) {
+      .hero-video-banner {
+        height: 220px;
+      }
+      .hero-video-element {
+        height: 220px;
       }
     }
 
-    .hero-overlay {
+    /* Hero Sound Control Toggle Button */
+    .hero-sound-btn {
       position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.72) 55%, rgba(15, 23, 42, 0.3) 100%);
-      display: flex;
-      align-items: center;
+      bottom: 16px;
+      right: 20px;
+      z-index: 20;
+      background: rgba(19, 23, 34, 0.8) !important;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      color: #ffffff !important;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.45rem 1rem;
+      border-radius: 50px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .hero-sound-btn:hover {
+      background: #696cff !important;
+      border-color: #696cff !important;
+      color: #ffffff !important;
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    .hero-overlay {
+      position: relative;
+      width: 100%;
+      z-index: 2;
+      background: linear-gradient(135deg, rgba(11, 15, 25, 0.94) 0%, rgba(19, 23, 34, 0.82) 50%, rgba(11, 15, 25, 0.92) 100%);
+      padding: 3rem 0;
     }
 
     .slide-badge {
-      background: rgba(105, 108, 255, 0.25);
-      border: 1px solid rgba(105, 108, 255, 0.5);
-      color: #8c8eff;
+      background: rgba(105, 108, 255, 0.2);
+      border: 1px solid rgba(105, 108, 255, 0.45);
+      color: #9da0ff;
       backdrop-filter: blur(8px);
-      padding: 0.4rem 1rem;
+      padding: 0.35rem 0.9rem;
       border-radius: 50px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 700;
       letter-spacing: 0.5px;
       text-uppercase: uppercase;
       display: inline-block;
     }
 
+    .hero-carousel-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      line-height: 1.25;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-carousel-desc {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.88);
+      max-width: 620px;
+    }
+
+    .hero-btn-main {
+      padding: 0.65rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 50px;
+      transition: all 0.25s ease;
+    }
+
+    .hero-btn-sub {
+      padding: 0.65rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 50px;
+      transition: all 0.25s ease;
+    }
+
+    /* Showcase Image Box Desktop & Tablet */
+    .hero-image-card {
+      width: 100%;
+      max-width: 380px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px);
+      border-radius: 1.25rem;
+      padding: 10px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .hero-image-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .hero-card-img {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      object-position: center;
+      border-radius: 0.9rem;
+      display: block;
+    }
+
+    /* Controls & Indicators */
+    .carousel-indicators {
+      bottom: 12px;
+      margin-bottom: 0;
+      z-index: 5;
+    }
+
     .carousel-indicators [data-bs-target] {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      margin: 0 6px;
+      margin: 0 5px;
       background-color: #fff;
       opacity: 0.4;
       transition: all 0.3s ease;
     }
 
     .carousel-indicators .active {
-      width: 34px;
-      border-radius: 8px;
+      width: 28px;
+      border-radius: 6px;
       opacity: 1;
       background-color: #696cff;
     }
 
     .carousel-control-prev, .carousel-control-next {
-      width: 5%;
-      opacity: 0.8;
+      width: 60px;
+      opacity: 0.85;
+      z-index: 5;
     }
 
     .carousel-control-btn {
-      width: 50px;
-      height: 50px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 1.35rem;
       transition: all 0.25s ease;
     }
 
     .carousel-control-btn:hover {
       background: #696cff;
       border-color: #696cff;
-      transform: scale(1.1);
+      transform: scale(1.08);
+      color: #fff;
+    }
+
+    /* Responsive Mobile Adjustments */
+    @media (max-width: 991.98px) {
+      .hero-carousel-title {
+        font-size: 1.75rem;
+      }
+      .hero-card-img {
+        height: 200px;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .hero-slide-item {
+        min-height: auto;
+      }
+      .hero-overlay {
+        padding: 1.75rem 0 2.5rem 0;
+      }
+      .hero-carousel-title {
+        font-size: 1.3rem;
+        line-height: 1.3;
+        margin-bottom: 0.5rem !important;
+      }
+      .hero-carousel-desc {
+        font-size: 0.85rem;
+        line-height: 1.45;
+        margin-bottom: 0.85rem !important;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .slide-badge {
+        font-size: 0.72rem;
+        padding: 0.25rem 0.7rem;
+        margin-bottom: 0.5rem !important;
+      }
+      .hero-mobile-img-box {
+        width: 100%;
+        height: 150px;
+        border-radius: 0.85rem;
+        overflow: hidden;
+        margin-bottom: 0.85rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      }
+      .hero-mobile-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+      .hero-btn-main, .hero-btn-sub {
+        font-size: 0.82rem;
+        padding: 0.45rem 0.85rem;
+        flex: 1 1 auto;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .carousel-control-prev, .carousel-control-next {
+        width: 38px;
+      }
+      .carousel-control-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 1.1rem;
+      }
+    }
+
+    /* Site Footer Full Width 100% Like Header */
+    .site-footer {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      background-color: #131722 !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+      left: 0;
+      right: 0;
     }
 
     /* Why Choose Us Feature Cards */
@@ -510,13 +661,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       100% { box-shadow: 0 0 0 0 rgba(255, 171, 0, 0); }
     }
 
-    /* Custom Call Back Banner */
+    /* Custom Call Back Banner Full Width Like Header */
     .callback-cta-banner {
-      background: linear-gradient(135deg, #1e1e2d 0%, #111319 100%);
-      border-radius: 1.5rem;
-      padding: 3rem 2rem;
+      width: 100% !important;
+      margin: 3rem 0 0 0 !important;
+      border-radius: 0 !important;
+      background: linear-gradient(135deg, #131722 0%, #1a1f2e 100%) !important;
       color: #ffffff;
-      box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.25);
+      box-shadow: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       position: relative;
       overflow: hidden;
     }
@@ -608,67 +761,97 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     </div>
   <?php endif; ?>
 
-    <!-- Services Image Carousel at Top -->
+  <!-- Top Hero Dual Video Carousel (100% Width x 350px Height) -->
   <div class="hero-carousel-container">
-    <div id="topServicesCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="4500">
+    <div id="heroVideoCarousel" class="carousel slide carousel-fade" data-bs-ride="false">
       
       <!-- Slide Indicators -->
-      <div class="carousel-indicators mb-4">
-        <?php foreach ($services as $index => $srv): ?>
-          <button type="button" data-bs-target="#topServicesCarousel" data-bs-slide-to="<?= $index ?>" class="<?= $index === 0 ? 'active' : '' ?>"></button>
-        <?php endforeach; ?>
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Video 1"></button>
+        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="1" aria-label="Video 2"></button>
+        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="2" aria-label="Video 3"></button>
+        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="3" aria-label="Video 4"></button>
+        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="4" aria-label="Video 5"></button>
+        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="5" aria-label="Video 6"></button>
+        <button type="button" data-bs-target="#heroVideoCarousel" data-bs-slide-to="6" aria-label="Video 7"></button>
       </div>
 
       <div class="carousel-inner">
-        <?php foreach ($services as $index => $srv): ?>
-          <?php
-          $srvId = (int)$srv->getId();
-          $srvName = $srv->getServiceName();
-          $srvImg = $srv->getServiceImage();
-          
-          $meta = $serviceMetadata[$srvId] ?? [
-              'badge' => 'Professional Service',
-              'carousel_title' => $srvName,
-              'carousel_desc' => 'Certified technician visit, maintenance, installation, and doorstep repairs tailored to your needs.',
-              'desc' => 'Comprehensive technician visit, inspection, diagnostics, and doorstep repairs for ' . $srvName . '.',
-              'icon' => 'bx-wrench',
-              'category' => 'other'
-          ];
-
-          $cleanPath = ltrim((string)$srvImg, '/');
-          if (strpos($cleanPath, 'html/') === 0) {
-              $cleanPath = substr($cleanPath, 5);
-          }
-          $bgImgSrc = '../../' . ($cleanPath ?: 'uploads/services/cctv_service.png');
-          ?>
-          <div class="carousel-item <?= $index === 0 ? 'active' : '' ?> hero-slide-item" style="background-image: url('<?= htmlspecialchars($bgImgSrc, ENT_QUOTES, 'UTF-8') ?>');">
-            <div class="hero-overlay">
-              <div class="container">
-                <div class="row align-items-center">
-                  <div class="col-lg-8 text-white">
-                    <span class="slide-badge mb-3"><i class="bx <?= htmlspecialchars($meta['icon'], ENT_QUOTES, 'UTF-8') ?> me-1"></i> <?= htmlspecialchars($meta['badge'], ENT_QUOTES, 'UTF-8') ?></span>
-                    <h1 class="display-4 fw-extrabold mb-3 text-white"><?= htmlspecialchars($meta['carousel_title'], ENT_QUOTES, 'UTF-8') ?></h1>
-                    <p class="lead mb-4 text-light opacity-90"><?= htmlspecialchars($meta['carousel_desc'], ENT_QUOTES, 'UTF-8') ?></p>
-                    <div class="d-flex flex-wrap gap-3">
-                      <a href="book-service.php?category=<?= urlencode($meta['category']) ?>&service_id=<?= $srvId ?>" class="btn btn-primary btn-lg fw-bold rounded-pill px-4 shadow"><i class="bx bx-calendar-check me-2"></i> Book <?= htmlspecialchars($srvName, ENT_QUOTES, 'UTF-8') ?></a>
-                      <button type="button" class="btn btn-outline-light btn-lg fw-bold rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" data-service="<?= htmlspecialchars($meta['category'], ENT_QUOTES, 'UTF-8') ?>">
-                        <i class="bx bx-phone-call me-2"></i> Request Call Back
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <!-- Slide 1: hero-bg-1.mp4 (First) -->
+        <div class="carousel-item active">
+          <div class="hero-video-banner">
+            <video id="heroVideo1" class="hero-video-element" autoplay playsinline preload="auto">
+              <source src="../../../assets/video/hero-bg-1.mp4" type="video/mp4">
+            </video>
           </div>
-        <?php endforeach; ?>
+        </div>
+
+        <!-- Slide 2: hero-bg-2.mp4 -->
+        <div class="carousel-item">
+          <div class="hero-video-banner">
+            <video id="heroVideo2" class="hero-video-element" playsinline preload="auto">
+              <source src="../../../assets/video/hero-bg-2.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+
+        <!-- Slide 3: hero-bg-3.mp4 -->
+        <div class="carousel-item">
+          <div class="hero-video-banner">
+            <video id="heroVideo3" class="hero-video-element" playsinline preload="auto">
+              <source src="../../../assets/video/hero-bg-3.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+
+        <!-- Slide 4: hero-bg-4.mp4 -->
+        <div class="carousel-item">
+          <div class="hero-video-banner">
+            <video id="heroVideo4" class="hero-video-element" playsinline preload="auto">
+              <source src="../../../assets/video/hero-bg-4.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+
+        <!-- Slide 5: hero-bg-5.mp4 -->
+        <div class="carousel-item">
+          <div class="hero-video-banner">
+            <video id="heroVideo5" class="hero-video-element" playsinline preload="auto">
+              <source src="../../../assets/video/hero-bg-5.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+
+        <!-- Slide 6: hero-bg-6.mp4 -->
+        <div class="carousel-item">
+          <div class="hero-video-banner">
+            <video id="heroVideo6" class="hero-video-element" playsinline preload="auto">
+              <source src="../../../assets/video/hero-bg-6.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+
+        <!-- Slide 7: hero-bg-1.mp4 (Last) -->
+        <div class="carousel-item">
+          <div class="hero-video-banner">
+            <video id="heroVideo7" class="hero-video-element" playsinline preload="auto">
+              <source src="../../../assets/video/hero-bg-1.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
       </div>
 
       <!-- Controls -->
-      <button class="carousel-control-prev" type="button" data-bs-target="#topServicesCarousel" data-bs-slide="prev">
+      <button class="carousel-control-prev" type="button" data-bs-target="#heroVideoCarousel" data-bs-slide="prev">
         <span class="carousel-control-btn"><i class="bx bx-chevron-left"></i></span>
       </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#topServicesCarousel" data-bs-slide="next">
+      <button class="carousel-control-next" type="button" data-bs-target="#heroVideoCarousel" data-bs-slide="next">
         <span class="carousel-control-btn"><i class="bx bx-chevron-right"></i></span>
+      </button>
+
+      <!-- Interactive Sound Toggle Button -->
+      <button id="videoSoundToggleBtn" class="btn hero-sound-btn" type="button" title="Toggle Sound" style="background: #696cff;">
+        <i class="bx bx-volume-full me-1 text-warning"></i> Sound On
       </button>
     </div>
   </div>
@@ -978,8 +1161,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
       </div>
     </div>
 
-    <!-- Call Back CTA Banner -->
-    <div class="callback-cta-banner text-center text-lg-start">
+  </div> <!-- End Main Content Container -->
+
+  <!-- Call Back CTA Banner (Full Width 100% Like Header) -->
+  <section class="callback-cta-banner text-center text-lg-start">
+    <div class="container py-5">
       <div class="row align-items-center">
         <div class="col-lg-8 mb-3 mb-lg-0">
           <h3 class="fw-bold text-white mb-2"><i class="bx bx-headphone text-warning me-2"></i> Need Instant Assistance or Custom Advice?</h3>
@@ -992,8 +1178,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
         </div>
       </div>
     </div>
-
-  </div>
+  </section>
 
   <!-- Floating Action Button for Call Back -->
   <button type="button" class="floating-callback-btn" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" title="Request Call Back">
@@ -1089,31 +1274,31 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
     </div>
   <?php endif; ?>
 
-  <!-- Footer -->
-  <footer class="bg-dark text-white py-5 mt-5" style="background-color: #131722 !important;">
+  <!-- Footer (Full Width 100% Like Header) -->
+  <footer class="site-footer text-white py-5">
     <div class="container">
       <div class="row g-4 mb-4">
-        <div class="col-lg-4">
+        <div class="col-lg-4 col-md-6">
           <a class="navbar-brand fw-bold fs-4 d-flex align-items-center mb-3" href="index.php">
-            <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 48px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 3px;" class="me-2 shadow-sm" />
+            <img src="../../../assets/img/logo.png" alt="tech-xpert" style="height: 44px; width: auto; object-fit: contain; border-radius: 8px; background: #ffffff; padding: 2px;" class="me-2 shadow-sm" />
             <span class="text-white">tech-</span><span style="color: #696cff;">xpert</span>
           </a>
-          <p class="text-muted fs-7">Your trusted partner for professional CCTV installation, computer hardware maintenance, network setup, and Annual Maintenance Contracts (AMC).</p>
+          <p class="text-muted fs-7 mb-0">Your trusted partner for professional CCTV installation, computer hardware maintenance, network setup, and Annual Maintenance Contracts (AMC).</p>
         </div>
-        <div class="col-lg-4">
-          <h6 class="fw-bold text-white mb-3">Quick Navigation</h6>
+        <div class="col-lg-4 col-md-6">
+          <h6 class="fw-bold text-white mb-3 text-uppercase fs-7 tracking-wider">Quick Navigation</h6>
           <ul class="list-unstyled text-muted fs-7 mb-0">
-            <li class="mb-2"><a href="index.php" class="text-muted text-decoration-none"><i class="bx bx-chevron-right me-1"></i> Home Portal</a></li>
-            <li class="mb-2"><a href="book-service.php" class="text-muted text-decoration-none"><i class="bx bx-chevron-right me-1"></i> Book a Service Request</a></li>
-            <li class="mb-2"><a href="my-requests.php" class="text-muted text-decoration-none"><i class="bx bx-chevron-right me-1"></i> Track Existing Request</a></li>
-            <li class="mb-2"><a href="#" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" class="text-muted text-decoration-none"><i class="bx bx-chevron-right me-1"></i> Request Immediate Call Back</a></li>
+            <li class="mb-2"><a href="index.php" class="text-muted text-decoration-none"><i class="bx bx-chevron-right me-1 text-primary"></i> Home Portal</a></li>
+            <li class="mb-2"><a href="book-service.php" class="text-muted text-decoration-none"><i class="bx bx-chevron-right me-1 text-primary"></i> Book a Service Request</a></li>
+            <li class="mb-2"><a href="my-requests.php" class="text-muted text-decoration-none"><i class="bx bx-chevron-right me-1 text-primary"></i> Track Existing Request</a></li>
+            <li class="mb-2"><a href="#" data-bs-toggle="modal" data-bs-target="#requestCallbackModal" class="text-muted text-decoration-none"><i class="bx bx-chevron-right me-1 text-primary"></i> Request Immediate Call Back</a></li>
           </ul>
         </div>
-        <div class="col-lg-4">
-          <h6 class="fw-bold text-white mb-3">Customer Support</h6>
+        <div class="col-lg-4 col-md-12">
+          <h6 class="fw-bold text-white mb-3 text-uppercase fs-7 tracking-wider">Customer Support</h6>
           <p class="text-muted fs-7 mb-2"><i class="bx bx-phone me-2 text-primary"></i> Toll-Free Support: +91 (800) 123-4567</p>
           <p class="text-muted fs-7 mb-2"><i class="bx bx-envelope me-2 text-primary"></i> Support Email: support@techxpert.com</p>
-          <p class="text-muted fs-7"><i class="bx bx-time me-2 text-primary"></i> Hours: Monday - Saturday (9:00 AM - 8:00 PM)</p>
+          <p class="text-muted fs-7 mb-0"><i class="bx bx-time me-2 text-primary"></i> Hours: Monday - Saturday (9:00 AM - 8:00 PM)</p>
         </div>
       </div>
       <hr class="border-secondary opacity-25 my-4" />
@@ -1148,6 +1333,122 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action']) 
           $(this).find('#cb_service').val(serviceCat);
         }
       });
+
+      // Multi-Video Carousel Playlist Controller with Auto-Mute After 1 Complete Loop
+      const videoCarouselEl = document.getElementById('heroVideoCarousel');
+      const soundBtn = document.getElementById('videoSoundToggleBtn');
+
+      if (videoCarouselEl) {
+        const videos = Array.from(videoCarouselEl.querySelectorAll('.hero-video-element'));
+        let isMuted = false;           // Default sound enabled
+        let userOverrodeSound = false;  // Tracks if user manually toggled sound
+        let playedIndicesInFirstLoop = new Set(); // Tracks unique slides completed in 1st loop
+
+        if (videos.length > 0) {
+          const videoCarousel = new bootstrap.Carousel(videoCarouselEl, {
+            interval: false,
+            wrap: true
+          });
+
+          videos.forEach(v => { v.muted = false; });
+
+          function playVideo(v) {
+            if (v) {
+              v.currentTime = 0;
+              v.muted = isMuted;
+              var playPromise = v.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(function(e) {
+                  if (e.name === 'NotAllowedError') {
+                    v.muted = true;
+                    v.play();
+                  }
+                });
+              }
+            }
+          }
+
+          function updateSoundBtnUI() {
+            if (!soundBtn) return;
+            if (isMuted) {
+              soundBtn.innerHTML = '<i class="bx bx-volume-mute me-1"></i> Sound Off';
+              soundBtn.style.background = 'rgba(19, 23, 34, 0.8)';
+            } else {
+              soundBtn.innerHTML = '<i class="bx bx-volume-full me-1 text-warning"></i> Sound On';
+              soundBtn.style.background = '#696cff';
+            }
+          }
+
+          // Unmute upon first user interaction on page if browser blocked sound autoplay initially
+          const enableAudioOnUserGesture = function() {
+            if (!isMuted && !userOverrodeSound) {
+              videos.forEach(v => { v.muted = false; });
+              const activeItem = videoCarouselEl.querySelector('.carousel-item.active');
+              if (activeItem) {
+                const activeVid = activeItem.querySelector('.hero-video-element');
+                if (activeVid) {
+                  activeVid.muted = false;
+                  activeVid.play();
+                }
+              }
+            }
+            window.removeEventListener('click', enableAudioOnUserGesture);
+            window.removeEventListener('touchstart', enableAudioOnUserGesture);
+          };
+          window.addEventListener('click', enableAudioOnUserGesture, { once: true });
+          window.addEventListener('touchstart', enableAudioOnUserGesture, { once: true });
+
+          // Toggle Sound Button handler
+          if (soundBtn) {
+            soundBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              isMuted = !isMuted;
+              userOverrodeSound = true;
+              
+              videos.forEach(v => {
+                v.muted = isMuted;
+              });
+
+              updateSoundBtnUI();
+
+              if (!isMuted) {
+                const activeItem = videoCarouselEl.querySelector('.carousel-item.active');
+                if (activeItem) {
+                  const activeVid = activeItem.querySelector('.hero-video-element');
+                  if (activeVid) {
+                    activeVid.muted = false;
+                    activeVid.play();
+                  }
+                }
+              }
+            });
+          }
+
+          // Advance to next video when current video ends
+          videos.forEach((v, idx) => {
+            v.addEventListener('ended', function() {
+              playedIndicesInFirstLoop.add(idx);
+
+              // Auto-mute audio after 1 complete loop of all slides (unless user overrode sound)
+              if (playedIndicesInFirstLoop.size >= videos.length && !userOverrodeSound) {
+                isMuted = true;
+                videos.forEach(vid => { vid.muted = true; });
+                updateSoundBtnUI();
+              }
+
+              videoCarousel.next();
+            });
+          });
+
+          // Play active slide video when slide changes
+          videoCarouselEl.addEventListener('slid.bs.carousel', function(e) {
+            videos.forEach(v => v.pause());
+            if (videos[e.to]) {
+              playVideo(videos[e.to]);
+            }
+          });
+        }
+      }
     });
   </script>
 </body>

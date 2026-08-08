@@ -13,8 +13,8 @@ return [
     'port'        => 587,
     'smtp_secure' => 'tls',
     'smtp_auth'   => true,
-    'username'    => 'support.teckxpert@gmail.com',
-    'password'    => 'egrsiatllykyjnnj',
-    'from_email'  => 'support.teckxpert@gmail.com',
+    'username'    => 'Support.techxpert@gmail.com',
+    'password'    => 'zeeimokyupregimu',
+    'from_email'  => 'Support.techxpert@gmail.com',
     'from_name'   => 'techxpert Portal',
 ];

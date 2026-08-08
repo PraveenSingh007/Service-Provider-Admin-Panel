@@ -49,6 +49,7 @@ if (!function_exists('hasModulePermission')) {
                 'invoices',
                 'daily_expenses',
                 'service_requests',
+                'callback_requests',
             ],
             'office_staff' => [
                 'services',
@@ -57,6 +58,7 @@ if (!function_exists('hasModulePermission')) {
                 'quotations',
                 'invoices',
                 'service_requests',
+                'callback_requests',
             ],
             'office_incharge' => [
                 'services',
@@ -67,6 +69,7 @@ if (!function_exists('hasModulePermission')) {
                 'invoices',
                 'daily_expenses',
                 'service_requests',
+                'callback_requests',
             ],
         ];
 

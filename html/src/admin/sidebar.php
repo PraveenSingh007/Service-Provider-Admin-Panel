@@ -162,6 +162,29 @@ $userRole = (string) ($currentUser['role'] ?? 'admin');
       </li>
     <?php endif; ?>
 
+    <!-- Callback Requests Section -->
+    <?php if (hasModulePermission($userRole, 'callback_requests')): ?>
+      <?php
+      $pendingCallbackCount = 0;
+      if (isset($dbConn)) {
+          $cbCountRes = $dbConn->query("SELECT COUNT(*) as cnt FROM callback_requests WHERE status = 'pending'");
+          if ($cbCountRes) {
+              $row = $cbCountRes->fetch_assoc();
+              $pendingCallbackCount = (int)($row['cnt'] ?? 0);
+          }
+      }
+      ?>
+      <li class="menu-item <?= $activePage === 'callback-requests' ? 'active' : '' ?>">
+        <a href="callback-requests.php" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-phone-call"></i>
+          <div class="text-truncate">Callback Requests</div>
+          <?php if ($pendingCallbackCount > 0): ?>
+            <span class="badge bg-danger rounded-pill ms-auto"><?= $pendingCallbackCount ?></span>
+          <?php endif; ?>
+        </a>
+      </li>
+    <?php endif; ?>
+
     <!-- Services Section -->
     <?php if (hasModulePermission($userRole, 'services')): ?>
       <?php $isServicesOpen = in_array($activePage, ['services', 'add-service'], true); ?>
